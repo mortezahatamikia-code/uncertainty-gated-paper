@@ -1,0 +1,65 @@
+{
+  "$schema": "https://frictionlessdata.io/schemas/data-package.json",
+  "name": "uncertainty-gated-dual-stage-peft",
+  "title": "Uncertainty-Gated Dual-Stage PEFT: Trustworthy Few-Shot Plant Disease Recognition on Edge Devices",
+  "description": "Open Knowledge Foundation (OKF) specification package for trustworthy few-shot plant disease diagnosis using Vision-Language Models (CLIP), LoRA, Shannon Entropy Uncertainty Gate, and Edge INT8 quantization.",
+  "version": "1.0.0",
+  "homepage": "https://github.com",
+  "licenses": [
+    {
+      "name": "CC-BY-4.0",
+      "path": "https://creativecommons.org/licenses/by/4.0/",
+      "title": "Creative Commons Attribution 4.0 International"
+    }
+  ],
+  "contributors": [
+    {
+      "title": "Research Team",
+      "role": "author"
+    }
+  ],
+  "keywords": [
+    "few-shot-learning",
+    "plant-disease-recognition",
+    "vision-language-models",
+    "clip",
+    "peft",
+    "lora",
+    "shannon-entropy",
+    "uncertainty-estimation",
+    "edge-ai",
+    "plantvillage"
+  ],
+  "resources": [
+    {
+      "name": "plantvillage-dataset",
+      "path": "plantvillage/plantvillage dataset/color",
+      "format": "image/jpeg",
+      "description": "54,305 leaf images spanning 38 agricultural disease classes (30 Base classes, 8 Novel classes)."
+    },
+    {
+      "name": "algorithm-pipeline",
+      "path": "scratch_run_pipeline.py",
+      "format": "text/x-python",
+      "description": "End-to-end GPU-accelerated training pipeline for Stage-1 InfoNCE and Stage-2 Dual PEFT."
+    },
+    {
+      "name": "ieee-paper-manuscript",
+      "path": "paper/main.tex",
+      "format": "text/x-tex",
+      "description": "Official IEEE conference format LaTeX manuscript with empirical evaluation tables."
+    },
+    {
+      "name": "algorithm-documentation",
+      "path": "docs/algorithm_guide.md",
+      "format": "text/markdown",
+      "description": "Comprehensive execution and troubleshooting guide for Windows and RTX GPU setup."
+    },
+    {
+      "name": "paper-setup-documentation",
+      "path": "docs/paper_guide.md",
+      "format": "text/markdown",
+      "description": "Step-by-step LaTeX Workshop and MiKTeX configuration guide."
+    }
+  ]
+}
