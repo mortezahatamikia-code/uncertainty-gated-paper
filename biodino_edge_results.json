@@ -1,0 +1,124 @@
+{
+  "method_name": "BioDINO-Edge",
+  "description": "Biologically-Grounded Multi-Scale Vision Foundation Models with Adaptive Edge Cascading",
+  "dataset": "PlantVillage (8 novel intra-species classes: Apple & Grape)",
+  "k_shot": 5,
+  "metrics": {
+    "accuracy_baseline": 88.02,
+    "f1_baseline": 85.09,
+    "accuracy_fast_dino": 88.97539274294452,
+    "f1_fast_dino": 89.08470111759857,
+    "accuracy_deep_bio": 94.10538023077993,
+    "f1_deep_bio": 94.00138978128145,
+    "accuracy_static_fusion": 94.70318365077158,
+    "f1_static_fusion": 94.80057820972654,
+    "accuracy_biodino_edge": 94.70318365077158,
+    "f1_biodino_edge": 94.80057820972654
+  },
+  "edge_profiling": {
+    "fast_ratio_pct": 10.746559154733768,
+    "deep_ratio_pct": 89.25344084526623,
+    "dino_latency_ms": 23.446592000072997,
+    "bioclip_latency_ms": 69.98270666681492,
+    "effective_latency_ms": 85.90856569685484,
+    "effective_fps": 11.640282804030223
+  },
+  "health_safety": {
+    "Apple healthy": {
+      "false_positives": 39,
+      "false_negatives": 17,
+      "fp_rate_pct": 0.7023230686115614,
+      "fn_rate_pct": 1.0365853658536586,
+      "recall_pct": 98.96341463414635
+    },
+    "Grape healthy": {
+      "false_positives": 7,
+      "false_negatives": 0,
+      "fp_rate_pct": 0.1033210332103321,
+      "fn_rate_pct": 0.0,
+      "recall_pct": 100.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      564,
+      29,
+      17,
+      15,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      574,
+      17,
+      24,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      269,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      10,
+      7,
+      0,
+      1623,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      981,
+      194,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      54,
+      1323,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      3,
+      2,
+      1060,
+      6
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      418
+    ]
+  ]
+}
