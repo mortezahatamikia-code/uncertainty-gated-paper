@@ -67,6 +67,12 @@
       "description": "Comprehensive execution and mathematical guide for BioDINO-Edge architecture."
     },
     {
+      "name": "plant-pathology-domain-guide",
+      "path": "docs/plant_pathology_domain_guide.md",
+      "format": "text/markdown",
+      "description": "Essential agricultural plant pathology domain guide for AI researchers covering pathogens, visual clinical symptoms, and defense strategies against pathology reviewers."
+    },
+    {
       "name": "mathematics-foundation-guide",
       "path": "docs/mathematics_foundation_guide.md",
       "format": "text/markdown",

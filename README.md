@@ -147,6 +147,7 @@ research-few-shot/
 │   └── IEEEtran.cls                    # قالب رسمی کنفرانس‌های IEEE
 │
 └── docs/                               # 📚 مستندات و راهنماهای جامع فنی
+    ├── plant_pathology_domain_guide.md # 🌿 راهنمای پاتولوژی کشاورزی، شناخت پاتوژن‌ها و پاسخ به داوران ژورنال
     ├── mathematics_foundation_guide.md # 📐 کتابچه جامع و بیش از ۱۱۰۰ خطی ریاضیات از پایه راهنمایی تا تفکیک فیشر
     ├── algorithm_guide.md              # راهنمای عمیق ریاضی، تئوری فیشر-لدویت‌ولف و معماری لبه
     └── paper_guide.md                  # راهنمای گام‌به‌گام ستاپ لاتک و کامپایلر MiKTeX
@@ -163,6 +164,7 @@ research-few-shot/
 | **[`paper/main.tex`](file:///e:/work/research-few-shot/paper/main.tex)** | سورس لاتک | **متن مقاله علمی:** مقاله کامل ۳ صفحه‌ای مطابق فرمت رسمی IEEE با فرمولاسیون ریاضی انقباض کوواریانس فیشر، گیت عدم قطعیت شانون، جداول مقایسه روش‌ها و تفکیک سنجه‌های پاتولوژی هر کلاس. |
 | **[`paper/main.pdf`](file:///e:/work/research-few-shot/paper/main.pdf)** | سند خروجی | **فایل PDF دوربین‌خوان (Camera-Ready):** خروجی کامپایل‌شده مقاله با موتور pdfTeX و MiKTeX آماده پرینت، ارسال به داوران ژورنال و پرزنتیشن برای اساتید. |
 | **[`paper/references.bib`](file:///e:/work/research-few-shot/paper/references.bib)** | مراجع علمی | آرشیو BibTeX مراجع معتبر شامل مقالات DINOv2 (Meta AI), BioCLIP (Imageomics CVPR 2024), CLIP (OpenAI), Tip-Adapter و مراجع گیاه‌پزشکی. |
+| **[`docs/plant_pathology_domain_guide.md`](file:///e:/work/research-few-shot/docs/plant_pathology_domain_guide.md)** | راهنمای پاتولوژی گیاهی (<۳۰۰ خط) | **دانش تخصصی کشاورزی و گیاه‌پزشکی برای مهندسان هوش مصنوعی:** تشریح اسامی علمی پاتوژن‌ها (*Venturia inaequalis*, *Guignardia bidwellii*, ...)، علائم بالینی تفکیک بیماری‌های سیب و انگور، چرایی تداخل بلک‌رات و اسکا، و پاسخ‌های آماده به ۳ پرسش چالش‌برانگیز داوران کشاورزی. |
 | **[`docs/mathematics_foundation_guide.md`](file:///e:/work/research-few-shot/docs/mathematics_foundation_guide.md)** | کتابچه آموزشی ریاضی (۱,۱۵۰ خط) | **آموزش قدم‌به‌قدم و همه‌فهم ریاضیات از صفر:** تشریح فوق‌العاده تفصیلی و گام‌به‌گام ریاضیات پروژه با ادبیات ساده و قابل فهم برای سطح مقطع راهنمایی به بالا؛ شامل مفهوم مشتق، قضیه فیثاغورس، جبر بردارها، ضرب ماتریس‌ها، آنتروپی شانون، مقادیر ویژه، کارگاه عددی حل‌شده دستی و اثبات انقباض لدویت-ولف در ۱۶ فصل مجزا. |
 | **[`docs/algorithm_guide.md`](file:///e:/work/research-few-shot/docs/algorithm_guide.md)** | مستندات فنی | **مرجع جامع ریاضی و الگوریتمی:** توضیح تفصیلی اثبات انقباض لدویت-ولف، هندسه منیفولد ۸۹۶ بعدی، گیت عدم قطعیت شانون و تحلیل پیچیدگی FLOPs سخت‌افزار لبه. |
 | **[`docs/paper_guide.md`](file:///e:/work/research-few-shot/docs/paper_guide.md)** | مستندات راهنما | **راهنمای محیط لاتک:** راهنمای گام‌به‌گام ستاپ ادیتور، اکستنشن LaTeX Workshop و کامپایلر MiKTeX روی سیستم‌های جدید. |
