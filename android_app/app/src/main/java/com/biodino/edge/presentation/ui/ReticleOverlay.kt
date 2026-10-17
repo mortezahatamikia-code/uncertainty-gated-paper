@@ -11,12 +11,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EnergySavingsLeaf
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,9 +30,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +45,8 @@ import com.biodino.edge.presentation.theme.AlertAmber
 import com.biodino.edge.presentation.theme.AlertCrimson
 import com.biodino.edge.presentation.theme.EmeraldNeon
 import com.biodino.edge.presentation.theme.ForestDark
+import com.biodino.edge.presentation.theme.ForestSurfaceGlass
+import com.biodino.edge.presentation.theme.TextPrimary
 
 @Composable
 fun ReticleOverlay(
@@ -48,19 +59,19 @@ fun ReticleOverlay(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    // Trigger haptic buzz on target lock
+    // Trigger physical haptic feedback when the Shannon uncertainty gate locks
     LaunchedEffect(isConfidentlyLocked) {
         if (isConfidentlyLocked) {
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         }
     }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "LaserScan")
+    val infiniteTransition = rememberInfiniteTransition(label = "ReticleLaserScan")
     val laserYRatio by infiniteTransition.animateFloat(
-        initialValue = 0.05f,
-        targetValue = 0.95f,
+        initialValue = 0.08f,
+        targetValue = 0.92f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = if (isEcoMode) 2400 else 1800, easing = LinearEasing),
+            animation = tween(durationMillis = if (isEcoMode) 2200 else 1600, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "LaserY"
@@ -72,89 +83,149 @@ fun ReticleOverlay(
         smoothedConfidence >= 0.50f -> EmeraldNeon
         smoothedConfidence >= 0.35f -> EmeraldNeon.copy(alpha = 0.9f)
         smoothedConfidence >= 0.20f -> AlertAmber
-        else -> AlertCrimson.copy(alpha = 0.8f)
+        else -> AlertCrimson.copy(alpha = 0.75f)
     }
 
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        val reticleSizeDp = 260.dp
+        val reticleSizeDp = 270.dp
 
         Canvas(modifier = Modifier.size(reticleSizeDp)) {
             val width = size.width
             val height = size.height
-            val cornerLength = 32.dp.toPx()
-            val strokeWidth = 3.5.dp.toPx()
+            val cornerRadius = 32.dp.toPx()
+            val strokeWidth = 3.dp.toPx()
 
-            // 1. Four tactical corners
-            // Top-Left
-            drawLine(reticleColor, Offset(0f, 0f), Offset(cornerLength, 0f), strokeWidth, StrokeCap.Round)
-            drawLine(reticleColor, Offset(0f, 0f), Offset(0f, cornerLength), strokeWidth, StrokeCap.Round)
+            // 1. Organic Rounded Viewfinder Frame
+            drawRoundRect(
+                color = reticleColor.copy(alpha = 0.3f),
+                size = Size(width, height),
+                cornerRadius = CornerRadius(cornerRadius, cornerRadius),
+                style = Stroke(width = 1.5.dp.toPx())
+            )
 
-            // Top-Right
-            drawLine(reticleColor, Offset(width, 0f), Offset(width - cornerLength, 0f), strokeWidth, StrokeCap.Round)
-            drawLine(reticleColor, Offset(width, 0f), Offset(width, cornerLength), strokeWidth, StrokeCap.Round)
+            // 2. High-contrast Tactical Rounded Corners
+            val arcLength = 40.dp.toPx()
+            // Top-Left Arc & lines
+            drawLine(reticleColor, Offset(0f, cornerRadius), Offset(0f, cornerRadius + arcLength), strokeWidth, StrokeCap.Round)
+            drawLine(reticleColor, Offset(cornerRadius, 0f), Offset(cornerRadius + arcLength, 0f), strokeWidth, StrokeCap.Round)
 
-            // Bottom-Left
-            drawLine(reticleColor, Offset(0f, height), Offset(cornerLength, height), strokeWidth, StrokeCap.Round)
-            drawLine(reticleColor, Offset(0f, height), Offset(0f, height - cornerLength), strokeWidth, StrokeCap.Round)
+            // Top-Right Arc & lines
+            drawLine(reticleColor, Offset(width, cornerRadius), Offset(width, cornerRadius + arcLength), strokeWidth, StrokeCap.Round)
+            drawLine(reticleColor, Offset(width - cornerRadius, 0f), Offset(width - cornerRadius - arcLength, 0f), strokeWidth, StrokeCap.Round)
 
-            // Bottom-Right
-            drawLine(reticleColor, Offset(width, height), Offset(width - cornerLength, height), strokeWidth, StrokeCap.Round)
-            drawLine(reticleColor, Offset(width, height), Offset(width, height - cornerLength), strokeWidth, StrokeCap.Round)
+            // Bottom-Left Arc & lines
+            drawLine(reticleColor, Offset(0f, height - cornerRadius), Offset(0f, height - cornerRadius - arcLength), strokeWidth, StrokeCap.Round)
+            drawLine(reticleColor, Offset(cornerRadius, height), Offset(cornerRadius + arcLength, height), strokeWidth, StrokeCap.Round)
 
-            // 2. Center crosshair
+            // Bottom-Right Arc & lines
+            drawLine(reticleColor, Offset(width, height - cornerRadius), Offset(width, height - cornerRadius - arcLength), strokeWidth, StrokeCap.Round)
+            drawLine(reticleColor, Offset(width - cornerRadius, height), Offset(width - cornerRadius - arcLength, height), strokeWidth, StrokeCap.Round)
+
+            // 3. Circular Central Target Lock Indicator
             val center = Offset(width / 2f, height / 2f)
-            val crossSize = 12.dp.toPx()
-            drawLine(reticleColor.copy(alpha = 0.4f), Offset(center.x - crossSize, center.y), Offset(center.x + crossSize, center.y), 1.5.dp.toPx())
-            drawLine(reticleColor.copy(alpha = 0.4f), Offset(center.x, center.y - crossSize), Offset(center.x, center.y + crossSize), 1.5.dp.toPx())
+            val ringRadius = 24.dp.toPx()
 
-            // 3. Animated scanning beam if active
+            // Background guide circle
+            drawCircle(
+                color = reticleColor.copy(alpha = 0.2f),
+                radius = ringRadius,
+                center = center,
+                style = Stroke(width = 2.dp.toPx())
+            )
+
+            // Dynamic Progress Sweep Arc proportional to confidence
+            val sweepAngle = (smoothedConfidence.coerceIn(0f, 1f) * 360f)
+            if (sweepAngle > 0f) {
+                drawArc(
+                    color = reticleColor,
+                    startAngle = -90f,
+                    sweepAngle = sweepAngle,
+                    useCenter = false,
+                    topLeft = Offset(center.x - ringRadius, center.y - ringRadius),
+                    size = Size(ringRadius * 2, ringRadius * 2),
+                    style = Stroke(width = 3.5.dp.toPx(), cap = StrokeCap.Round)
+                )
+            }
+
+            // Central crosshair dot
+            drawCircle(
+                color = reticleColor,
+                radius = 3.dp.toPx(),
+                center = center
+            )
+
+            // 4. Subtle Animated Scanning Beam
             if (!isScanningPaused) {
                 val currentLaserY = height * laserYRatio
                 drawLine(
-                    color = reticleColor.copy(alpha = 0.75f),
-                    start = Offset(12.dp.toPx(), currentLaserY),
-                    end = Offset(width - 12.dp.toPx(), currentLaserY),
+                    color = reticleColor.copy(alpha = 0.8f),
+                    start = Offset(24.dp.toPx(), currentLaserY),
+                    end = Offset(width - 24.dp.toPx(), currentLaserY),
                     strokeWidth = 2.dp.toPx(),
                     cap = StrokeCap.Round
                 )
             }
         }
 
-        // Overlay status text above & below reticle
+        // Minimalist Status Capsule floating above reticle
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(bottom = reticleSizeDp + 36.dp)
         ) {
-            Text(
-                text = when {
-                    isScanningPaused -> "SCANNER PAUSED"
-                    isBlurred -> "⚠️ CAMERA BLUR DETECTED"
-                    isConfidentlyLocked -> "LEAF TARGET LOCKED"
-                    smoothedConfidence >= 0.20f -> "ANALYZING SYMPTOMS..."
-                    else -> "CENTER FOLIAGE IN RETICLE"
-                },
-                color = reticleColor,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.2.sp
-            )
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(ForestSurfaceGlass)
+                    .border(1.dp, reticleColor.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(reticleColor)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = when {
+                            isScanningPaused -> "PAUSED"
+                            isBlurred -> "HOLD CAMERA STEADY (BLUR)"
+                            isConfidentlyLocked -> "LEAF LOCKED (${(smoothedConfidence * 100).toInt()}%)"
+                            smoothedConfidence >= 0.20f -> "ANALYZING SYMPTOMS..."
+                            else -> "ALIGN LEAF IN RETICLE"
+                        },
+                        color = TextPrimary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.8.sp
+                    )
+                }
+            }
 
             if (isEcoMode) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
+                        .clip(RoundedCornerShape(10.dp))
                         .background(ForestDark.copy(alpha = 0.7f))
-                        .border(1.dp, EmeraldNeon.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                        .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.EnergySavingsLeaf,
+                        contentDescription = null,
+                        tint = EmeraldNeon,
+                        modifier = Modifier.size(11.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "ECO MODE (15 FPS)",
+                        text = "ECO 15 FPS",
                         color = EmeraldNeon,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold

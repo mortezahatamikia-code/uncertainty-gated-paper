@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -52,24 +53,38 @@ import com.biodino.edge.presentation.theme.TextSecondary
 import java.util.Locale
 
 @Composable
-fun HistoryDialog(
+fun HistorySheet(
     historyItems: List<ScanHistoryItem>,
     onClearHistory: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val healthyCount = historyItems.count { it.isHealthy }
+    val pathologyCount = historyItems.size - healthyCount
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.85f)
-                .clip(RoundedCornerShape(24.dp))
+                .fillMaxHeight(0.90f)
+                .clip(RoundedCornerShape(28.dp))
                 .background(ForestDark)
-                .border(1.dp, BorderHighlight, RoundedCornerShape(24.dp))
+                .border(1.dp, BorderHighlight, RoundedCornerShape(28.dp))
                 .padding(20.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
+                // Drag Handle
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .width(36.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(TextSecondary.copy(alpha = 0.4f))
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
                 // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -77,22 +92,30 @@ fun HistoryDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = null,
-                            tint = EmeraldNeon,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(EmeraldNeon.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.History,
+                                contentDescription = null,
+                                tint = EmeraldNeon,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Field Scan History",
+                                text = "Scan History",
                                 color = TextPrimary,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "${historyItems.size} diagnoses recorded on-device",
+                                text = "${historyItems.size} Total Inspections",
                                 color = TextSecondary,
                                 fontSize = 11.sp
                             )
@@ -110,7 +133,36 @@ fun HistoryDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Action Bar: Export Report & Clear
+                // Summary Stats Bar
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(ForestSurface)
+                        .border(1.dp, BorderHighlight.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = "${historyItems.size}", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "Total", color = TextSecondary, fontSize = 10.sp)
+                    }
+                    Box(modifier = Modifier.width(1.dp).height(20.dp).background(BorderHighlight))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = "$pathologyCount", color = AlertAmber, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "Infections", color = TextSecondary, fontSize = 10.sp)
+                    }
+                    Box(modifier = Modifier.width(1.dp).height(20.dp).background(BorderHighlight))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = "$healthyCount", color = EmeraldNeon, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "Healthy", color = TextSecondary, fontSize = 10.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Action Bar: Export & Clear
                 if (historyItems.isNotEmpty()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -121,15 +173,18 @@ fun HistoryDialog(
                                 val report = buildString {
                                     appendLine("=== BioDINO-Edge Agronomic Field Report ===")
                                     appendLine("Generated by BioDINO-Edge On-Device AI")
-                                    appendLine("Total Records: ${historyItems.size}")
-                                    appendLine("-------------------------------------------")
+                                    appendLine("Total Inspected Foliage: ${historyItems.size}")
+                                    appendLine("Pathology Detections: $pathologyCount")
+                                    appendLine("Healthy Foliage: $healthyCount")
+                                    appendLine("===========================================")
+                                    appendLine()
                                     historyItems.forEachIndexed { i, item ->
                                         appendLine("${i + 1}. [${item.formattedDate}]")
                                         appendLine("   Diagnosis: ${item.commonName} (${item.latinName})")
                                         appendLine("   Host: ${item.hostPlant}")
-                                        appendLine("   Confidence: ${String.format(Locale.US, "%.1f%%", item.confidence * 100)}")
-                                        appendLine("   Latency: ${item.latencyMs} ms")
-                                        appendLine("   Advice: ${item.actionableAdvice}")
+                                        appendLine("   Certainty: ${String.format(Locale.US, "%.1f%%", item.confidence * 100)}")
+                                        appendLine("   Hardware Latency: ${item.latencyMs} ms")
+                                        appendLine("   Agronomy Advice: ${item.actionableAdvice}")
                                         appendLine()
                                     }
                                 }
@@ -146,17 +201,20 @@ fun HistoryDialog(
                                 containerColor = EmeraldNeon,
                                 contentColor = ForestDark
                             ),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.weight(1f)
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp)
                         ) {
                             Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Export Report", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Export Official Report", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
 
                         OutlinedButton(
                             onClick = onClearHistory,
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(42.dp)
                         ) {
                             Icon(Icons.Default.DeleteSweep, contentDescription = null, modifier = Modifier.size(16.dp), tint = AlertAmber)
                         }
@@ -165,6 +223,7 @@ fun HistoryDialog(
                     Spacer(modifier = Modifier.height(12.dp))
                 }
 
+                // History Items List
                 if (historyItems.isEmpty()) {
                     Box(
                         modifier = Modifier
@@ -173,7 +232,7 @@ fun HistoryDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No recorded diagnoses yet.\nPoint camera at plant foliage to record.",
+                            text = "No recorded diagnoses yet.\nPoint camera at plant foliage to inspect.",
                             color = TextSecondary,
                             fontSize = 13.sp,
                             lineHeight = 18.sp
@@ -187,6 +246,13 @@ fun HistoryDialog(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(historyItems) { item ->
+                            val plantEmoji = when {
+                                item.isHealthy -> "🌿"
+                                item.commonName.contains("Apple", ignoreCase = true) -> "🍎"
+                                item.commonName.contains("Grape", ignoreCase = true) -> "🍇"
+                                else -> "🌱"
+                            }
+
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = ForestSurface),
                                 shape = RoundedCornerShape(12.dp),
@@ -200,19 +266,22 @@ fun HistoryDialog(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Column {
-                                            Text(
-                                                text = item.commonName,
-                                                color = TextPrimary,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Text(
-                                                text = item.latinName,
-                                                color = EmeraldAccent,
-                                                fontSize = 10.sp,
-                                                fontStyle = FontStyle.Italic
-                                            )
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(plantEmoji, fontSize = 18.sp, modifier = Modifier.padding(end = 6.dp))
+                                            Column {
+                                                Text(
+                                                    text = item.commonName,
+                                                    color = TextPrimary,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text(
+                                                    text = item.latinName,
+                                                    color = EmeraldAccent,
+                                                    fontSize = 10.sp,
+                                                    fontStyle = FontStyle.Italic
+                                                )
+                                            }
                                         }
 
                                         Text(
@@ -223,7 +292,7 @@ fun HistoryDialog(
                                         )
                                     }
 
-                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Spacer(modifier = Modifier.height(6.dp))
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
