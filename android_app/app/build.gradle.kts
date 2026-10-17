@@ -20,10 +20,19 @@ android {
             useSupportLibrary = true
         }
 
-        // Keep uncompressed onnx models for fast memory mapping
-        aaptOptions {
-            noCompress("onnx")
+        // Optional ABI filter (e.g. -PtargetAbi=arm64-v8a for lightweight 53MB build)
+        // If not passed, builds universal APK with all architectures.
+        val targetAbi = project.findProperty("targetAbi") as? String
+        if (!targetAbi.isNullOrBlank()) {
+            ndk {
+                abiFilters.add(targetAbi)
+            }
         }
+    }
+
+    // Keep uncompressed onnx models for fast memory mapping
+    androidResources {
+        noCompress += "onnx"
     }
 
     buildTypes {
