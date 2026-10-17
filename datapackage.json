@@ -67,6 +67,12 @@
       "description": "Comprehensive execution and mathematical guide for BioDINO-Edge architecture."
     },
     {
+      "name": "mathematics-foundation-guide",
+      "path": "docs/mathematics_foundation_guide.md",
+      "format": "text/markdown",
+      "description": "Comprehensive 1,150+ lines pedagogical mathematical foundation guide explaining every concept from middle school geometry and calculus up to Ledoit-Wolf regularized Fisher-LDA."
+    },
+    {
       "name": "paper-setup-documentation",
       "path": "docs/paper_guide.md",
       "format": "text/markdown",
