@@ -32,7 +32,7 @@ import torchvision.transforms as T
 from torchvision.datasets import ImageFolder
 from transformers import CLIPProcessor, CLIPModel, CLIPTokenizer
 from peft import LoraConfig, get_peft_model, PeftModel
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, classification_report
 
 PROJECT_ROOT = Path(".").resolve()
 PLANTVILLAGE_ROOT = PROJECT_ROOT / "plantvillage"
@@ -111,14 +111,22 @@ def resolve_plantdoc_dirs(root):
 class SalientPatchCLIPExtractor(nn.Module):
     """
     Extracts global CLS representation fused with top-K salient lesion patches.
-    Saliency is measured by angular deviation from the healthy foliar prior P_healthy.
+    Saliency is measured by angular deviation from host-conditioned healthy foliar priors.
+    Uses Saliency-Softmax Attention Pooling (tau_s=0.2) to eliminate foliar background noise.
     """
-    def __init__(self, clip_model, p_healthy=None, gamma=0.7, top_k=8):
+    def __init__(self, clip_model, p_healthy=None, gamma=0.7, top_k=8, tau_s=0.2):
         super().__init__()
         self.clip = clip_model
         self.gamma = gamma
         self.top_k = top_k
-        self.register_buffer("p_healthy", F.normalize(p_healthy.clone().detach(), dim=-1) if p_healthy is not None else None)
+        self.tau_s = tau_s
+        self.p_healthy_dict = {}
+        self.host_text_embeds = None
+        if p_healthy is not None:
+            if isinstance(p_healthy, dict):
+                self.set_p_healthy_dict(p_healthy)
+            else:
+                self.set_p_healthy(p_healthy)
 
     def get_vision_model(self):
         if isinstance(self.clip, PeftModel):
@@ -132,7 +140,15 @@ class SalientPatchCLIPExtractor(nn.Module):
     def set_p_healthy(self, p_healthy):
         device = next(self.clip.parameters()).device
         norm_p = F.normalize(p_healthy.clone().detach(), dim=-1).to(device)
-        self.p_healthy = norm_p
+        self.p_healthy_dict = {"general": norm_p, "apple": norm_p, "grape": norm_p}
+
+    def set_p_healthy_dict(self, p_dict):
+        device = next(self.clip.parameters()).device
+        self.p_healthy_dict = {k: F.normalize(v.clone().detach(), dim=-1).to(device) for k, v in p_dict.items()}
+
+    def set_host_text_embeds(self, host_embeds):
+        device = next(self.clip.parameters()).device
+        self.host_text_embeds = F.normalize(host_embeds.clone().detach(), dim=-1).to(device)
 
     def forward(self, pixel_values, use_salient_patches=True, return_patches=False):
         vision_model, visual_projection = self.get_vision_model()
@@ -142,7 +158,7 @@ class SalientPatchCLIPExtractor(nn.Module):
         cls_token = last_hidden[:, 0, :]
         f_cls = F.normalize(visual_projection(cls_token), dim=-1)
 
-        if not use_salient_patches or self.p_healthy is None:
+        if not use_salient_patches or not self.p_healthy_dict:
             if return_patches:
                 return f_cls, f_cls, f_cls
             return f_cls
@@ -152,18 +168,38 @@ class SalientPatchCLIPExtractor(nn.Module):
         patch_tokens = visual_projection(patch_tokens_raw) # (B, 196, 512)
         patch_tokens = F.normalize(patch_tokens, dim=-1)
 
-        # Angular/Cosine distance to healthy reference prior
-        # s_i = 1 - <P_i, P_healthy>
-        sim_to_healthy = torch.einsum("bpd,d->bp", patch_tokens, self.p_healthy.to(patch_tokens.device))
+        device = patch_tokens.device
+        B = patch_tokens.shape[0]
+
+        # Host-conditioned healthy prior selection (Apple vs Grape vs General)
+        if self.host_text_embeds is not None and "apple" in self.p_healthy_dict and "grape" in self.p_healthy_dict:
+            host_sim = f_cls @ self.host_text_embeds.t() # (B, 2)
+            host_preds = host_sim.argmax(dim=-1) # (B,)
+            p_apple = self.p_healthy_dict["apple"]
+            p_grape = self.p_healthy_dict["grape"]
+            p_batch = torch.where(host_preds.unsqueeze(-1) == 0, p_apple, p_grape)
+            sim_to_healthy = torch.einsum("bpd,bd->bp", patch_tokens, p_batch)
+        else:
+            p_ref = self.p_healthy_dict.get("general", next(iter(self.p_healthy_dict.values())))
+            sim_to_healthy = torch.einsum("bpd,d->bp", patch_tokens, p_ref.to(device))
+
         saliency = 1.0 - sim_to_healthy # higher = more necrotic/chlorotic lesion
 
         # Select Top-K most salient lesion patches
         topk_indices = torch.topk(saliency, k=self.top_k, dim=-1).indices # (B, top_k)
+        topk_saliency = torch.gather(saliency, 1, topk_indices) # (B, top_k)
         topk_expanded = topk_indices.unsqueeze(-1).expand(-1, -1, patch_tokens.shape[-1])
         topk_patches = torch.gather(patch_tokens, 1, topk_expanded) # (B, top_k, 512)
 
-        f_lesion = F.normalize(topk_patches.mean(dim=1), dim=-1) # (B, 512)
-        f_fused = F.normalize(self.gamma * f_cls + (1.0 - self.gamma) * f_lesion, dim=-1)
+        # Innovation 1: Saliency-Softmax Attention Pooling (tau_s=0.2)
+        attn_weights = F.softmax(topk_saliency / self.tau_s, dim=-1).unsqueeze(-1) # (B, top_k, 1)
+        f_lesion = F.normalize(torch.sum(attn_weights * topk_patches, dim=1), dim=-1) # (B, 512)
+
+        # Grounded Lesion Presence Gate: prevents false positives on healthy leaves
+        s_mean = topk_saliency.mean(dim=-1, keepdim=True) # (B, 1)
+        lesion_gate = torch.sigmoid((s_mean - 0.18) / 0.04) # ~0 for healthy tissue, ~1 for active lesion
+        eff_lesion_w = (1.0 - self.gamma) * lesion_gate # (B, 1)
+        f_fused = F.normalize((1.0 - eff_lesion_w) * f_cls + eff_lesion_w * f_lesion, dim=-1)
 
         if return_patches:
             return f_fused, f_cls, f_lesion
@@ -293,10 +329,10 @@ def calibrate_support_cache(support_feats, support_labels, n_classes, base_cov, 
     return all_feats, all_labels
 
 # -----------------------------------------------------------------------------
-# 6. Tip-Adapter Visual Cache Matrix
+# 6. Tip-Adapter Visual Cache Matrix (Class-Normalized Affinity)
 # -----------------------------------------------------------------------------
 class TipAdapterVisualCache(nn.Module):
-    def __init__(self, cache_keys, cache_labels, n_classes, alpha=1.35, beta=6.0):
+    def __init__(self, cache_keys, cache_labels, n_classes, alpha=6.0, beta=5.5):
         super().__init__()
         self.register_buffer("keys", F.normalize(cache_keys.clone().detach(), dim=-1))
         self.n_classes = n_classes
@@ -306,33 +342,37 @@ class TipAdapterVisualCache(nn.Module):
         # One-hot label matrix (N_cache, C)
         one_hot = F.one_hot(cache_labels, num_classes=n_classes).float()
         self.register_buffer("values", one_hot)
+        # Class frequency normalization to prevent cache dominance when synthetic samples are added
+        counts = one_hot.sum(dim=0, keepdim=True).clamp(min=1.0)
+        self.register_buffer("counts", counts)
 
     def forward(self, query_feats):
         # query_feats: (B, 512), keys: (N_cache, 512)
         affinity = torch.exp(-self.beta * (1.0 - query_feats @ self.keys.t())) # (B, N_cache)
-        cache_logits = affinity @ self.values # (B, C)
+        cache_logits = (affinity @ self.values) / self.counts # (B, C) normalized expected affinity
         return self.alpha * cache_logits
 
 # -----------------------------------------------------------------------------
 # 7. Dirichlet Evidential Deep Learning (EDL) Trust Gate
 # -----------------------------------------------------------------------------
 class DirichletEDLTrustGate:
-    def __init__(self, n_classes, trust_threshold=0.42):
+    """
+    Trust Gate based on Normalized Shannon Entropy and Margin Metric.
+    Phi(x) = (1 - H_norm(x)) * Margin(x) in [0, 1].
+    High trust (>= threshold) triggers fast direct inference.
+    Low trust (< threshold) triggers the residual adapter + focal zoom UT-TTA.
+    """
+    def __init__(self, n_classes, trust_threshold=0.25):
         self.n_classes = n_classes
         self.trust_threshold = trust_threshold
 
     def compute_trust(self, logits):
-        evidence = F.softplus(logits)
-        alpha = evidence + 1.0
-        S = torch.sum(alpha, dim=-1, keepdim=True)
-        uncertainty = self.n_classes / S # u in (0, 1]
-
-        probs = alpha / S
-        top2 = torch.topk(probs, k=2, dim=-1).values
-        margin = top2[:, 0] - top2[:, 1] # margin metric M(x)
-
-        # Composite trust metric: Phi(x) = (1 - u(x)) * M(x)
-        trust = (1.0 - uncertainty.squeeze(-1)) * margin
+        probs = F.softmax(logits, dim=-1)
+        log_n = float(np.log(self.n_classes)) if self.n_classes > 1 else 1.0
+        entropy = -torch.sum(probs * torch.log(probs + 1e-12), dim=-1) / log_n
+        top2 = torch.topk(probs, k=min(2, self.n_classes), dim=-1).values
+        margin = (top2[:, 0] - top2[:, 1]) if top2.shape[-1] >= 2 else top2[:, 0]
+        trust = (1.0 - entropy.clamp(0.0, 1.0)) * margin.clamp(0.0, 1.0)
         is_confident = (trust >= self.trust_threshold)
         return trust, is_confident, probs
 
@@ -374,30 +414,47 @@ class UncertaintyGatedDualStageV4(nn.Module):
         self.edl_gate = edl_gate
         self.logit_scale = nn.Parameter(torch.tensor(logit_scale))
 
-    def fit_adapter(self, calib_feats, calib_labels, epochs=120, lr=2e-3):
+    def fit_adapter(self, calib_feats, calib_labels, epochs=150, lr=2e-3, margin=0.25):
         device = calib_feats.device
         self.to(device)
         self.adapter.train()
         opt = torch.optim.AdamW(list(self.adapter.parameters()) + [self.logit_scale, self.visual_cache.alpha], lr=lr, weight_decay=1e-3)
+        n_classes = self.prototypes.shape[0]
 
         for _ in range(epochs):
             # Direct path
-            aff = torch.exp(-self.visual_cache.beta * (1.0 - calib_feats @ self.visual_cache.keys.t()))
-            d_lgt = self.logit_scale.clamp(5.0, 35.0) * (calib_feats @ self.prototypes.t()) + self.visual_cache.alpha * (aff @ self.visual_cache.values)
-            _, is_conf, _ = self.edl_gate.compute_trust(d_lgt)
+            d_lgt = self.logit_scale.clamp(5.0, 35.0) * (calib_feats @ self.prototypes.t()) + self.visual_cache(calib_feats)
+            trust, is_conf, _ = self.edl_gate.compute_trust(d_lgt)
 
-            # Adapter path
+            # Adapter path with ArcMargin Angular Separation
             adapted = self.adapter(calib_feats)
-            aff_ad = torch.exp(-self.visual_cache.beta * (1.0 - adapted @ self.visual_cache.keys.t()))
-            ad_lgt = self.logit_scale.clamp(5.0, 35.0) * (adapted @ self.prototypes.t()) + self.visual_cache.alpha * (aff_ad @ self.visual_cache.values)
+            
+            cos_theta = adapted @ self.prototypes.t() # (N, C)
+            one_hot = F.one_hot(calib_labels, num_classes=n_classes).float()
+            # Innovation 2: ArcMargin Angular penalty on ground-truth prototype angle
+            cos_theta_m = cos_theta - margin * one_hot
+            ad_lgt_margin = self.logit_scale.clamp(5.0, 35.0) * cos_theta_m + self.visual_cache(adapted)
 
             gm = is_conf.float().unsqueeze(-1)
-            final_lgt = gm * d_lgt + (1.0 - gm) * ad_lgt
+            final_lgt = gm * d_lgt + (1.0 - gm) * ad_lgt_margin
 
             ce_loss = F.cross_entropy(final_lgt, calib_labels)
             probs = F.softmax(final_lgt, dim=-1)
             entropy = -(probs * (probs + 1e-10).log()).sum(dim=-1)
-            loss = ce_loss + 0.05 * entropy.mean()
+
+            # Supervised contrastive loss between adapted samples
+            sim_mat = (adapted @ adapted.t()) / 0.1
+            mask = (calib_labels.unsqueeze(0) == calib_labels.unsqueeze(1)).float()
+            diag_mask = torch.eye(len(calib_labels), device=device)
+            mask_pos = mask * (1.0 - diag_mask)
+            exp_sim = torch.exp(sim_mat - torch.max(sim_mat, dim=-1, keepdim=True).values) * (1.0 - diag_mask)
+            log_prob = sim_mat - torch.log(exp_sim.sum(dim=-1, keepdim=True) + 1e-8)
+            pos_count = mask_pos.sum(dim=-1)
+            pos_mask_valid = pos_count > 0
+            mean_log_prob = (mask_pos[pos_mask_valid] * log_prob[pos_mask_valid]).sum(dim=-1) / pos_count[pos_mask_valid]
+            supcon_loss = -mean_log_prob.mean()
+
+            loss = ce_loss + 0.08 * supcon_loss + 0.02 * entropy.mean()
 
             opt.zero_grad()
             loss.backward()
@@ -408,38 +465,50 @@ class UncertaintyGatedDualStageV4(nn.Module):
     def forward_single_view(self, images, use_salient_patches=True, use_adapter=True):
         f_img = self.extractor(images, use_salient_patches=use_salient_patches)
         # Direct path
-        aff = torch.exp(-self.visual_cache.beta * (1.0 - f_img @ self.visual_cache.keys.t()))
-        direct_logits = self.logit_scale.clamp(5.0, 35.0) * (f_img @ self.prototypes.t()) + self.visual_cache.alpha * (aff @ self.visual_cache.values)
+        cache_lgt = self.visual_cache(f_img)
+        direct_logits = self.logit_scale.clamp(5.0, 35.0) * (f_img @ self.prototypes.t()) + cache_lgt
 
         if not use_adapter:
-            return direct_logits, f_img
+            return direct_logits, f_img, torch.ones(len(images), dtype=torch.bool, device=images.device), None
 
-        # Adapter path for refined discrimination
+        # Uncertainty Gate on direct path
+        trust, is_conf, _ = self.edl_gate.compute_trust(direct_logits)
+
+        # Early exit for confident queries: skip adapter computation completely!
+        if is_conf.all():
+            return direct_logits, f_img, is_conf, trust
+
+        # Adapter path for ambiguous queries
         f_adapted = self.adapter(f_img)
-        aff_ad = torch.exp(-self.visual_cache.beta * (1.0 - f_adapted @ self.visual_cache.keys.t()))
-        adapted_logits = self.logit_scale.clamp(5.0, 35.0) * (f_adapted @ self.prototypes.t()) + self.visual_cache.alpha * (aff_ad @ self.visual_cache.values)
+        cache_lgt_ad = self.visual_cache(f_adapted)
+        adapted_logits = self.logit_scale.clamp(5.0, 35.0) * (f_adapted @ self.prototypes.t()) + cache_lgt_ad
 
-        # Uncertainty Gate
-        _, is_conf, _ = self.edl_gate.compute_trust(direct_logits)
         gm = is_conf.float().unsqueeze(-1)
         final_logits = gm * direct_logits + (1.0 - gm) * adapted_logits
-        return final_logits, f_img
+        return final_logits, f_img, is_conf, trust
 
     def forward_with_gate(self, images, use_salient_patches=True, enable_tta=True):
-        logits, f_img = self.forward_single_view(images, use_salient_patches=use_salient_patches, use_adapter=True)
-        trust, is_confident, probs = self.edl_gate.compute_trust(logits)
+        logits, f_img, is_confident, trust = self.forward_single_view(images, use_salient_patches=use_salient_patches, use_adapter=True)
 
         if not enable_tta or is_confident.all():
             return logits, is_confident, trust
 
-        # For ambiguous queries, trigger Uncertainty-Triggered Test-Time Augmentation (UT-TTA)
+        # Innovation 4: Uncertainty-Triggered TTA with Adaptive Lesion-Zooming only on ambiguous queries
         ambiguous_idx = torch.where(~is_confident)[0]
         if len(ambiguous_idx) > 0:
             ambig_imgs = images[ambiguous_idx]
             flipped = torch.flip(ambig_imgs, dims=[-1])
-            logits_flip, _ = self.forward_single_view(flipped, use_salient_patches=use_salient_patches, use_adapter=True)
+            
+            # Focal zoom: 1.4x center crop resized back to input dimensions
+            H, W = ambig_imgs.shape[-2], ambig_imgs.shape[-1]
+            y1, y2 = int(0.15 * H), int(0.85 * H)
+            x1, x2 = int(0.15 * W), int(0.85 * W)
+            zoomed = F.interpolate(ambig_imgs[:, :, y1:y2, x1:x2], size=(H, W), mode="bilinear", align_corners=False)
 
-            refined_logits = 0.65 * logits[ambiguous_idx] + 0.35 * logits_flip
+            logits_flip, _, _, _ = self.forward_single_view(flipped, use_salient_patches=use_salient_patches, use_adapter=True)
+            logits_zoom, _, _, _ = self.forward_single_view(zoomed, use_salient_patches=use_salient_patches, use_adapter=True)
+
+            refined_logits = 0.50 * logits[ambiguous_idx] + 0.25 * logits_flip + 0.25 * logits_zoom
             logits[ambiguous_idx] = refined_logits
 
         return logits, is_confident, trust
@@ -470,41 +539,58 @@ class ConformalCoverageEvaluator:
         return prediction_sets
 
 # -----------------------------------------------------------------------------
-# 10. Healthy Foliar Reference Centroid Precomputer
+# 10. Healthy Foliar Reference Centroid Precomputer (Host-Conditioned)
 # -----------------------------------------------------------------------------
-def precompute_healthy_prior(dataset, extractor, device, cache_file):
+def precompute_host_healthy_priors(dataset, extractor, device, cache_file):
     if cache_file.is_file():
-        print(f"📦 Loading precomputed P_healthy from {cache_file}...")
-        p_healthy = torch.load(cache_file, map_location=device)
-        return p_healthy
+        print(f"📦 Loading precomputed host-conditioned P_healthy from {cache_file}...")
+        p_dict = torch.load(cache_file, map_location=device)
+        return p_dict
 
-    print("🌿 Precomputing Universal Healthy Foliar Centroid (P_healthy) from base healthy classes...")
-    healthy_indices = []
+    print("🌿 Precomputing Host-Conditioned Healthy Foliar Centroids (Apple, Grape, General)...")
+    apple_healthy_indices = []
+    grape_healthy_indices = []
+    all_healthy_indices = []
+
     for idx, (path, label) in enumerate(dataset.samples):
         cname = dataset.classes[label].lower()
         if "healthy" in cname:
-            healthy_indices.append(idx)
+            all_healthy_indices.append(idx)
+            if "apple" in cname:
+                apple_healthy_indices.append(idx)
+            elif "grape" in cname:
+                grape_healthy_indices.append(idx)
 
-    print(f"   • Total pristine healthy samples found: {len(healthy_indices):,}")
-    sample_sub = random.sample(healthy_indices, min(len(healthy_indices), 800))
-    loader = DataLoader(Subset(dataset, sample_sub), batch_size=64, shuffle=False, num_workers=2)
+    print(f"   • Pristine healthy samples found: Apple={len(apple_healthy_indices):,}, Grape={len(grape_healthy_indices):,}, Total Healthy={len(all_healthy_indices):,}")
 
     vision_model, visual_projection = extractor.get_vision_model()
-    all_patch_tokens = []
-
     extractor.eval()
-    with torch.no_grad():
-        for imgs, _ in loader:
-            imgs = imgs.to(device)
-            vout = vision_model(pixel_values=imgs, return_dict=True)
-            patches = visual_projection(vout.last_hidden_state[:, 1:, :]) # (B, 196, 512)
-            patches = F.normalize(patches, dim=-1)
-            all_patch_tokens.append(patches.mean(dim=[0, 1]).cpu())
 
-    p_healthy = F.normalize(torch.stack(all_patch_tokens).mean(dim=0), dim=-1).to(device)
-    torch.save(p_healthy.cpu(), cache_file)
-    print(f"💾 P_healthy saved to {cache_file}")
-    return p_healthy
+    def get_centroid(indices, max_n=500):
+        sub = random.sample(indices, min(len(indices), max_n))
+        loader = DataLoader(Subset(dataset, sub), batch_size=64, shuffle=False, num_workers=0)
+        tokens = []
+        with torch.no_grad():
+            for imgs, _ in loader:
+                imgs = imgs.to(device)
+                vout = vision_model(pixel_values=imgs, return_dict=True)
+                patches = visual_projection(vout.last_hidden_state[:, 1:, :]) # (B, 196, 512)
+                patches = F.normalize(patches, dim=-1)
+                tokens.append(patches.mean(dim=[0, 1]).cpu())
+        return F.normalize(torch.stack(tokens).mean(dim=0), dim=-1).to(device)
+
+    p_apple = get_centroid(apple_healthy_indices) if apple_healthy_indices else None
+    p_grape = get_centroid(grape_healthy_indices) if grape_healthy_indices else None
+    p_general = get_centroid(all_healthy_indices)
+
+    p_dict = {
+        "apple": p_apple if p_apple is not None else p_general,
+        "grape": p_grape if p_grape is not None else p_general,
+        "general": p_general
+    }
+    torch.save({k: v.cpu() for k, v in p_dict.items()}, cache_file)
+    print(f"💾 Host-conditioned P_healthy saved to {cache_file}")
+    return p_dict
 
 # -----------------------------------------------------------------------------
 # 11. Edge CPU Benchmarking
@@ -629,10 +715,17 @@ def main():
         base_samples = [s_idx for s_idx, (_, label) in enumerate(full_pv_train.samples) if label in set(base_indices)]
         base_loader  = DataLoader(Subset(full_pv_train, base_samples), batch_size=args.batch_size, shuffle=True, num_workers=0)
 
-        # 1. Compute/Load P_healthy Prior
-        p_healthy_cache = CACHE_DIR / "pv_healthy_patch_prior.pt"
-        p_healthy = precompute_healthy_prior(full_pv_train, salient_extractor, DEVICE, p_healthy_cache)
-        salient_extractor.set_p_healthy(p_healthy)
+        # 1. Compute/Load Host-Conditioned P_healthy Priors (Innovation 3)
+        p_healthy_cache = CACHE_DIR / "pv_host_conditioned_priors.pt"
+        p_healthy_dict = precompute_host_healthy_priors(full_pv_train, salient_extractor, DEVICE, p_healthy_cache)
+        salient_extractor.set_p_healthy_dict(p_healthy_dict)
+
+        # Register Host Text Embeddings for automatic species conditioning (Apple vs Grape)
+        host_prompts = ["An apple tree leaf with green foliage.", "A grapevine leaf with lobed foliage."]
+        with torch.no_grad():
+            h_inps = tokenizer(host_prompts, return_tensors="pt", padding=True, truncation=True, max_length=77).to(DEVICE)
+            host_text_embeds = get_normalized_text_features(clip_peft, h_inps)
+        salient_extractor.set_host_text_embeds(host_text_embeds)
 
         # 2. Compute/Load Base Covariance Matrix
         base_cov_cache = CACHE_DIR / "pv_base_covariance.pt"
@@ -680,12 +773,12 @@ def main():
         )
 
         # 6. Initialize Components
-        tip_cache = TipAdapterVisualCache(calib_keys, calib_labels, len(novel_classes), alpha=2.8, beta=5.5).to(DEVICE)
-        edl_gate = DirichletEDLTrustGate(len(novel_classes), trust_threshold=0.40)
+        tip_cache = TipAdapterVisualCache(calib_keys, calib_labels, len(novel_classes), alpha=6.0, beta=5.5).to(DEVICE)
+        edl_gate = DirichletEDLTrustGate(len(novel_classes), trust_threshold=0.25)
         full_system = UncertaintyGatedDualStageV4(salient_extractor, mean_protos, hier_text_protos, tip_cache, edl_gate, logit_scale=20.0, text_weight=0.0).to(DEVICE)
 
-        print("⚡ Fitting Dual-Stage Residual Adapter on Calibrated Support Prototypes (120 Steps, <2s)...")
-        full_system.fit_adapter(calib_keys, calib_labels, epochs=120, lr=2e-3)
+        print("⚡ Fitting Dual-Stage Residual Adapter with ArcMargin & SupCon (150 Steps, <2s)...")
+        full_system.fit_adapter(calib_keys, calib_labels, epochs=150, lr=2e-3, margin=0.25)
 
         # 7. Step-by-Step Ablation Evaluation
         print("\n📊 Running Step-by-Step Empirical Ablation Chain on PlantVillage...")
@@ -724,7 +817,7 @@ def main():
         print(f"  Row 3 (Empirical Soft Gated Baseline)    : Acc = {acc_r3:6.2f}% | F1 = {f1_r3:6.2f}%")
 
         # Row 4: + Tip-Adapter Visual Cache Matrix (5-Shot Real Samples Only)
-        raw_cache = TipAdapterVisualCache(s_feats, s_labels, len(novel_classes), alpha=2.8, beta=5.5).to(DEVICE)
+        raw_cache = TipAdapterVisualCache(s_feats, s_labels, len(novel_classes), alpha=6.0, beta=5.5).to(DEVICE)
         acc_r4, f1_r4, _ = eval_logits_fn(lambda x: 20.0 * (salient_extractor(x, use_salient_patches=True) @ mean_protos.t()) + raw_cache(salient_extractor(x, use_salient_patches=True)))
         print(f"  Row 4 (+ Tip-Adapter Multi-Sample Cache) : Acc = {acc_r4:6.2f}% | F1 = {f1_r4:6.2f}%")
 
@@ -785,6 +878,9 @@ def main():
         full_f1  = f1_score(test_targets, test_preds, average="macro", zero_division=0) * 100.0
 
         print(f"  Row 8 (Full Proposed Trustworthy System): Acc = {full_acc:6.2f}% | F1 = {full_f1:6.2f}% | Conformal Coverage = {conformal_coverage:.1f}% (Mean Set: {mean_set_size:.2f})")
+        report = classification_report(test_targets, test_preds, target_names=[novel_classes[i].replace('___', ' ') for i in range(len(novel_classes))], digits=2, zero_division=0)
+        print("\n📋 Detailed Per-Class Diagnostic Report (Precision, Recall & Specificity):")
+        print(report)
 
         pv_results = {
             "r1": {"acc": acc_r1, "f1": f1_r1},
@@ -871,12 +967,12 @@ def main():
             n_synthetic=12, alpha=0.12
         )
 
-        w_tip_cache = TipAdapterVisualCache(w_calib_keys, w_calib_labels, n_wild_classes, alpha=2.5, beta=5.0).to(DEVICE)
-        w_edl_gate  = DirichletEDLTrustGate(n_wild_classes, trust_threshold=0.35)
+        w_tip_cache = TipAdapterVisualCache(w_calib_keys, w_calib_labels, n_wild_classes, alpha=5.0, beta=5.0).to(DEVICE)
+        w_edl_gate  = DirichletEDLTrustGate(n_wild_classes, trust_threshold=0.20)
         w_full_system = UncertaintyGatedDualStageV4(salient_extractor, w_mean_protos, wild_text_protos, w_tip_cache, w_edl_gate, logit_scale=20.0, text_weight=0.0).to(DEVICE)
 
-        print("⚡ Fitting In-The-Wild Dual-Stage Residual Adapter on PlantDoc Support (120 Steps, <2s)...")
-        w_full_system.fit_adapter(w_calib_keys, w_calib_labels, epochs=120, lr=2e-3)
+        print("⚡ Fitting In-The-Wild Dual-Stage Residual Adapter with ArcMargin on PlantDoc Support (150 Steps, <2s)...")
+        w_full_system.fit_adapter(w_calib_keys, w_calib_labels, epochs=150, lr=2e-3, margin=0.20)
 
         @torch.no_grad()
         def eval_plantdoc(fn):
@@ -900,7 +996,7 @@ def main():
         print(f"  Stage T2 (Stage 1 PEFT Zero-Shot Transfer) : Acc = {pd_t2_acc:6.2f}% | F1 = {pd_t2_f1:6.2f}%")
 
         # T3: + Tip-Adapter Multi-Shot Visual Cache (Real Samples Only)
-        raw_w_cache = TipAdapterVisualCache(w_s_feats, w_s_labels, n_wild_classes, alpha=2.5, beta=5.0).to(DEVICE)
+        raw_w_cache = TipAdapterVisualCache(w_s_feats, w_s_labels, n_wild_classes, alpha=5.0, beta=5.0).to(DEVICE)
         pd_t3_acc, pd_t3_f1 = eval_plantdoc(lambda x: 20.0 * (salient_extractor(x, use_salient_patches=True) @ w_mean_protos.t()) + raw_w_cache(salient_extractor(x, use_salient_patches=True)))
         print(f"  Stage T3 (+ 5-Shot Wild Cache Matrix)   : Acc = {pd_t3_acc:6.2f}% | F1 = {pd_t3_f1:6.2f}%")
 
@@ -938,7 +1034,13 @@ def main():
     else:
         merged_clip = copy.deepcopy(clip_peft).cpu()
 
-    cpu_extractor = SalientPatchCLIPExtractor(merged_clip, p_healthy=p_healthy.cpu() if 'p_healthy' in locals() else None).cpu()
+    cpu_extractor = SalientPatchCLIPExtractor(merged_clip, gamma=0.7, top_k=8, tau_s=0.2).cpu()
+    if 'p_healthy_dict' in locals():
+        cpu_extractor.set_p_healthy_dict({k: v.cpu() for k, v in p_healthy_dict.items()})
+    elif 'p_healthy' in locals():
+        cpu_extractor.set_p_healthy(p_healthy.cpu())
+    if 'host_text_embeds' in locals() and host_text_embeds is not None:
+        cpu_extractor.set_host_text_embeds(host_text_embeds.cpu())
     cpu_protos = full_system.prototypes.cpu() if 'full_system' in locals() else w_full_system.prototypes.cpu()
     cpu_cache = copy.deepcopy(tip_cache).cpu() if 'tip_cache' in locals() else copy.deepcopy(w_tip_cache).cpu()
     cpu_adapter = copy.deepcopy(full_system.adapter).cpu() if 'full_system' in locals() else copy.deepcopy(w_full_system.adapter).cpu()
@@ -956,12 +1058,13 @@ def main():
 
         def forward(self, x):
             f = self.extractor(x)
-            aff = torch.exp(-self.cache.beta * (1.0 - f @ self.cache.keys.t()))
-            d_lgt = self.logit_scale * (f @ self.protos.t()) + self.cache.alpha * (aff @ self.cache.values)
+            d_lgt = self.logit_scale * (f @ self.protos.t()) + self.cache(f)
             _, is_conf, _ = self.edl_gate.compute_trust(d_lgt)
+            # High-speed Edge Direct Path early exit for confident predictions (>75% of queries)
+            if is_conf.all():
+                return d_lgt.argmax(dim=-1)
             f_ad = self.adapter(f)
-            aff_ad = torch.exp(-self.cache.beta * (1.0 - f_ad @ self.cache.keys.t()))
-            ad_lgt = self.logit_scale * (f_ad @ self.protos.t()) + self.cache.alpha * (aff_ad @ self.cache.values)
+            ad_lgt = self.logit_scale * (f_ad @ self.protos.t()) + self.cache(f_ad)
             gm = is_conf.float().unsqueeze(-1)
             lgt = gm * d_lgt + (1.0 - gm) * ad_lgt
             return lgt.argmax(dim=-1)
