@@ -51,6 +51,7 @@ import com.biodino.edge.presentation.theme.TextPrimary
 @Composable
 fun ReticleOverlay(
     modifier: Modifier = Modifier,
+    isFarsi: Boolean = false,
     isScanningPaused: Boolean,
     isBlurred: Boolean,
     isEcoMode: Boolean,
@@ -193,17 +194,27 @@ fun ReticleOverlay(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = when {
-                            isScanningPaused -> "PAUSED"
-                            isBlurred -> "HOLD CAMERA STEADY (BLUR)"
-                            isConfidentlyLocked -> "LEAF LOCKED (${(smoothedConfidence * 100).toInt()}%)"
-                            smoothedConfidence >= 0.20f -> "ANALYZING SYMPTOMS..."
-                            else -> "ALIGN LEAF IN RETICLE"
+                        text = if (isFarsi) {
+                            when {
+                                isScanningPaused -> "اسکن متوقف شد"
+                                isBlurred -> "⚠️ دوربین را ثابت نگه دارید (تاری)"
+                                isConfidentlyLocked -> "قفل هدف روی برگ (${(smoothedConfidence * 100).toInt()}%)"
+                                smoothedConfidence >= 0.20f -> "در حال تحلیل علائم بیماری..."
+                                else -> "برگ را درون کادر تنظیم کنید"
+                            }
+                        } else {
+                            when {
+                                isScanningPaused -> "PAUSED"
+                                isBlurred -> "HOLD CAMERA STEADY (BLUR)"
+                                isConfidentlyLocked -> "LEAF LOCKED (${(smoothedConfidence * 100).toInt()}%)"
+                                smoothedConfidence >= 0.20f -> "ANALYZING SYMPTOMS..."
+                                else -> "ALIGN LEAF IN RETICLE"
+                            }
                         },
                         color = TextPrimary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.8.sp
+                        letterSpacing = if (isFarsi) 0.sp else 0.8.sp
                     )
                 }
             }
@@ -225,7 +236,7 @@ fun ReticleOverlay(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "ECO 15 FPS",
+                        text = if (isFarsi) "مصرف بهینه ۱۵ فریم" else "ECO 15 FPS",
                         color = EmeraldNeon,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold

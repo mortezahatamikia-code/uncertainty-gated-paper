@@ -47,6 +47,7 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
     /**
      * Extracts the 384-dimensional L2-normalized DINOv2 visual embedding from an input image.
      */
+    @Synchronized
     fun extractEmbedding(bitmap: Bitmap): FloatArray {
         val buffer = preallocatedTensor.loadFromBitmap(bitmap)
         val inputShape = longArrayOf(1, 3, 224, 224)
@@ -65,6 +66,7 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
      * Executes real-time forward pass on the input bitmap and dynamically enriches
      * the prediction manifold if custom enrolled few-shot prototypes exist.
      */
+    @Synchronized
     fun classify(
         bitmap: Bitmap,
         customPrototypes: List<CustomEnrolledDisease> = emptyList()

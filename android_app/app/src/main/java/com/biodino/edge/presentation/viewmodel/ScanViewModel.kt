@@ -121,7 +121,11 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun clearGalleryImage() {
-        _uiState.update { it.copy(galleryBitmap = null) }
+        _uiState.update { it.copy(galleryBitmap = null, latestDiagnosis = null, smoothedConfidence = 0f, errorMessage = null) }
+    }
+
+    fun clearErrorMessage() {
+        _uiState.update { it.copy(errorMessage = null) }
     }
 
     fun deleteCustomDisease(id: String) {
@@ -230,9 +234,12 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
                 // Classification taking into account any custom enrolled prototypes
                 val result = engine.classify(bitmap, currentState.customEnrolledDiseases)
 
+                // For live detection, top softmax probability represents the classification strength
+                val frameScore = if (result.probability > 0f) result.probability else result.confidence
+
                 // Exponential Moving Average
-                val prevConf = if (currentState.smoothedConfidence == 0f) result.confidence else currentState.smoothedConfidence
-                val smoothedConf = (0.65f * prevConf) + (0.35f * result.confidence)
+                val prevConf = if (currentState.smoothedConfidence == 0f) frameScore else currentState.smoothedConfidence
+                val smoothedConf = (0.65f * prevConf) + (0.35f * frameScore)
 
                 val prevLat = if (currentState.averageLatencyMs == 0f) result.latencyMs else currentState.averageLatencyMs
                 val smoothedLat = (0.80f * prevLat) + (0.20f * result.latencyMs)
@@ -274,26 +281,43 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun onGalleryError(msg: String) {
+        _uiState.update { it.copy(errorMessage = msg) }
+    }
+
     fun analyzeGalleryImage(bitmap: Bitmap) {
+        // 1. Immediately present the gallery photo to the user with a scanning state
+        _uiState.update {
+            it.copy(
+                galleryBitmap = bitmap,
+                latestDiagnosis = null,
+                smoothedConfidence = 0f,
+                errorMessage = null
+            )
+        }
+
         viewModelScope.launch(Dispatchers.Default) {
             try {
                 val blurred = ImageQualityEvaluator.isBlurred(bitmap)
                 val result = engine.classify(bitmap, _uiState.value.customEnrolledDiseases)
 
+                // For static gallery images, top softmax probability represents the true classification strength
+                val displayConfidence = if (result.probability > 0f) result.probability else result.confidence
+
                 _uiState.update {
                     it.copy(
-                        galleryBitmap = bitmap,
                         isBlurred = blurred,
                         latestDiagnosis = result,
-                        smoothedConfidence = result.confidence,
-                        averageLatencyMs = result.latencyMs
+                        smoothedConfidence = displayConfidence,
+                        averageLatencyMs = result.latencyMs,
+                        errorMessage = null
                     )
                 }
 
                 historyRepo.addFromDiagnosis(result)
 
                 if (_uiState.value.isTtsEnabled) {
-                    val percent = (result.confidence * 100).toInt()
+                    val percent = (displayConfidence * 100).toInt()
                     ttsManager.speakDiagnosis(
                         result.diseaseInfo.commonName,
                         percent,
@@ -301,8 +325,8 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
                         force = true
                     )
                 }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = "Gallery scan failed: ${e.message}") }
+            } catch (e: Throwable) {
+                _uiState.update { it.copy(errorMessage = "خطا در تحلیل هوش مصنوعی تصویر: ${e.message}") }
             }
         }
     }

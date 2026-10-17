@@ -61,8 +61,24 @@ import com.biodino.edge.presentation.theme.ForestSurfaceGlass
 import com.biodino.edge.presentation.theme.TextPrimary
 import com.biodino.edge.presentation.theme.TextSecondary
 
+private fun getLocalizedDiseaseName(rawKey: String, commonName: String, isFarsi: Boolean): String {
+    if (!isFarsi) return commonName
+    return when {
+        rawKey.contains("Apple___Apple_scab", ignoreCase = true) -> "اسکب سیب (لکه سیاه)"
+        rawKey.contains("Apple___Black_rot", ignoreCase = true) -> "پوسیدگی سیاه سیب (چشم‌قورباغه‌ای)"
+        rawKey.contains("Apple___Cedar_apple_rust", ignoreCase = true) -> "زنگ سیب و سرو کوهی"
+        rawKey.contains("Apple___healthy", ignoreCase = true) -> "برگ سالم سیب"
+        rawKey.contains("Grape___Black_rot", ignoreCase = true) -> "پوسیدگی سیاه انگور"
+        rawKey.contains("Grape___Esca", ignoreCase = true) -> "اسکا انگور (سرخک سیاه / راه‌راه ببری)"
+        rawKey.contains("Grape___Leaf_blight", ignoreCase = true) -> "سوختگی برگ انگور (بلایت)"
+        rawKey.contains("Grape___healthy", ignoreCase = true) -> "برگ سالم مو (انگور)"
+        else -> commonName
+    }
+}
+
 @Composable
 fun AtlasSheet(
+    isFarsi: Boolean = false,
     onDismiss: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -138,13 +154,13 @@ fun AtlasSheet(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Pathology Atlas",
+                                text = if (isFarsi) "اطلس بیماری‌های گیاهی" else "Pathology Atlas",
                                 color = TextPrimary,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Clinical Disease & Fungicide Reference",
+                                text = if (isFarsi) "مرجع جامع قارچ‌شناسی و پروتکل درمان" else "Clinical Disease & Fungicide Reference",
                                 color = TextSecondary,
                                 fontSize = 11.sp
                             )
@@ -166,7 +182,7 @@ fun AtlasSheet(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search symptoms, fungi, or sprays...", fontSize = 13.sp, color = TextSecondary) },
+                    placeholder = { Text(if (isFarsi) "جستجوی علائم، نام قارچ یا سموم..." else "Search symptoms, fungi, or sprays...", fontSize = 13.sp, color = TextSecondary) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(18.dp)) },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
@@ -203,11 +219,11 @@ fun AtlasSheet(
                     items(filterOptions) { filter ->
                         val isSelected = selectedFilter == filter
                         val label = when (filter) {
-                            "All" -> "All (8)"
-                            "Apple" -> "🍎 Apple (4)"
-                            "Grape" -> "🍇 Grape (4)"
-                            "Pathologies" -> "⚠️ Pathologies (6)"
-                            "Healthy" -> "🌿 Healthy (2)"
+                            "All" -> if (isFarsi) "همه (۸)" else "All (8)"
+                            "Apple" -> if (isFarsi) "🍎 سیب (۴)" else "🍎 Apple (4)"
+                            "Grape" -> if (isFarsi) "🍇 انگور (۴)" else "🍇 Grape (4)"
+                            "Pathologies" -> if (isFarsi) "⚠️ بیماری‌ها (۶)" else "⚠️ Pathologies (6)"
+                            "Healthy" -> if (isFarsi) "🌿 سالم (۲)" else "🌿 Healthy (2)"
                             else -> filter
                         }
 
@@ -240,7 +256,7 @@ fun AtlasSheet(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No diseases match \"$searchQuery\"",
+                            text = if (isFarsi) "موردی با عنوان «$searchQuery» یافت نشد" else "No diseases match \"$searchQuery\"",
                             color = TextSecondary,
                             fontSize = 13.sp
                         )
@@ -280,7 +296,7 @@ fun AtlasSheet(
                                             Text(plantEmoji, fontSize = 20.sp, modifier = Modifier.padding(end = 8.dp))
                                             Column {
                                                 Text(
-                                                    text = disease.commonName,
+                                                    text = getLocalizedDiseaseName(disease.rawKey, disease.commonName, isFarsi),
                                                     color = TextPrimary,
                                                     fontSize = 15.sp,
                                                     fontWeight = FontWeight.Bold
@@ -301,7 +317,7 @@ fun AtlasSheet(
                                                 .padding(horizontal = 8.dp, vertical = 3.dp)
                                         ) {
                                             Text(
-                                                text = if (disease.isHealthy) "HEALTHY" else "PATHOLOGY",
+                                                text = if (disease.isHealthy) (if (isFarsi) "سالم 🌿" else "HEALTHY") else (if (isFarsi) "بیماری ⚠️" else "PATHOLOGY"),
                                                 color = if (disease.isHealthy) EmeraldNeon else AlertAmber,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold
@@ -311,7 +327,7 @@ fun AtlasSheet(
 
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "Symptoms: ${disease.primarySymptom}",
+                                        text = if (isFarsi) "علائم بالینی: ${disease.primarySymptom}" else "Symptoms: ${disease.primarySymptom}",
                                         color = TextSecondary,
                                         fontSize = 12.sp,
                                         lineHeight = 16.sp
@@ -328,7 +344,7 @@ fun AtlasSheet(
                                                 .padding(8.dp)
                                         ) {
                                             Text(
-                                                text = "Protocol: ${disease.actionableAdvice}",
+                                                text = if (isFarsi) "دستور اقدام زراعی: ${disease.actionableAdvice}" else "Protocol: ${disease.actionableAdvice}",
                                                 color = AlertAmber,
                                                 fontSize = 11.sp,
                                                 lineHeight = 15.sp,

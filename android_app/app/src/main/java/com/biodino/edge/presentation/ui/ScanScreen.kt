@@ -61,10 +61,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.compose.material.icons.filled.Warning
+import com.biodino.edge.data.engine.BitmapUtils
 import com.biodino.edge.presentation.theme.AlertAmber
+import com.biodino.edge.presentation.theme.AlertCrimson
 import com.biodino.edge.presentation.theme.BorderHighlight
+import com.biodino.edge.presentation.theme.EmeraldAccent
 import com.biodino.edge.presentation.theme.EmeraldNeon
 import com.biodino.edge.presentation.theme.ForestDark
+import com.biodino.edge.presentation.theme.ForestSurface
 import com.biodino.edge.presentation.theme.ForestSurfaceGlass
 import com.biodino.edge.presentation.theme.TextPrimary
 import com.biodino.edge.presentation.theme.TextSecondary
@@ -84,19 +89,25 @@ fun ScanScreen(
         viewModel.onPermissionResult(isGranted)
     }
 
-    // Photo Gallery Picker
+    // Photo Gallery Picker (Robust Software Decoding & EXIF orientation support)
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
             try {
-                context.contentResolver.openInputStream(uri)?.use { stream ->
-                    val bitmap = BitmapFactory.decodeStream(stream)
-                    if (bitmap != null) {
-                        viewModel.analyzeGalleryImage(bitmap)
-                    }
+                val bitmap = BitmapUtils.decodeSoftwareBitmap(context, uri)
+                if (bitmap != null) {
+                    viewModel.analyzeGalleryImage(bitmap)
+                } else {
+                    viewModel.onGalleryError(
+                        if (isFarsi) "قالب تصویر قابل پردازش نیست یا حجم تصویر بسیار بالاست." else "Unable to decode foliage image from storage."
+                    )
                 }
-            } catch (_: Exception) {}
+            } catch (t: Throwable) {
+                viewModel.onGalleryError(
+                    if (isFarsi) "خطا در خواندن فایل از حافظه: ${t.localizedMessage}" else "Failed to load image: ${t.localizedMessage}"
+                )
+            }
         }
     }
 
@@ -161,6 +172,7 @@ fun ScanScreen(
 
                 // High-Tech Organic Reticle
                 ReticleOverlay(
+                    isFarsi = isFarsi,
                     isScanningPaused = state.isScanningPaused,
                     isBlurred = state.isBlurred,
                     isEcoMode = state.isEcoMode,
@@ -268,6 +280,46 @@ fun ScanScreen(
                 }
             }
 
+            // Error Notification Pill if any operation fails
+            if (state.errorMessage != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                        .padding(top = 64.dp, start = 16.dp, end = 16.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(AlertCrimson.copy(alpha = 0.95f))
+                        .border(1.dp, Color.White.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Warning, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = state.errorMessage!!,
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        IconButton(
+                            onClick = { viewModel.clearErrorMessage() },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = "Dismiss", tint = Color.White, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+            }
+
             // Bottom Stack: Floating Action Dock + Diagnostic Card
             Column(
                 modifier = Modifier
@@ -289,59 +341,66 @@ fun ScanScreen(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 1. Few-Shot Class Enrollment (New Crop / Disease)
+                    // 1. Live Diagnosis / Scan Mode (DEFAULT & PRIMARY ACTIVE TAB)
+                    val isLiveMode = state.galleryBitmap == null
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(EmeraldNeon.copy(alpha = 0.18f))
-                            .border(1.dp, EmeraldNeon, RoundedCornerShape(16.dp))
-                            .clickable { viewModel.openEnrollment(true) }
+                            .background(if (isLiveMode) EmeraldNeon.copy(alpha = 0.22f) else ForestSurface)
+                            .border(1.dp, if (isLiveMode) EmeraldNeon else BorderHighlight, RoundedCornerShape(16.dp))
+                            .clickable { viewModel.clearGalleryImage() }
                             .padding(horizontal = 12.dp, vertical = 7.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.AddCircle, contentDescription = null, tint = EmeraldNeon, modifier = Modifier.size(17.dp))
+                            Icon(
+                                Icons.Default.CameraAlt,
+                                contentDescription = null,
+                                tint = if (isLiveMode) EmeraldNeon else TextSecondary,
+                                modifier = Modifier.size(17.dp)
+                            )
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
-                                text = if (isFarsi) "+ تعریف بیماری جدید (۵ شات)" else "+ Enroll Class (5-Shot)",
-                                color = EmeraldNeon,
+                                text = if (isFarsi) "تشخیص زنده" else "Live Scan",
+                                color = if (isLiveMode) EmeraldNeon else TextPrimary,
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = if (isLiveMode) FontWeight.Bold else FontWeight.Medium
                             )
                         }
                     }
 
-                    // 2. Dosage Calculator
+                    // 2. Gallery Picker
+                    val isGalleryMode = state.galleryBitmap != null
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .clickable { viewModel.openCalculator(true) }
-                            .padding(horizontal = 10.dp, vertical = 7.dp)
+                            .background(if (isGalleryMode) Color(0xFF00B0FF).copy(alpha = 0.22f) else ForestSurface)
+                            .border(1.dp, if (isGalleryMode) Color(0xFF00B0FF) else BorderHighlight, RoundedCornerShape(16.dp))
+                            .clickable { galleryLauncher.launch("image/*") }
+                            .padding(horizontal = 11.dp, vertical = 7.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Calculate, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(17.dp))
+                            Icon(
+                                Icons.Default.PhotoLibrary,
+                                contentDescription = null,
+                                tint = if (isGalleryMode) Color(0xFF00B0FF) else TextPrimary,
+                                modifier = Modifier.size(17.dp)
+                            )
                             Spacer(modifier = Modifier.width(5.dp))
-                            Text(if (isFarsi) "محاسبه دوز" else "Dosage", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                text = if (isFarsi) "گالری" else "Gallery",
+                                color = if (isGalleryMode) Color(0xFF00B0FF) else TextPrimary,
+                                fontSize = 11.sp,
+                                fontWeight = if (isGalleryMode) FontWeight.Bold else FontWeight.SemiBold
+                            )
                         }
                     }
 
-                    // 3. Weather Spray Window
+                    // 3. Atlas
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .clickable { viewModel.openWeather(true) }
-                            .padding(horizontal = 10.dp, vertical = 7.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.WbSunny, contentDescription = null, tint = AlertAmber, modifier = Modifier.size(17.dp))
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(if (isFarsi) "هواشناسی سم" else "Weather", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-
-                    // 4. Atlas
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
+                            .background(ForestSurface)
+                            .border(1.dp, BorderHighlight, RoundedCornerShape(16.dp))
                             .clickable { viewModel.openAtlas(true) }
                             .padding(horizontal = 10.dp, vertical = 7.dp)
                     ) {
@@ -352,10 +411,44 @@ fun ScanScreen(
                         }
                     }
 
-                    // 5. History
+                    // 4. Dosage Calculator
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
+                            .background(ForestSurface)
+                            .border(1.dp, BorderHighlight, RoundedCornerShape(16.dp))
+                            .clickable { viewModel.openCalculator(true) }
+                            .padding(horizontal = 10.dp, vertical = 7.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Calculate, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(17.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(if (isFarsi) "محاسبه دوز" else "Dosage", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+
+                    // 5. Weather Spray Window
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(ForestSurface)
+                            .border(1.dp, BorderHighlight, RoundedCornerShape(16.dp))
+                            .clickable { viewModel.openWeather(true) }
+                            .padding(horizontal = 10.dp, vertical = 7.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.WbSunny, contentDescription = null, tint = AlertAmber, modifier = Modifier.size(17.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(if (isFarsi) "هواشناسی سم" else "Weather", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+
+                    // 6. History
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(ForestSurface)
+                            .border(1.dp, BorderHighlight, RoundedCornerShape(16.dp))
                             .clickable { viewModel.openHistory(true) }
                             .padding(horizontal = 10.dp, vertical = 7.dp)
                     ) {
@@ -366,25 +459,33 @@ fun ScanScreen(
                         }
                     }
 
-                    // 6. Gallery Picker
+                    // 7. Few-Shot Class Enrollment (Custom Calibration)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .clickable { galleryLauncher.launch("image/*") }
-                            .padding(horizontal = 10.dp, vertical = 7.dp)
+                            .background(ForestSurface)
+                            .border(1.dp, BorderHighlight, RoundedCornerShape(16.dp))
+                            .clickable { viewModel.openEnrollment(true) }
+                            .padding(horizontal = 11.dp, vertical = 7.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.PhotoLibrary, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(17.dp))
+                            Icon(Icons.Default.AddCircle, contentDescription = null, tint = EmeraldAccent, modifier = Modifier.size(17.dp))
                             Spacer(modifier = Modifier.width(5.dp))
-                            Text(if (isFarsi) "گالری" else "Gallery", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                text = if (isFarsi) "+ افزودن بیماری جدید (۵-شات)" else "+ Enroll Class (5-Shot)",
+                                color = EmeraldAccent,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            )
                         }
                     }
 
-                    // 7. Eco Mode
+                    // 8. Eco Mode
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(if (state.isEcoMode) EmeraldNeon.copy(alpha = 0.2f) else Color.Transparent)
+                            .background(if (state.isEcoMode) EmeraldNeon.copy(alpha = 0.2f) else ForestSurface)
+                            .border(1.dp, if (state.isEcoMode) EmeraldNeon else BorderHighlight, RoundedCornerShape(16.dp))
                             .clickable { viewModel.toggleEcoMode() }
                             .padding(horizontal = 8.dp, vertical = 7.dp)
                     ) {
@@ -406,6 +507,7 @@ fun ScanScreen(
                 // Progressive Disclosure Diagnostic Card
                 DiagnosticCard(
                     isFarsi = isFarsi,
+                    isGalleryMode = state.galleryBitmap != null,
                     latestDiagnosis = state.latestDiagnosis,
                     smoothedConfidence = state.smoothedConfidence,
                     averageLatencyMs = state.averageLatencyMs,
@@ -499,11 +601,15 @@ fun ScanScreen(
         }
 
         if (state.isAtlasOpen) {
-            AtlasSheet(onDismiss = { viewModel.openAtlas(false) })
+            AtlasSheet(
+                isFarsi = isFarsi,
+                onDismiss = { viewModel.openAtlas(false) }
+            )
         }
 
         if (state.isHistoryOpen) {
             HistorySheet(
+                isFarsi = isFarsi,
                 historyItems = state.scanHistory,
                 onClearHistory = { viewModel.clearHistory() },
                 onDismiss = { viewModel.openHistory(false) }

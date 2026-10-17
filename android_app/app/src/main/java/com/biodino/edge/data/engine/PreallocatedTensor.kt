@@ -33,13 +33,25 @@ class PreallocatedTensor(
      * Converts, resizes, and normalizes a bitmap directly into the pre-allocated FloatBuffer in NCHW format.
      */
     fun loadFromBitmap(bitmap: Bitmap): FloatBuffer {
-        val scaled = if (bitmap.width == width && bitmap.height == height) {
-            bitmap
+        val safeBmp = if (bitmap.config == Bitmap.Config.HARDWARE) {
+            bitmap.copy(Bitmap.Config.ARGB_8888, false) ?: bitmap
         } else {
-            Bitmap.createScaledBitmap(bitmap, width, height, true)
+            bitmap
         }
 
-        scaled.getPixels(pixelArray, 0, width, 0, 0, width, height)
+        val scaled = if (safeBmp.width == width && safeBmp.height == height) {
+            safeBmp
+        } else {
+            Bitmap.createScaledBitmap(safeBmp, width, height, true)
+        }
+
+        val finalBmp = if (scaled.config == Bitmap.Config.HARDWARE) {
+            scaled.copy(Bitmap.Config.ARGB_8888, false) ?: scaled
+        } else {
+            scaled
+        }
+
+        finalBmp.getPixels(pixelArray, 0, width, 0, 0, width, height)
 
         floatBuffer.clear()
         val numPixels = height * width

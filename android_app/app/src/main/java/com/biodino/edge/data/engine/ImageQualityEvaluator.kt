@@ -20,7 +20,13 @@ object ImageQualityEvaluator {
         val startX = (bitmap.width - SAMPLE_SIZE) / 2
         val startY = (bitmap.height - SAMPLE_SIZE) / 2
 
-        bitmap.getPixels(pixels, 0, SAMPLE_SIZE, startX, startY, SAMPLE_SIZE, SAMPLE_SIZE)
+        val safeBmp = if (bitmap.config == Bitmap.Config.HARDWARE) {
+            bitmap.copy(Bitmap.Config.ARGB_8888, false) ?: bitmap
+        } else {
+            bitmap
+        }
+
+        safeBmp.getPixels(pixels, 0, SAMPLE_SIZE, startX, startY, SAMPLE_SIZE, SAMPLE_SIZE)
 
         // Convert to Luminance
         for (i in 0 until (SAMPLE_SIZE * SAMPLE_SIZE)) {

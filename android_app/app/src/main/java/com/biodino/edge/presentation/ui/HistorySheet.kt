@@ -54,6 +54,7 @@ import java.util.Locale
 
 @Composable
 fun HistorySheet(
+    isFarsi: Boolean = false,
     historyItems: List<ScanHistoryItem>,
     onClearHistory: () -> Unit,
     onDismiss: () -> Unit
@@ -109,13 +110,13 @@ fun HistorySheet(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Scan History",
+                                text = if (isFarsi) "تاریخچه تشخیص‌ها" else "Scan History",
                                 color = TextPrimary,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "${historyItems.size} Total Inspections",
+                                text = if (isFarsi) "$healthyCount سالم • $pathologyCount دارای عارضه" else "${historyItems.size} Total Inspections",
                                 color = TextSecondary,
                                 fontSize = 11.sp
                             )

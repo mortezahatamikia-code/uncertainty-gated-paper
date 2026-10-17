@@ -57,6 +57,7 @@ import com.biodino.edge.presentation.theme.AlertAmber
 import com.biodino.edge.presentation.theme.AlertCrimson
 import com.biodino.edge.presentation.theme.BorderHighlight
 import com.biodino.edge.presentation.theme.EmeraldAccent
+import androidx.compose.material3.CircularProgressIndicator
 import com.biodino.edge.presentation.theme.EmeraldNeon
 import com.biodino.edge.presentation.theme.ForestDark
 import com.biodino.edge.presentation.theme.ForestSurface
@@ -65,10 +66,35 @@ import com.biodino.edge.presentation.theme.TextPrimary
 import com.biodino.edge.presentation.theme.TextSecondary
 import java.util.Locale
 
+private fun getLocalizedDiseaseName(rawKey: String, commonName: String, isFarsi: Boolean): String {
+    if (!isFarsi) return commonName
+    return when {
+        rawKey.contains("Apple___Apple_scab", ignoreCase = true) -> "اسکب سیب (لکه سیاه)"
+        rawKey.contains("Apple___Black_rot", ignoreCase = true) -> "پوسیدگی سیاه سیب (چشم‌قورباغه‌ای)"
+        rawKey.contains("Apple___Cedar_apple_rust", ignoreCase = true) -> "زنگ سیب و سرو کوهی"
+        rawKey.contains("Apple___healthy", ignoreCase = true) -> "برگ سالم سیب"
+        rawKey.contains("Grape___Black_rot", ignoreCase = true) -> "پوسیدگی سیاه انگور"
+        rawKey.contains("Grape___Esca", ignoreCase = true) -> "اسکا انگور (سرخک سیاه / راه‌راه ببری)"
+        rawKey.contains("Grape___Leaf_blight", ignoreCase = true) -> "سوختگی برگ انگور (بلایت)"
+        rawKey.contains("Grape___healthy", ignoreCase = true) -> "برگ سالم مو (انگور)"
+        else -> commonName
+    }
+}
+
+private fun getLocalizedHostPlant(hostPlant: String, isFarsi: Boolean): String {
+    if (!isFarsi) return hostPlant
+    return when {
+        hostPlant.contains("Apple", ignoreCase = true) -> "درخت سیب (Malus domestica)"
+        hostPlant.contains("Grape", ignoreCase = true) -> "مو / درخت انگور (Vitis vinifera)"
+        else -> hostPlant
+    }
+}
+
 @Composable
 fun DiagnosticCard(
     modifier: Modifier = Modifier,
     isFarsi: Boolean = false,
+    isGalleryMode: Boolean = false,
     latestDiagnosis: DiagnosisResult?,
     smoothedConfidence: Float,
     averageLatencyMs: Float,
@@ -88,8 +114,14 @@ fun DiagnosticCard(
             .animateContentSize(animationSpec = tween(300))
             .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
-        if (latestDiagnosis == null || smoothedConfidence < 0.15f) {
-            // Idle / Seeking Foliage State
+        val isIdle = if (isGalleryMode) {
+            latestDiagnosis == null
+        } else {
+            latestDiagnosis == null || (smoothedConfidence < 0.15f && latestDiagnosis.probability < 0.30f)
+        }
+
+        if (isIdle) {
+            // Idle / Seeking Foliage or Processing Gallery Image
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -103,32 +135,50 @@ fun DiagnosticCard(
                         .background(EmeraldNeon.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Eco,
-                        contentDescription = null,
-                        tint = EmeraldNeon,
-                        modifier = Modifier.size(26.dp)
-                    )
+                    if (isGalleryMode) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(26.dp),
+                            color = EmeraldNeon,
+                            strokeWidth = 2.5.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Eco,
+                            contentDescription = null,
+                            tint = EmeraldNeon,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Center leaf inside reticle",
+                        text = if (isGalleryMode) {
+                            if (isFarsi) "در حال پردازش تصویر با هوش مصنوعی..." else "Analyzing imported leaf with BioDINO..."
+                        } else {
+                            if (isFarsi) "برگ را درون کادر تنظیم کنید" else "Center leaf inside reticle"
+                        },
                         color = TextPrimary,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Hold phone 15-20 cm from foliage. AI analysis is live.",
+                        text = if (isGalleryMode) {
+                            if (isFarsi) "استخراج ویژگی‌های بصری DINOv2 و تطبیق پاتوژن..." else "Extracting 384 DINOv2 visual features & pathology match..."
+                        } else {
+                            if (isFarsi) "گوشی را در فاصله ۱۵-۲۰ سانتی‌متری برگ نگه دارید." else "Hold phone 15-20 cm from foliage. AI analysis is live."
+                        },
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
                 }
             }
         } else {
-            val disease = latestDiagnosis.diseaseInfo
-            val isConfident = smoothedConfidence >= 0.35f
+            val diag = latestDiagnosis!!
+            val disease = diag.diseaseInfo
+            val isConfident = smoothedConfidence >= 0.35f || diag.probability >= 0.40f
+            val displayConfidence = maxOf(smoothedConfidence, diag.probability)
             val plantIcon = when {
                 disease.isHealthy -> "🌿"
                 disease.rawKey.startsWith("Apple") -> "🍎"
@@ -172,14 +222,14 @@ fun DiagnosticCard(
                         )
                         Column {
                             Text(
-                                text = disease.commonName,
+                                text = getLocalizedDiseaseName(disease.rawKey, disease.commonName, isFarsi),
                                 color = TextPrimary,
                                 fontSize = 19.sp,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1
                             )
                             Text(
-                                text = disease.hostPlant,
+                                text = getLocalizedHostPlant(disease.hostPlant, isFarsi),
                                 color = TextSecondary,
                                 fontSize = 12.sp
                             )
@@ -195,7 +245,11 @@ fun DiagnosticCard(
                             .padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
                         Text(
-                            text = if (disease.isHealthy) "HEALTHY" else "PATHOLOGY",
+                            text = if (isFarsi) {
+                                if (disease.isHealthy) "سالم 🌿" else if (isConfident) "بیماری قطعی ⚠️" else "تخمین احتمالی 🔍"
+                            } else {
+                                if (disease.isHealthy) "HEALTHY" else if (isConfident) "PATHOLOGY" else "PROBABLE"
+                            },
                             color = themeStatusColor,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
@@ -213,12 +267,16 @@ fun DiagnosticCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (isConfident) "Confidence: High" else "Confidence: Scanning...",
+                        text = if (isFarsi) {
+                            if (isConfident) "ضریب اطمینان مدل: بالا" else if (isGalleryMode) "ضریب اطمینان: متوسط / تخمینی" else "ضریب اطمینان: در حال اسکن..."
+                        } else {
+                            if (isConfident) "Confidence: High" else if (isGalleryMode) "Confidence: Moderate" else "Confidence: Scanning..."
+                        },
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
                     Text(
-                        text = String.format(Locale.US, "%.1f%%", smoothedConfidence * 100f),
+                        text = String.format(Locale.US, "%.1f%%", displayConfidence * 100f),
                         color = themeStatusColor,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
@@ -228,7 +286,7 @@ fun DiagnosticCard(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 LinearProgressIndicator(
-                    progress = { smoothedConfidence.coerceIn(0f, 1f) },
+                    progress = { displayConfidence.coerceIn(0f, 1f) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(6.dp)
@@ -260,7 +318,11 @@ fun DiagnosticCard(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = if (disease.isHealthy) "Agronomy Protocol" else "Immediate Treatment Protocol",
+                                text = if (isFarsi) {
+                                    if (disease.isHealthy) "وضعیت زراعی و بهداشت مزرعه" else "پروتکل اقدام فوری درمان زراعی"
+                                } else {
+                                    if (disease.isHealthy) "Agronomy Protocol" else "Immediate Treatment Protocol"
+                                },
                                 color = if (disease.isHealthy) EmeraldNeon else AlertAmber,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
@@ -299,7 +361,11 @@ fun DiagnosticCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (isExpanded) "Hide Lab Analysis" else "View Scientific Details & Symptoms",
+                        text = if (isFarsi) {
+                            if (isExpanded) "بستن تحلیل آزمایشگاهی" else "مشاهده جزییات علمی، علائم و پاتوژن"
+                        } else {
+                            if (isExpanded) "Hide Lab Analysis" else "View Scientific Details & Symptoms"
+                        },
                         color = EmeraldAccent,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
