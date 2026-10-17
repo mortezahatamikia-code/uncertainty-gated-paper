@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="forest_dark">#0B1712</color>
+    <color name="forest_surface">#12241C</color>
+    <color name="emerald_neon">#00E676</color>
+    <color name="alert_amber">#FFD600</color>
+    <color name="alert_crimson">#FF3D00</color>
+</resources>

@@ -19,6 +19,7 @@
 | **[`reviewer_rebuttal_playbook.md`](file:///e:/work/research-few-shot/docs/reviewer_rebuttal_playbook.md)** | **سناریوهای دفاع و پاسخ به داور** | نویسندگان مقاله و ارائه‌دهندگان | ~ ۲۸۰ خط | پاسخ مقتدرانه به ۲۰ پرسش چالشی داوران، فواصل اطمینان و طرح ۱۰ اسلاید دفاع شفاهی. |
 | **[`failure_modes_and_robustness.md`](file:///e:/work/research-few-shot/docs/failure_modes_and_robustness.md)** | **کالبدشکافی خطاها و آزمون OOD** | داوران ژورنال‌های معتبر | ~ ۲۶۰ خط | تحلیل ۹۱ خطای باقیمانده، آزمون‌های تنش تاری و نور، تشخیص داده‌های نامربوط با گیت شانون. |
 | **[`edge_hardware_deployment_guide.md`](file:///e:/work/research-few-shot/docs/edge_hardware_deployment_guide.md)** | **راهنمای استقرار سخت‌افزار لبه** | مهندسان سخت‌افزار و IoT | ~ ۲۵۰ خط | استقرار روی رزبری‌پای، انویدیا جتسون، اکسپورت ONNX INT8، مدیریت گرما و باتری پهپاد. |
+| **[`android_mobile_app_guide.md`](file:///e:/work/research-few-shot/docs/android_mobile_app_guide.md)** | **راهنمای اپلیکیشن اندروید نیتیو** | توسعه‌دهندگان اندروید و موبایل | ~ ۲۰۰ خط | معماری کاتلین و Jetpack Compose، پایپلاین بافر مستقیم بدون GC، استنتاج ONNX NNAPI و دوربین CameraX. |
 | **[`paper_guide.md`](file:///e:/work/research-few-shot/docs/paper_guide.md)** | **راهنمای محیط لاتک و کامپایل** | نویسندگان مقاله | ~ ۶۰ خط | راهنمای گام‌به‌گام ستاپ ادیتور، اکستنشن LaTeX Workshop و کامپایلر MiKTeX. |
 
 ---
@@ -81,6 +82,7 @@
 * **گام ۱:** مطالعه [`edge_hardware_deployment_guide.md`](file:///e:/work/research-few-shot/docs/edge_hardware_deployment_guide.md) جهت انتخاب برد سخت‌افزاری مناسب (رزبری‌پای ۴/۵ یا انویدیا جتسون).
 * **گام ۲:** اجرای اسکریپت تبدیل به `ONNX INT8` و تست پایپلاین روی دوربین USB یا CSI به صورت بلادرنگ.
 * **گام ۳:** پیکربندی هیت‌سینک و مدیریت شارژ باتری برای عملیات میدانی در مزارع گرمسیر.
+* **گام ۴:** مطالعه [`android_mobile_app_guide.md`](file:///e:/work/research-few-shot/docs/android_mobile_app_guide.md) و بیلد اپلیکیشن کاتلین در پوشه `android_app/` برای گوشی‌های هوشمند کشاورزان.
 
 ---
 

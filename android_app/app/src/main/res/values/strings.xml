@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BioDINO-Edge</string>
+    <string name="camera_permission_rationale">Camera permission is required to analyze foliage and identify agricultural pathogens in real-time.</string>
+</resources>
