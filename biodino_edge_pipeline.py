@@ -336,8 +336,9 @@ def main():
 
     # 9. Multi-Episode Statistical Rigor Benchmark (30 Episodes)
     print("\n[*] Running 30-Episode Statistical Rigor Benchmark (Monte Carlo 5-shot splits)...")
-    # Using pre-extracted features for fast evaluation across 30 random episodes
-    cache_path = PROJECT_ROOT / "pv_novel_embeddings.pt"
+    cache_path = CACHE_DIR / "pv_novel_embeddings.pt"
+    if not cache_path.exists():
+        cache_path = PROJECT_ROOT / "pv_novel_embeddings.pt"
     if cache_path.exists():
         cdata = torch.load(cache_path, map_location="cpu")
         c_bio = cdata["bio_feats"]

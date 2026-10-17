@@ -123,29 +123,51 @@ resources:
 
 ---
 
-## 📁 ساختار نهایی و تمیز مخزن (Repository Structure)
+## 📁 ساختار نهایی و توضیح تفصیلی فایل‌های مخزن (Repository Structure & File Guide)
 
 ```text
 research-few-shot/
 │
-├── biodino_edge_pipeline.py            # 🚀 پایپلاین اصلی پایتون (سورس کامل و مستقل)
-├── biodino_edge_pipeline.ipynb         # 📓 نوت‌بوک تعاملی ژوپیتر با نمودارها و تحلیل‌ها
-├── biodino_edge_results.json           # 📊 گزارش عددی نتایج بنچمارک و پروفایلینگ Edge
-├── pv_novel_embeddings.pt              # ⚡ کَش بردار ویژگی‌های ۷,۱۹۳ نمونه (بازآفرینی سریع)
-├── ACCURACY_OPTIMIZATION_ROADMAP.md    # 🗺️ تاریخچه و نقشه راه تفصیلی ارتقای دقت
-├── requirements.txt                    # 📋 پکیج‌های مورد نیاز با پشتیبانی CUDA 12.4
-├── datapackage.json                    # 📦 متادیتای استاندارد Open Knowledge (OKF)
+├── biodino_edge_pipeline.py            # 🚀 پایپلاین اصلی پایتون (سورس کامل و مستقل الگوریتم)
+├── biodino_edge_pipeline.ipynb         # 📓 نوت‌بوک تعاملی ژوپیتر (شامل دیاگرام، کد و نمودارها)
+├── biodino_edge_results.json           # 📊 گزارش عددی نتایج بنچمارک رسمی SOTA
+├── CHANGELOG.md                        # 📜 تاریخچه تفصیلی تغییرات، نوآوری‌ها و نتایج در هر نسخه
+├── requirements.txt                    # 📋 فهرست وابستگی‌های نرم‌افزاری با پشتیبانی CUDA 12.4
+├── datapackage.json                    # 📦 متادیتای استاندارد Open Knowledge (OKF) نسخه ۲.۱
+├── pyrefly.toml                        # ⚙️ پیکربندی اتصال محیط ادیتور به پایتون مجازی .venv
+├── README.md                           # 📄 معرفی رسمی پروژه، چکیده، متدولوژی و راهنمای اجرا
 │
-├── paper/                              # 📝 پکیج مقاله علمی آماده ارسال به ژورنال/کنفرانس
+├── cache_artifacts/                    # ⚡ کَش محاسبات سنگین جهت بازتولید آنی زیر ۱ ثانیه
+│   └── pv_novel_embeddings.pt          # بردار ویژگی‌های استخراج‌شده ۷,۱۹۳ نمونه آزمون (DINOv2 + BioCLIP)
+│
+├── paper/                              # 📝 پکیج کامل مقاله علمی آماده ارسال به ژورنال/کنفرانس
 │   ├── main.tex                        # کد منبع لاتک مقاله دو ستونه استاندارد IEEE
-│   ├── main.pdf                        # خروجی دوربین‌خوان کامپایل‌شده (۳ صفحه کامل)
-│   ├── references.bib                  # مراجع معتبر BibTeX
-│   └── IEEEtran.cls                    # قالب رسمی کنفرانس IEEE
+│   ├── main.pdf                        # خروجی دوربین‌خوان کامپایل‌شده (۳ صفحه کامل استاندارد)
+│   ├── references.bib                  # بانک مراجع استاندارد BibTeX مقالات مرتبط
+│   └── IEEEtran.cls                    # قالب رسمی کنفرانس‌های IEEE
 │
-└── docs/                               # 📚 راهنماهای فنی
-    ├── algorithm_guide.md              # راهنمای جامع تئوری ریاضی و پیاده‌سازی
-    └── paper_guide.md                  # راهنمای کامپایل لاتک با MiKTeX
+└── docs/                               # 📚 مستندات و راهنماهای جامع فنی
+    ├── algorithm_guide.md              # راهنمای عمیق ریاضی، تئوری فیشر-لدویت‌ولف و معماری لبه
+    └── paper_guide.md                  # راهنمای گام‌به‌گام ستاپ لاتک و کامپایلر MiKTeX
 ```
+
+### 📋 شرح وظیفه و محتوای تک‌تک فایل‌ها:
+
+| نام فایل / پوشه | نوع فایل | نقش در پروژه و توضیحات محتوایی |
+| :--- | :---: | :--- |
+| **[`biodino_edge_pipeline.py`](file:///e:/work/research-few-shot/biodino_edge_pipeline.py)** | کد منبع پایتون | **قلب اجرایی پروژه:** پایپلاین ماژولار و مستقل پایتون که تمام فرآیندهای لود مدل‌های DINOv2 و BioCLIP، استخراج بردارهای ساپورت چنددیدگاهی، نگاشت فیشر با انقباض لدویت-ولف، ارزیابی تک‌سید (۹۷.۳۴٪)، ارزیابی آماری ۳۰ اپیزودی و پروفایلینگ کوانتیزاسیون INT8 روی پردازنده لبه را از صفر تا صد انجام می‌دهد. |
+| **[`biodino_edge_pipeline.ipynb`](file:///e:/work/research-few-shot/biodino_edge_pipeline.ipynb)** | نوت‌بوک ژوپیتر | **محیط تعاملی و ویژوالایزیشن:** نوت‌بوک سلف‌کانتین شامل توضیحات تئوری، دیاگرام جریان داده، لود کَش بردارها در کمتر از ۱ ثانیه، اجرای آزمون‌ها و رسم ماتریس درهم‌ریختگی (Confusion Matrix) با تفکیک رنگی کلاسی. |
+| **[`biodino_edge_results.json`](file:///e:/work/research-few-shot/biodino_edge_results.json)** | داده ساختاریافته | **سند عددی رسمی بنچمارک:** شامل ارقام دقیق دقت تک‌سید، میانگین ۳۰ اپیزودی، فواصل اطمینان ۹۵٪، ماتریس درهم‌ریختگی عددی و تاخیرهای دقیق سخت‌افزاری پردازنده لبه به میلی‌ثانیه. |
+| **[`CHANGELOG.md`](file:///e:/work/research-few-shot/CHANGELOG.md)** | مستندات فنی | **گاه‌شمار پیشرفت پژوهش:** تشریح گام‌به‌گام ارتقای مدل از نسخه پایه ۲۳.۴٪ تا ۸۱.۶٪، سپس ۸۸.۰٪، ۹۴.۷٪ و در نهایت رکورد تاریخی ۹۷.۳۴٪ با ذکر دقیق تغییرات اعمال‌شده در هر فاز. |
+| **[`paper/main.tex`](file:///e:/work/research-few-shot/paper/main.tex)** | سورس لاتک | **متن مقاله علمی:** مقاله کامل ۳ صفحه‌ای مطابق فرمت رسمی IEEE با فرمولاسیون ریاضی انقباض کوواریانس فیشر، گیت عدم قطعیت شانون، جداول مقایسه روش‌ها و تفکیک سنجه‌های پاتولوژی هر کلاس. |
+| **[`paper/main.pdf`](file:///e:/work/research-few-shot/paper/main.pdf)** | سند خروجی | **فایل PDF دوربین‌خوان (Camera-Ready):** خروجی کامپایل‌شده مقاله با موتور pdfTeX و MiKTeX آماده پرینت، ارسال به داوران ژورنال و پرزنتیشن برای اساتید. |
+| **[`paper/references.bib`](file:///e:/work/research-few-shot/paper/references.bib)** | مراجع علمی | آرشیو BibTeX مراجع معتبر شامل مقالات DINOv2 (Meta AI), BioCLIP (Imageomics CVPR 2024), CLIP (OpenAI), Tip-Adapter و مراجع گیاه‌پزشکی. |
+| **[`docs/algorithm_guide.md`](file:///e:/work/research-few-shot/docs/algorithm_guide.md)** | مستندات فنی | **مرجع جامع ریاضی و الگوریتمی:** توضیح تفصیلی اثبات انقباض لدویت-ولف، هندسه منیفولد ۸۹۶ بعدی، گیت عدم قطعیت شانون و تحلیل پیچیدگی FLOPs سخت‌افزار لبه. |
+| **[`docs/paper_guide.md`](file:///e:/work/research-few-shot/docs/paper_guide.md)** | مستندات راهنما | **راهنمای محیط لاتک:** راهنمای گام‌به‌گام ستاپ ادیتور، اکستنشن LaTeX Workshop و کامپایلر MiKTeX روی سیستم‌های جدید. |
+| **[`cache_artifacts/pv_novel_embeddings.pt`](file:///e:/work/research-few-shot/cache_artifacts/pv_novel_embeddings.pt)** | باینری کش (۲۷MB) | ذخیره آفلاین ویژگی‌های استخراج‌شده ۷,۱۹۳ نمونه آزمون؛ این فایل باعث می‌شود اجرای بنچمارک ۳۰ اپیزودی به جای ۴۰ ثانیه پردازش سنگین GPU، در **کسری از ثانیه (< ۱ ثانیه)** اجرا و بازتولید شود. |
+| **[`datapackage.json`](file:///e:/work/research-few-shot/datapackage.json)** | متادیتا OKF | شناسنامه استاندارد بسته داده باز (Open Knowledge Foundation) نسخه ۲.۱ جهت بازآفرینی شفاف علمی. |
+| **[`requirements.txt`](file:///e:/work/research-few-shot/requirements.txt)** | کانفیگ پایتون | فهرست پکیج‌های پایه‌ای (`torch`, `torchvision`, `timm`, `open_clip_torch`, `scikit-learn`, `matplotlib`) با ایندکس CUDA 12.4. |
+| **[`pyrefly.toml`](file:///e:/work/research-few-shot/pyrefly.toml)** | تنظیمات ادیتور | تنظیم اتصال موتور آنالیز کد VS Code / Antigravity به مفسر پایتون ایزوله محیط مجازی `.venv`. |
 
 ---
 

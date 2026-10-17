@@ -1,9 +1,9 @@
 {
   "$schema": "https://frictionlessdata.io/schemas/data-package.json",
-  "name": "uncertainty-gated-dual-stage-peft",
-  "title": "Uncertainty-Gated Dual-Stage PEFT: Trustworthy Few-Shot Plant Disease Recognition on Edge Devices",
-  "description": "Open Knowledge Foundation (OKF) specification package for trustworthy few-shot plant disease diagnosis using Vision-Language Models (CLIP), LoRA, Shannon Entropy Uncertainty Gate, and Edge INT8 quantization.",
-  "version": "1.0.0",
+  "name": "biodino-edge",
+  "title": "BioDINO-Edge: Biologically-Grounded Multi-Scale Vision Foundation Models for Trustworthy Few-Shot Plant Pathology on Resource-Constrained Hardware",
+  "description": "Open Knowledge Foundation (OKF) specification package for trustworthy few-shot plant disease diagnosis using multi-scale self-supervised Vision Transformers (DINOv2), biological foundation models (BioCLIP), Regularized Fisher-LDA with Ledoit-Wolf Shrinkage, and dynamic INT8 edge CPU quantization.",
+  "version": "2.1.0",
   "homepage": "https://github.com",
   "licenses": [
     {
@@ -20,12 +20,11 @@
   ],
   "keywords": [
     "few-shot-learning",
-    "plant-disease-recognition",
-    "vision-language-models",
-    "clip",
-    "peft",
-    "lora",
-    "shannon-entropy",
+    "plant-pathology",
+    "vision-foundation-models",
+    "dinov2",
+    "bioclip",
+    "fisher-discriminant-analysis",
     "uncertainty-estimation",
     "edge-ai",
     "plantvillage"
@@ -38,28 +37,46 @@
       "description": "54,305 leaf images spanning 38 agricultural disease classes (30 Base classes, 8 Novel classes)."
     },
     {
-      "name": "algorithm-pipeline",
-      "path": "scratch_run_pipeline.py",
+      "name": "biodino-edge-pipeline",
+      "path": "biodino_edge_pipeline.py",
       "format": "text/x-python",
-      "description": "End-to-end GPU-accelerated training pipeline for Stage-1 InfoNCE and Stage-2 Dual PEFT."
+      "description": "End-to-end Python pipeline for few-shot evaluation, Fisher-LDA fitting, multi-episode audit, and INT8 edge CPU benchmarking."
+    },
+    {
+      "name": "biodino-edge-notebook",
+      "path": "biodino_edge_pipeline.ipynb",
+      "format": "application/x-ipynb+json",
+      "description": "Interactive Jupyter Notebook with step-by-step theory, execution, and confusion matrix visualizations."
     },
     {
       "name": "ieee-paper-manuscript",
       "path": "paper/main.tex",
       "format": "text/x-tex",
-      "description": "Official IEEE conference format LaTeX manuscript with empirical evaluation tables."
+      "description": "Official IEEE conference format LaTeX manuscript with theoretical formulations and empirical evaluation tables."
+    },
+    {
+      "name": "benchmark-results",
+      "path": "biodino_edge_results.json",
+      "format": "application/json",
+      "description": "Comprehensive numerical benchmark metrics (97.34% peak accuracy, 94.95% 30-episode mean, INT8 latency profiling)."
     },
     {
       "name": "algorithm-documentation",
       "path": "docs/algorithm_guide.md",
       "format": "text/markdown",
-      "description": "Comprehensive execution and troubleshooting guide for Windows and RTX GPU setup."
+      "description": "Comprehensive execution and mathematical guide for BioDINO-Edge architecture."
     },
     {
       "name": "paper-setup-documentation",
       "path": "docs/paper_guide.md",
       "format": "text/markdown",
       "description": "Step-by-step LaTeX Workshop and MiKTeX configuration guide."
+    },
+    {
+      "name": "project-changelog",
+      "path": "CHANGELOG.md",
+      "format": "text/markdown",
+      "description": "Detailed chronicle of all technical changes and performance results across versions."
     }
   ]
 }
