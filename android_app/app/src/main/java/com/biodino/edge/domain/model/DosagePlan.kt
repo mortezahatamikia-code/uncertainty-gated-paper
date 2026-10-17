@@ -1,0 +1,88 @@
+package com.biodino.edge.domain.model
+
+data class DosageChemical(
+    val id: String,
+    val tradeNameEn: String,
+    val tradeNameFa: String,
+    val activeIngredient: String,
+    val dosePerLiter: Float, // grams or ml per liter
+    val unit: String,
+    val adjuvantPerLiter: Float = 0.5f, // ml soap/spreader per liter
+    val phiDays: Int, // Pre-Harvest Interval (دوره کارنس)
+    val targetDisease: String
+)
+
+object DosageDatabase {
+    val CHEMICALS = listOf(
+        DosageChemical(
+            id = "captan",
+            tradeNameEn = "Captan 50% WP",
+            tradeNameFa = "قارچ‌کش کاپتان ۵۰٪ (پودر وتابل)",
+            activeIngredient = "Captan (Phthalimide)",
+            dosePerLiter = 2.5f,
+            unit = "g",
+            phiDays = 14,
+            targetDisease = "Apple Scab / Black Rot"
+        ),
+        DosageChemical(
+            id = "mancozeb",
+            tradeNameEn = "Mancozeb 80% WP",
+            tradeNameFa = "قارچ‌کش مانکوزب ۸۰٪",
+            activeIngredient = "Mancozeb (Dithiocarbamate)",
+            dosePerLiter = 2.0f,
+            unit = "g",
+            phiDays = 15,
+            targetDisease = "Apple Rust / Grape Blight"
+        ),
+        DosageChemical(
+            id = "copper",
+            tradeNameEn = "Copper Hydroxide 77% WP",
+            tradeNameFa = "اکسی‌کلرور / هیدروکسید مس",
+            activeIngredient = "Copper Hydroxide",
+            dosePerLiter = 1.5f,
+            unit = "g",
+            phiDays = 7,
+            targetDisease = "Bacterial Blight / Downy Mildew"
+        ),
+        DosageChemical(
+            id = "myclobutanil",
+            tradeNameEn = "Myclobutanil 20% EW",
+            tradeNameFa = "مایکلووبوتانیل (سیستال ۲۰٪)",
+            activeIngredient = "Myclobutanil (Triazole DMI)",
+            dosePerLiter = 0.4f,
+            unit = "ml",
+            phiDays = 14,
+            targetDisease = "Cedar Apple Rust / Powdery Mildew"
+        ),
+        DosageChemical(
+            id = "trichoderma",
+            tradeNameEn = "Trichoderma Biocontrol",
+            tradeNameFa = "تریکودرما (بیولوژیک ارگانیک)",
+            activeIngredient = "Trichoderma harzianum T-22",
+            dosePerLiter = 1.0f,
+            unit = "g",
+            phiDays = 0,
+            targetDisease = "Grape Esca / Trunk Wounds"
+        )
+    )
+
+    fun calculate(tankLiters: Float, chemical: DosageChemical): DosageResult {
+        val totalChemical = tankLiters * chemical.dosePerLiter
+        val totalAdjuvant = tankLiters * chemical.adjuvantPerLiter
+        return DosageResult(
+            chemical = chemical,
+            tankLiters = tankLiters,
+            totalChemicalAmount = totalChemical,
+            totalAdjuvantAmount = totalAdjuvant,
+            phiDays = chemical.phiDays
+        )
+    }
+}
+
+data class DosageResult(
+    val chemical: DosageChemical,
+    val tankLiters: Float,
+    val totalChemicalAmount: Float,
+    val totalAdjuvantAmount: Float,
+    val phiDays: Int
+)

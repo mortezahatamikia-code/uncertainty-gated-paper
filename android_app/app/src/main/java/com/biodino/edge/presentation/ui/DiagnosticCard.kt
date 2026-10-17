@@ -68,11 +68,13 @@ import java.util.Locale
 @Composable
 fun DiagnosticCard(
     modifier: Modifier = Modifier,
+    isFarsi: Boolean = false,
     latestDiagnosis: DiagnosisResult?,
     smoothedConfidence: Float,
     averageLatencyMs: Float,
     isHardwareAccelerated: Boolean,
-    onSpeakDiagnosis: () -> Unit
+    onSpeakDiagnosis: () -> Unit,
+    onOpenCalculator: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var isExpanded by remember { mutableStateOf(false) }
@@ -377,7 +379,7 @@ fun DiagnosticCard(
                 // Bottom Action Buttons (Large, high-contrast, thumb-friendly)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
                         onClick = onSpeakDiagnosis,
@@ -395,12 +397,32 @@ fun DiagnosticCard(
                             contentDescription = "Speak",
                             modifier = Modifier.size(18.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Listen Audio",
-                            fontSize = 13.sp,
+                            text = if (isFarsi) "پخش صوتی" else "Listen",
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
+                    }
+
+                    if (!disease.isHealthy) {
+                        Button(
+                            onClick = onOpenCalculator,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AlertAmber,
+                                contentColor = ForestDark
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                        ) {
+                            Text(
+                                text = if (isFarsi) "محاسبه دوز" else "Dosage",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
                     OutlinedButton(
@@ -429,13 +451,13 @@ fun DiagnosticCard(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Share",
                             tint = TextPrimary,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Share Report",
+                            text = if (isFarsi) "ارسال" else "Share",
                             color = TextPrimary,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }

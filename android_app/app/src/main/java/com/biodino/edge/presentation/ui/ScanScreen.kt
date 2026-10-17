@@ -6,13 +6,11 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,19 +23,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EnergySavingsLeaf
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocalFlorist
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -73,6 +76,7 @@ fun ScanScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val isFarsi = state.isFarsi
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -138,7 +142,12 @@ fun ScanScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Close, contentDescription = null, tint = EmeraldNeon, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Gallery View • Tap to return to Live Camera", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = if (isFarsi) "حالت بازبینی گالری • لمس برای بازگشت به دوربین زنده" else "Gallery View • Tap to return to Live Camera",
+                                color = TextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
@@ -160,7 +169,7 @@ fun ScanScreen(
                 )
             }
 
-            // Top Bar: Clean Minimalist Brand & Essential Flash/Audio
+            // Top Bar: Clean Minimalist Brand, Language Toggle & Controls
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -202,7 +211,7 @@ fun ScanScreen(
                     }
                 }
 
-                // Quick Floating Glass Capsule for Torch & TTS
+                // Floating Glass Capsule: Language Toggle, Torch, Audio
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
@@ -211,6 +220,24 @@ fun ScanScreen(
                         .padding(horizontal = 4.dp, vertical = 2.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        // FA / EN Switch
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { viewModel.toggleFarsi() }
+                                .padding(horizontal = 8.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = if (isFarsi) "FA 🇮🇷" else "EN 🌐",
+                                color = if (isFarsi) EmeraldNeon else TextPrimary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Box(modifier = Modifier.width(1.dp).height(18.dp).background(BorderHighlight))
+
+                        // Torch Button
                         IconButton(
                             onClick = { viewModel.toggleTorch() },
                             modifier = Modifier.size(36.dp)
@@ -225,6 +252,7 @@ fun ScanScreen(
 
                         Box(modifier = Modifier.width(1.dp).height(18.dp).background(BorderHighlight))
 
+                        // TTS Audio Button
                         IconButton(
                             onClick = { viewModel.toggleTts() },
                             modifier = Modifier.size(36.dp)
@@ -246,78 +274,130 @@ fun ScanScreen(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
             ) {
-                // Floating Action Tool Dock (Thumb-Friendly, 48dp height)
+                // Floating Action Tool Dock (Scrollable thumb-friendly dock)
+                val dockScrollState = rememberScrollState()
                 Row(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 12.dp)
+                        .padding(horizontal = 14.dp)
+                        .padding(bottom = 10.dp)
                         .clip(RoundedCornerShape(24.dp))
                         .background(ForestSurfaceGlass)
                         .border(1.dp, BorderHighlight, RoundedCornerShape(24.dp))
+                        .horizontalScroll(dockScrollState)
                         .padding(horizontal = 8.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Gallery Picker
+                    // 1. Few-Shot Class Enrollment (New Crop / Disease)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .clickable { galleryLauncher.launch("image/*") }
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .background(EmeraldNeon.copy(alpha = 0.18f))
+                            .border(1.dp, EmeraldNeon, RoundedCornerShape(16.dp))
+                            .clickable { viewModel.openEnrollment(true) }
+                            .padding(horizontal = 12.dp, vertical = 7.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.PhotoLibrary, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Gallery", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Icon(Icons.Default.AddCircle, contentDescription = null, tint = EmeraldNeon, modifier = Modifier.size(17.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = if (isFarsi) "+ تعریف بیماری جدید (۵ شات)" else "+ Enroll Class (5-Shot)",
+                                color = EmeraldNeon,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
 
-                    // Atlas
+                    // 2. Dosage Calculator
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable { viewModel.openCalculator(true) }
+                            .padding(horizontal = 10.dp, vertical = 7.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Calculate, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(17.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(if (isFarsi) "محاسبه دوز" else "Dosage", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+
+                    // 3. Weather Spray Window
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable { viewModel.openWeather(true) }
+                            .padding(horizontal = 10.dp, vertical = 7.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.WbSunny, contentDescription = null, tint = AlertAmber, modifier = Modifier.size(17.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(if (isFarsi) "هواشناسی سم" else "Weather", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+
+                    // 4. Atlas
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
                             .clickable { viewModel.openAtlas(true) }
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .padding(horizontal = 10.dp, vertical = 7.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.LocalFlorist, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Atlas", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Icon(Icons.Default.LocalFlorist, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(17.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(if (isFarsi) "اطلس" else "Atlas", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
 
-                    // History
+                    // 5. History
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
                             .clickable { viewModel.openHistory(true) }
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .padding(horizontal = 10.dp, vertical = 7.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.History, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("History", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Icon(Icons.Default.History, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(17.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(if (isFarsi) "تاریخچه" else "History", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
 
-                    // Eco Mode Toggle
+                    // 6. Gallery Picker
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable { galleryLauncher.launch("image/*") }
+                            .padding(horizontal = 10.dp, vertical = 7.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.PhotoLibrary, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(17.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(if (isFarsi) "گالری" else "Gallery", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+
+                    // 7. Eco Mode
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
                             .background(if (state.isEcoMode) EmeraldNeon.copy(alpha = 0.2f) else Color.Transparent)
                             .clickable { viewModel.toggleEcoMode() }
-                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                            .padding(horizontal = 8.dp, vertical = 7.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.EnergySavingsLeaf,
                                 contentDescription = null,
                                 tint = if (state.isEcoMode) EmeraldNeon else TextSecondary,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(17.dp)
                             )
                             if (state.isEcoMode) {
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("ECO", color = EmeraldNeon, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("ECO", color = EmeraldNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -325,11 +405,13 @@ fun ScanScreen(
 
                 // Progressive Disclosure Diagnostic Card
                 DiagnosticCard(
+                    isFarsi = isFarsi,
                     latestDiagnosis = state.latestDiagnosis,
                     smoothedConfidence = state.smoothedConfidence,
                     averageLatencyMs = state.averageLatencyMs,
                     isHardwareAccelerated = state.isHardwareAccelerated,
-                    onSpeakDiagnosis = { viewModel.speakCurrentDiagnosis() }
+                    onSpeakDiagnosis = { viewModel.speakCurrentDiagnosis() },
+                    onOpenCalculator = { viewModel.openCalculator(true) }
                 )
             }
 
@@ -358,14 +440,14 @@ fun ScanScreen(
                 }
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    text = "Camera Permission Required",
+                    text = if (isFarsi) "مجوز دسترسی به دوربین الزامی است" else "Camera Permission Required",
                     color = TextPrimary,
                     fontSize = 21.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "BioDINO-Edge runs real-time plant pathology vision on your device. Camera access is needed to scan foliage.",
+                    text = if (isFarsi) "سامانه BioDINO-Edge برای اسکن برگ‌ها و تشخیص زنده بیماری‌های گیاهی به دسترسی دوربین نیاز دارد." else "BioDINO-Edge runs real-time plant pathology vision on your device. Camera access is needed to scan foliage.",
                     color = TextSecondary,
                     fontSize = 14.sp,
                     lineHeight = 20.sp,
@@ -382,7 +464,7 @@ fun ScanScreen(
                     modifier = Modifier.height(48.dp)
                 ) {
                     Text(
-                        text = "Enable Camera Access",
+                        text = if (isFarsi) "تایید و فعال‌سازی دوربین" else "Enable Camera Access",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
@@ -390,7 +472,32 @@ fun ScanScreen(
             }
         }
 
-        // Searchable Bottom Sheets
+        // Modals & Bottom Sheets
+        if (state.isEnrollmentOpen) {
+            FewShotEnrollmentSheet(
+                customClasses = state.customEnrolledDiseases,
+                onEnroll = { name, host, latin, healthy, advice, photos ->
+                    viewModel.enrollCustomClass(name, host, latin, healthy, advice, photos)
+                },
+                onDeleteClass = { id -> viewModel.deleteCustomDisease(id) },
+                onDismiss = { viewModel.openEnrollment(false) }
+            )
+        }
+
+        if (state.isCalculatorOpen) {
+            DosageCalculatorSheet(
+                isFarsi = isFarsi,
+                onDismiss = { viewModel.openCalculator(false) }
+            )
+        }
+
+        if (state.isWeatherOpen) {
+            WeatherWindowSheet(
+                isFarsi = isFarsi,
+                onDismiss = { viewModel.openWeather(false) }
+            )
+        }
+
         if (state.isAtlasOpen) {
             AtlasSheet(onDismiss = { viewModel.openAtlas(false) })
         }
