@@ -106,6 +106,11 @@ $$\text{norm}(r) = \frac{\frac{r}{255} - 0.485}{0.229}$$
 $$C_{\text{display}}^{(t)} = 0.65 \times C_{\text{display}}^{(t-1)} + 0.35 \times C_{\text{raw}}^{(t)}$$
 $$\text{Latency}_{\text{display}}^{(t)} = 0.80 \times \text{Latency}_{\text{display}}^{(t-1)} + 0.20 \times \text{Latency}_{\text{raw}}^{(t)}$$
 
+### ۳.۴. استراتژی جداسازی مدل سنگین (Companion Model Separation)
+جهت کاهش چشمگیر حجم اولیه فایل نصبی (APK)، معماری دوپله‌ای (Dual-Tier) اتخاذ شده است:
+* **مدل مستقل پایه تعبیه‌شده (`biodino_mobile_int8.onnx`):** تنها فایل مدل موجود در دارایی‌های APK با حجم ۲۱.۴۰ مگابایت است که عملکرد کامل اسکنر آفلاین با سرعت ۵۵ فریم بر ثانیه را تضمین می‌کند.
+* **مدل همراه تکمیلی (`biodino_companion_int8.onnx`):** مدل سنگین‌تر ۸۳.۵۷ مگابایتی بر پایه انکودر متنی-تصویری BioCLIP خارج از بسته APK نگهداری می‌شود و از طریق دانلود اختیاری درون‌برنامه‌ای (On-Demand Feature Delivery) فعال می‌گردد تا بدون افزایش حجم فایل نصب، پتانسیل رسیدن به دقت ۹۸.۳۹٪ فراهم باشد.
+
 ---
 
 ## ۴. قابلیت‌های پیشرفته و تجربه کاربری مدرن (Progressive Disclosure & Botanical UI/UX)

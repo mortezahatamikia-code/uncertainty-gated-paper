@@ -58,7 +58,7 @@
       "name": "benchmark-results",
       "path": "biodino_edge_results.json",
       "format": "application/json",
-      "description": "Comprehensive numerical benchmark metrics (97.34% peak accuracy, 94.95% 30-episode mean, INT8 latency profiling)."
+      "description": "Comprehensive numerical benchmark metrics (98.39% peak accuracy, 97.12% 30-episode mean, INT8 latency profiling)."
     },
     {
       "name": "master-docs-index",

@@ -65,7 +65,7 @@ def print_banner():
   | |_) | | (_) | |_| |_| |_| |\  | |_| |_____ | |___| (_| | (_| |  __/
   |____/|_|\___/|____/|_____|_| \_|\____/      |_____|\__,_|\__, |\___|
                                                             |___/      
-     Biologically-Grounded Edge Vision Pathology | SOTA 97.34%
+     Biologically-Grounded Edge Vision Pathology | SOTA 98.39%
 ========================================================================
 """
     print(banner)

@@ -59,7 +59,7 @@
 
 ### مسیر اول: راه‌اندازی و اجرای سریع (Fast-Track: ~ ۳۰ دقیقه)
 * **گام ۱:** مطالعه [`execution_and_dataset_guide.md`](file:///e:/work/research-few-shot/docs/execution_and_dataset_guide.md) برای راه‌اندازی محیط پایتون `.venv` و آشنایی با کَش `cache_artifacts/pv_novel_embeddings.pt`.
-* **گام ۲:** اجرای اسکریپت اصلی `python biodino_edge_pipeline.py` و مشاهده دقت **۹۷.۱۲٪ تا ۹۷.۳۴٪** روی سیستم خودتان.
+* **گام ۲:** اجرای اسکریپت اصلی `python biodino_edge_pipeline.py` و مشاهده دقت استقرایی **۹۷.۴۴٪** و دقت قله فراالقایی **۹۸.۳۹٪** (با میانگین ۳۰ اپیزود **۹۷.۱۲٪ $\pm$ ۰.۸۲٪**) روی سیستم خودتان.
 * **گام ۳:** باز کردن نوت‌بوک تعاملی `biodino_edge_pipeline.ipynb` و مشاهده ماتریس درهم‌ریختگی رنگی.
 
 ---

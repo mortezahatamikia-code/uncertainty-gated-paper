@@ -51,15 +51,15 @@ NOVEL_CLASSES = [
 class BioDINOEdgeMobile(nn.Module):
     """
     Self-contained Mobile Neural Network module for edge Android deployment.
-    Encapsulates DINOv2 feature extractor, cosine prototype projection,
-    temperature scaling, softmax, and Shannon uncertainty gating into a single ONNX graph.
+    Encapsulates DINOv2 feature extractor, Regularized Fisher-LDA linear discriminant projection,
+    softmax, and Shannon uncertainty gating into a single ONNX graph.
     """
-    def __init__(self, backbone, proto_dino, temperature=20.0):
+    def __init__(self, backbone, fisher_weight, fisher_bias):
         super().__init__()
         self.backbone = backbone
-        # Register prototypes as persistent buffer (8, 384)
-        self.register_buffer("proto_dino", proto_dino)
-        self.temperature = float(temperature)
+        # Register Fisher weights and bias as persistent buffers (8, 384) and (1, 8)
+        self.register_buffer("fisher_weight", fisher_weight)
+        self.register_buffer("fisher_bias", fisher_bias.unsqueeze(0))
         self.ln_k = float(np.log(len(NOVEL_CLASSES)))  # ln(8) ~ 2.07944
 
     def forward(self, x):
@@ -68,8 +68,8 @@ class BioDINOEdgeMobile(nn.Module):
         # 2. L2 Normalization
         f_norm = F.normalize(f_raw, p=2.0, dim=-1)
 
-        # 3. Fast Support Manifold Cosine Classification
-        logits = self.temperature * torch.matmul(f_norm, self.proto_dino.transpose(0, 1))
+        # 3. Regularized Fisher-LDA Linear Discriminant Projection
+        logits = torch.matmul(f_norm, self.fisher_weight.transpose(0, 1)) + self.fisher_bias
 
         # 4. Softmax Probabilities across 8 Novel Classes
         probabilities = F.softmax(logits, dim=-1)
@@ -103,23 +103,31 @@ def main():
     dino_feats = cache["dino_feats"]
     labels = cache["labels"]
 
-    # Compute 5-shot prototypes for the 8 novel classes
-    proto_list = []
+    # Calibrate Regularized Fisher-LDA on 5-shot DINOv2 support features
+    from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+    s_idx_all = []
     for c in range(len(NOVEL_CLASSES)):
         c_mask = (labels == c)
         c_idx = c_mask.nonzero().squeeze()
         s_idx = c_idx[:5]  # first 5 shots
-        c_proto = F.normalize(dino_feats[s_idx].mean(dim=0), dim=-1)
-        proto_list.append(c_proto)
-    proto_dino = torch.stack(proto_list)  # (8, 384)
-    print(f"  • Calibrated support prototypes shape: {proto_dino.shape}")
+        s_idx_all.extend(s_idx.tolist())
+    
+    s_dino_np = dino_feats[s_idx_all].numpy()
+    s_lbl_np = labels[s_idx_all].numpy()
+
+    clf_dino = LinearDiscriminantAnalysis(solver='lsqr', shrinkage='auto')
+    clf_dino.fit(s_dino_np, s_lbl_np)
+
+    fisher_weight = torch.tensor(clf_dino.coef_, dtype=torch.float32)    # (8, 384)
+    fisher_bias = torch.tensor(clf_dino.intercept_, dtype=torch.float32)  # (8,)
+    print(f"  • Calibrated Regularized Fisher projection matrix: {fisher_weight.shape}, bias: {fisher_bias.shape}")
 
     # 2. Build Backbone and End-to-End Module
     print("\n[*] Initializing DINOv2 Small backbone (22.1M parameters, static 224x224)...")
     backbone = timm.create_model('vit_small_patch14_dinov2', pretrained=True, img_size=224)
     backbone.eval()
 
-    mobile_model = BioDINOEdgeMobile(backbone, proto_dino, temperature=20.0)
+    mobile_model = BioDINOEdgeMobile(backbone, fisher_weight, fisher_bias)
     mobile_model.eval()
 
     # 3. Export to FP32 ONNX

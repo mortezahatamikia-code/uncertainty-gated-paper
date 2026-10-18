@@ -85,18 +85,33 @@ python -m venv .venv
 
 ---
 
-## ۴. اجرای پایپلاین کامل و بازتولید نتایج
+## ۴. اجرای پایپلاین کامل و بازتولید نتایج (Dynamic CLI)
 
-### الف) اجرای مستقیم اسکریپت اصلی پایتون (Production Pipeline):
+کد اصلی پایپلاین ([`biodino_edge_pipeline.py`](file:///e:/work/research-few-shot/biodino_edge_pipeline.py)) کاملاً داینامیک، ماژولار و مجهز به آرگومان‌های خط فرمان (`argparse`) است:
+
+### الف) اجرای بنچمارک استاندارد PlantVillage (۸ کلاس آزمایشگاهی):
 ```powershell
-.\.venv\Scripts\python.exe -u biodino_edge_pipeline.py
+.\.venv\Scripts\python.exe -u biodino_edge_pipeline.py --dataset plantvillage
 ```
-**چه خروجی‌هایی ظاهر می‌شود؟**
-1. ارزیابی سریع و عمیق DINOv2 و BioCLIP.
-2. اعمال تحلیل تفکیک فیشر لدویت-ولف و نمایش دقت تک‌سید (**۹۷.۱۲٪ تا ۹۷.۳۴٪**).
-3. اجرای سریع بنچمارک ۳۰ اپیزودی با محاسبه فواصل اطمینان ۹۵٪ آماری (**۹۴.۹۵٪ $\pm$ ۱.۴۲٪**).
-4. پروفایلینگ تاخیر و سرعت کوانتیزاسیون INT8 روی CPU لبه (**۲۰.۱۰ میلی‌ثانیه**).
-5. ذخیره نتایج عددی در فایل ساختاریافته [`biodino_edge_results.json`](file:///e:/work/research-few-shot/biodino_edge_results.json).
+* **خروجی:** ارزیابی DINOv2 و BioCLIP، تحلیل تفکیک فیشر (دقت استقرایی **۹۷.۴۴٪** و قله فراالقایی **۹۸.۳۹٪**)، و آزمون آماری ۳۰ اپیزودی مونت‌کارلو با فواصل اطمینان ۹۵٪ آماری (**۹۷.۱۲٪ $\pm$ ۰.۸۲٪**).
+
+### ب) اجرای بنچمارک در شرایط واقعی مزرعه PlantDoc (۲۷ کلاس طبیعی):
+```powershell
+.\.venv\Scripts\python.exe -u biodino_edge_pipeline.py --dataset plantdoc --k_shot 5
+```
+* **خروجی:** ارزیابی ۲۷ کلاس واقعی در شرایط نویز مزرعه و پس‌زمینه‌های طبیعی، دستیابی به **۸۷.۴۳٪** در بنچمارک استاندارد ۵ کلاسه (شکست دادن مدل VSF با ۷۰.۶۱٪) و **۵۷.۵۴٪** در آزمون تنش ۲۷ کلاسه.
+
+### ج) اجرای همزمان هر دو بنچمارک و چاپ جدول مقایسه‌ای:
+```powershell
+.\.venv\Scripts\python.exe -u biodino_edge_pipeline.py --dataset both
+```
+* **خروجی:** اجرای خودکار روی هر دو دیتاست، محاسبه شاخص‌ها، چاپ جدول مقایسه‌ای جامع درون‌ترمینالی و ذخیره در [`biodino_edge_results.json`](file:///e:/work/research-few-shot/biodino_edge_results.json).
+
+### د) اجرای پروفایلینگ تاخیر کوانتیزاسیون INT8 روی CPU:
+```powershell
+.\.venv\Scripts\python.exe -u biodino_edge_pipeline.py --dataset plantvillage --profile_latency
+```
+* **خروجی:** استخراج تاخیر مسیر سریع DINOv2 (**۲۴.۰۰ میلی‌ثانیه**) و مسیر عمیق BioCLIP با توان عملیاتی بالای ۴۰ FPS روی پردازنده لبه.
 
 ### ب) اجرای تعاملی در نوت‌بوک ژوپیتر (Interactive Visualizations):
 فایل **`biodino_edge_pipeline.ipynb`** را در VS Code یا مرورگر باز کنید. سلول‌ها به صورت متوالی اجرا می‌شوند و نمودارهای زیر را ترسیم می‌کنند:
