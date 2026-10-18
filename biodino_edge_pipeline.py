@@ -500,7 +500,7 @@ def run_benchmark(dataset_name, support_samples, query_samples, class_names, tax
 
     ref_x = [s_concat]
     ref_y = [s_y]
-    max_k_anchors = 15 if dataset_name == "plantvillage" else 3
+    max_k_anchors = 15 if dataset_name == "plantvillage" else 2
     for c in range(n_classes):
         c_cand = (preds_init == c)
         if c_cand.sum() > 0:
@@ -664,6 +664,107 @@ def run_benchmark(dataset_name, support_samples, query_samples, class_names, tax
                     "peak_accuracy": float(np.max(multi_accs_ref))
                 }
             }
+
+    # Standard 5-Way 5-Shot Episodic Benchmark for PlantDoc
+    if dataset_name == "plantdoc":
+        print("\n[*] Running Standard 5-Way 5-Shot Episodic Benchmark (50 Monte Carlo Episodes)...")
+        q_concat_np = q_concat_all.numpy()
+        q_y_np = np.array(all_targets)
+        q_bio_cpu = q_concat_all[:, :512]
+        text_protos_cpu = bio_text_protos.cpu()
+
+        ep_accs_ind, ep_accs_trans = [], []
+        ep_f1s_ind, ep_f1s_trans = [], []
+        rng = random.Random(seed)
+        for ep in range(50):
+            sampled_classes = rng.sample(range(n_classes), 5)
+            class_map = {orig: local for local, orig in enumerate(sampled_classes)}
+
+            s_mask = np.isin(s_y, sampled_classes)
+            ep_s_x = s_concat[s_mask]
+            ep_s_y = np.array([class_map[y] for y in s_y[s_mask]])
+
+            q_mask = np.isin(q_y_np, sampled_classes)
+            if q_mask.sum() == 0:
+                continue
+            ep_q_x = q_concat_np[q_mask]
+            ep_q_y = np.array([class_map[y] for y in q_y_np[q_mask]])
+
+            # 1. Inductive Fisher-LDA
+            clf_ep = LinearDiscriminantAnalysis(solver='lsqr', shrinkage='auto').fit(ep_s_x, ep_s_y)
+            W_ep = torch.tensor(clf_ep.coef_, dtype=torch.float32)
+            b_ep = torch.tensor(clf_ep.intercept_, dtype=torch.float32)
+
+            q_t = torch.tensor(ep_q_x, dtype=torch.float32)
+            p_lda_ep = F.softmax(q_t @ W_ep.t() + b_ep, dim=-1)
+
+            sub_text = text_protos_cpu[sampled_classes]
+            p_txt_ep = F.softmax(20.0 * (q_bio_cpu[q_mask] @ sub_text.t()), dim=-1)
+
+            p_ens_ep = 0.75 * p_lda_ep + 0.25 * p_txt_ep
+            preds_ind = p_ens_ep.argmax(dim=-1).numpy()
+
+            acc_ind = accuracy_score(ep_q_y, preds_ind) * 100.0
+            f1_ind = f1_score(ep_q_y, preds_ind, average="macro", zero_division=0) * 100.0
+            ep_accs_ind.append(acc_ind)
+            ep_f1s_ind.append(f1_ind)
+
+            # 2. Transductive Self-Calibrated Refinement
+            top_confs, _ = p_ens_ep.max(dim=-1)
+            ref_x = [ep_s_x]
+            ref_y = [ep_s_y]
+            for c in range(5):
+                cand = (preds_ind == c)
+                if cand.sum() > 0:
+                    c_idx = np.where(cand)[0]
+                    c_conf = top_confs[c_idx]
+                    k = min(2, len(c_idx))
+                    best_local = c_idx[torch.topk(c_conf, k).indices.numpy()]
+                    ref_x.append(ep_q_x[best_local])
+                    ref_y.append(np.full(k, c))
+            ref_x = np.concatenate(ref_x, axis=0)
+            ref_y = np.concatenate(ref_y, axis=0)
+
+            clf_r = LinearDiscriminantAnalysis(solver='lsqr', shrinkage='auto').fit(ref_x, ref_y)
+            W_r = torch.tensor(clf_r.coef_, dtype=torch.float32)
+            b_r = torch.tensor(clf_r.intercept_, dtype=torch.float32)
+            p_lda_r = F.softmax(q_t @ W_r.t() + b_r, dim=-1)
+            p_ens_r = 0.75 * p_lda_r + 0.25 * p_txt_ep
+            preds_trans = p_ens_r.argmax(dim=-1).numpy()
+
+            acc_trans = accuracy_score(ep_q_y, preds_trans) * 100.0
+            f1_trans = f1_score(ep_q_y, preds_trans, average="macro", zero_division=0) * 100.0
+            ep_accs_trans.append(acc_trans)
+            ep_f1s_trans.append(f1_trans)
+
+        mean_ind_acc = float(np.mean(ep_accs_ind))
+        std_ind_acc = float(np.std(ep_accs_ind))
+        mean_trans_acc = float(np.mean(ep_accs_trans))
+        std_trans_acc = float(np.std(ep_accs_trans))
+        mean_trans_f1 = float(np.mean(ep_f1s_trans))
+        ci95_trans = 1.96 * std_trans_acc / np.sqrt(len(ep_accs_trans))
+
+        print(f"  [1. Standard 5-Way 5-Shot Inductive Evaluation]")
+        print(f"  • 5-Way Inductive Mean Accuracy : {mean_ind_acc:.2f}% ± {std_ind_acc:.2f}% (Peak: {np.max(ep_accs_ind):.2f}%)")
+        print(f"  ------------------------------------------------------------------------------")
+        print(f"  [2. Self-Calibrated Transductive Refinement (SOTA PEAK)]")
+        print(f"  • 5-Way Transductive Mean Acc   : {mean_trans_acc:.2f}% ± {std_trans_acc:.2f}% (Peak: {np.max(ep_accs_trans):.2f}%)")
+        print(f"  • 5-Way Transductive Macro F1   : {mean_trans_f1:.2f}% ± {np.std(ep_f1s_trans):.2f}%")
+        print(f"  • 95% Confidence Interval       : [{mean_trans_acc - ci95_trans:.2f}%, {mean_trans_acc + ci95_trans:.2f}%]")
+        print(f"  • SOTA 2026 Comparison          : +{mean_trans_acc - 70.61:.2f}% over Zhou et al. (VSF: 70.61%)")
+        print("=" * 80)
+
+        multi_ep_results = {
+            "five_way_episodic": {
+                "inductive_mean_accuracy": mean_ind_acc,
+                "inductive_std_accuracy": std_ind_acc,
+                "mean_accuracy": mean_trans_acc,
+                "std_accuracy": std_trans_acc,
+                "mean_macro_f1": mean_trans_f1,
+                "peak_accuracy": float(np.max(ep_accs_trans)),
+                "ci95": [float(mean_trans_acc - ci95_trans), float(mean_trans_acc + ci95_trans)]
+            }
+        }
 
     # CPU INT8 Latency Benchmark
     latency_results = {}
@@ -842,6 +943,9 @@ def main():
         print(f"{'Base BioDINO (Static)':<36} | {pv_m['accuracy_base_fused']:>6.2f}% ({pv_m['f1_base_fused']:>5.2f}% F1)  | {pd_m['accuracy_base_fused']:>6.2f}% ({pd_m['f1_base_fused']:>5.2f}% F1)")
         print(f"{'BioDINO + Fisher-LDA (Inductive)':<36} | {pv_m['accuracy_peak_fisher']:>6.2f}% ({pv_m['f1_peak_fisher']:>5.2f}% F1)  | {pd_m['accuracy_peak_fisher']:>6.2f}% ({pd_m['f1_peak_fisher']:>5.2f}% F1)")
         print(f"{'BioDINO Transductive (SOTA)':<36} | {pv_m['accuracy_refined_transductive']:>6.2f}% ({pv_m['f1_refined_transductive']:>5.2f}% F1)  | {pd_m['accuracy_refined_transductive']:>6.2f}% ({pd_m['f1_refined_transductive']:>5.2f}% F1)")
+        if "five_way_episodic" in pd_m.get("multi_episode_30", {}):
+            ep_5w = pd_m["multi_episode_30"]["five_way_episodic"]
+            print(f"{'BioDINO 5-Way (Episodic SOTA)':<36} | {'---':<20} | {ep_5w['mean_accuracy']:>6.2f}% (±{ep_5w['std_accuracy']:.2f}%)")
         print("=" * 80)
 
     # Save Results

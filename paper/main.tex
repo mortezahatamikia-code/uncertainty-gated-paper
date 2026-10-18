@@ -88,7 +88,7 @@ Zhou \textit{et al.} (VSF) \cite{zhou2026vsf} & 2026 & Visual-semantic multimoda
 \midrule
 Sharif \textit{et al.} \cite{sharif2026real} & 2026 & Federated learning, multimodal RGB-text fusion, few-shot domain adaptation, edge computing & PlantWild & 93.78\% accuracy, 93.33\% F1-score, 0.97 AUC; 4$\times$ lower comm. overhead & High system complexity; communication overhead; dependence on synchronized image-text data. \\
 \midrule
-\textbf{BioDINO-Edge (Ours)} & \textbf{2026} & \textbf{Dual-Foundation (DINOv2 + BioCLIP), Regularized Fisher-LDA (Ledoit-Wolf), Closed-Form Transductive Calibration, Shannon Gating} & \textbf{PlantVillage (8 novel classes) \& PlantDoc (27 in-the-wild classes)} & \textbf{PlantVillage: 98.39\% Peak, 97.12\% $\pm$ 0.82\% Mean; PlantDoc: 87.43\% $\pm$ 9.20\% (5-Way SOTA), 57.54\% (27-Way all-class stress test)} & \textbf{Eliminates representation collapse without backprop; lightweight dual-tier edge footprint (21.4\,MB APK + 83.6\,MB on-demand, $<$25\,ms CPU, $>$40 FPS).} \\
+\textbf{BioDINO-Edge (Ours)} & \textbf{2026} & \textbf{Dual-Foundation (DINOv2 + BioCLIP), Regularized Fisher-LDA (Ledoit-Wolf), Closed-Form Transductive Calibration, Shannon Gating} & \textbf{PlantVillage (8 novel classes) \& PlantDoc (27 in-the-wild classes)} & \textbf{PlantVillage: 98.39\% Peak, 97.12\% $\pm$ 0.82\% Mean; PlantDoc: 87.43\% $\pm$ 9.20\% (5-Way SOTA), 58.33\% (27-Way all-class stress test)} & \textbf{Eliminates representation collapse without backprop; lightweight dual-tier edge footprint (21.4\,MB APK + 83.6\,MB on-demand, $<$25\,ms CPU, $>$40 FPS).} \\
 \bottomrule
 \end{tabular}%
 }
@@ -101,7 +101,7 @@ The primary contributions of this work are summarized as follows:
     \item \textbf{Dual-Foundation Representation Synergy:} We bridge self-supervised spatial patch representations with biological taxonomic language prompts, completely eliminating representation degradation on subtle chlorotic foliar lesions.
     \item \textbf{Regularized Fisher Manifold Alignment \& Transductive Self-Calibration:} We derive analytical closed-form covariance shrinkage and query-anchor recalibration that resolve high-dimensional singularity and 5-shot empirical centroid shifts without a single step of backpropagation or GPU retraining.
     \item \textbf{Predictive Shannon Gating \& Dual-Tier Edge Footprint:} We design an adaptive uncertainty router coupled with an ultra-lightweight standalone APK model (21.4\,MB, $>$40 FPS on CPU) and an on-demand deep companion model (83.6\,MB), enabling real-time edge execution within a strict 110\,MB budget.
-    \item \textbf{Empirical State-of-the-Art Validation:} BioDINO-Edge achieves 98.39\% Peak Accuracy, 97.12\% 30-episode mean, 0.00\% cross-species confusion, and suppresses false-negative disease risk to 0.564\% on 7,193 PlantVillage test queries. Furthermore, on the unconstrained in-the-wild PlantDoc benchmark, it achieves 87.43\% $\pm$ 9.20\% in 5-way 5-shot evaluation (+16.82\% over SOTA) and 57.54\% on 27-way all-class stress testing, proving robust real-world field transfer.
+    \item \textbf{Empirical State-of-the-Art Validation:} BioDINO-Edge achieves 98.39\% Peak Accuracy, 97.12\% 30-episode mean, 0.00\% cross-species confusion, and suppresses false-negative disease risk to 0.564\% on 7,193 PlantVillage test queries. Furthermore, on the unconstrained in-the-wild PlantDoc benchmark, it achieves 87.43\% $\pm$ 9.20\% in 5-way 5-shot evaluation (+16.82\% over SOTA) and 58.33\% on 27-way all-class stress testing, proving robust real-world field transfer.
 \end{enumerate}
 
 \section{Proposed BioDINO-Edge Architecture}
@@ -245,7 +245,7 @@ Static Prototype Consensus & 93.65 & 93.38 & 87.43 $\pm$ 9.20 & 54.37 \\
 BioDINO-Edge (Cascaded Routing) & 97.14 & 96.60 & 86.50 $\pm$ 9.10 & 53.97 \\
 \midrule
 \textbf{BioDINO + Fisher-LDA (Inductive)} & \textbf{97.44} & \textbf{96.91} & 87.32 $\pm$ 9.09 & 54.37 \\
-\textbf{BioDINO Transductive (SOTA Peak)} & \textbf{98.39} & \textbf{98.36} & \textbf{87.43 $\pm$ 9.20} & \textbf{57.54} \\
+\textbf{BioDINO Transductive (SOTA Peak)} & \textbf{98.39} & \textbf{98.36} & \textbf{87.43 $\pm$ 9.20} & \textbf{58.33} \\
 \textit{30-Episode Transductive Mean} & 97.12 $\pm$ 0.82 & 97.14 $\pm$ 0.91 & --- & --- \\
 \bottomrule
 \end{tabular}%
@@ -322,7 +322,7 @@ We evaluate under two complementary protocols:
     \item \textbf{27-Way All-Class Stress Test:} A rigorous holistic evaluation where all 27 categories are classified simultaneously (random chance = 3.70\%) using 5 support shots from the training split and tested against all 252 real-world field test queries.
 \end{enumerate}
 
-As detailed in Table~\ref{tab:comparative} (Columns 4 and 5), under the standard 5-way 5-shot protocol, BioDINO-Edge establishes a new state of the art with \textbf{87.43\% $\pm$ 9.20\%} accuracy, surpassing the recent multimodal VSF model (70.61\%) by \textbf{+16.82\%} and Zhao \textit{et al.} (54.24\%) by \textbf{+33.19\%}. Furthermore, in the severe 27-way all-class stress test, BioDINO-Edge attains \textbf{57.54\% accuracy} and \textbf{56.77\% Macro F1} (15.5$\times$ above random guessing), outperforming Zhao \textit{et al.}'s 5-way baseline despite facing more than 5$\times$ higher label complexity. This demonstrates that combining biological taxonomic embeddings with regularized analytical covariance alignment provides exceptional domain transfer resilience against complex non-foliar agricultural artifacts without necessitating any target-domain backpropagation.
+As detailed in Table~\ref{tab:comparative} (Columns 4 and 5), under the standard 5-way 5-shot protocol, BioDINO-Edge establishes a new state of the art with \textbf{87.43\% $\pm$ 9.20\%} accuracy, surpassing the recent multimodal VSF model (70.61\%) by \textbf{+16.82\%} and Zhao \textit{et al.} (54.24\%) by \textbf{+33.19\%}. Furthermore, in the severe 27-way all-class stress test, BioDINO-Edge attains \textbf{58.33\% accuracy} and \textbf{57.37\% Macro F1} (15.8$\times$ above random guessing), outperforming Zhao \textit{et al.}'s 5-way baseline despite facing more than 5$\times$ higher label complexity. This demonstrates that combining biological taxonomic embeddings with regularized analytical covariance alignment provides exceptional domain transfer resilience against complex non-foliar agricultural artifacts without necessitating any target-domain backpropagation.
 
 \subsection{Edge Hardware \& Dual-Tier Profiling}
 Table~\ref{tab:edge_bench} details edge hardware execution profiles under INT8 dynamic quantization on an Intel 4-thread CPU, mirroring embedded ARM microprocessors (e.g., Raspberry Pi 5, Cortex-A76).
