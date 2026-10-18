@@ -17,31 +17,56 @@ import kotlin.math.max
 class BioDinoOnnxEngine(context: Context) : AutoCloseable {
 
     private val ortEnv: OrtEnvironment = OrtEnvironment.getEnvironment("BioDINO-Mobile")
-    private val session: OrtSession
+    private var session: OrtSession
     private val preallocatedTensor = PreallocatedTensor()
+    private val modelBytes: ByteArray
 
     var isNnapiActive: Boolean = false
         private set
 
     init {
-        val sessionOptions = OrtSession.SessionOptions().apply {
-            try {
+        modelBytes = context.assets.open("biodino_mobile_int8.onnx").use { input: InputStream ->
+            input.readBytes()
+        }
+
+        session = try {
+            val nnapiOptions = OrtSession.SessionOptions().apply {
                 addNnapi()
-                isNnapiActive = true
-            } catch (e: Exception) {
-                isNnapiActive = false
-                // Multi-threaded CPU fallback
+                setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
+            }
+            val s = ortEnv.createSession(modelBytes, nnapiOptions)
+            isNnapiActive = true
+            s
+        } catch (e: Exception) {
+            isNnapiActive = false
+            val cpuOptions = OrtSession.SessionOptions().apply {
                 setInterOpNumThreads(2)
                 setIntraOpNumThreads(4)
                 setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
             }
+            ortEnv.createSession(modelBytes, cpuOptions)
         }
+    }
 
-        val modelBytes = context.assets.open("biodino_mobile_int8.onnx").use { input: InputStream ->
-            input.readBytes()
+    private fun runSession(tensor: OnnxTensor): OrtSession.Result {
+        return try {
+            session.run(mapOf("input_leaf" to tensor))
+        } catch (e: OrtException) {
+            if (isNnapiActive) {
+                // NNAPI runtime kernel failure - seamlessly fallback to CPU execution
+                isNnapiActive = false
+                val cpuOptions = OrtSession.SessionOptions().apply {
+                    setInterOpNumThreads(2)
+                    setIntraOpNumThreads(4)
+                    setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
+                }
+                session.close()
+                session = ortEnv.createSession(modelBytes, cpuOptions)
+                session.run(mapOf("input_leaf" to tensor))
+            } else {
+                throw e
+            }
         }
-
-        session = ortEnv.createSession(modelBytes, sessionOptions)
     }
 
     /**
@@ -54,7 +79,7 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
         val inputTensor = OnnxTensor.createTensor(ortEnv, buffer, inputShape)
 
         inputTensor.use { tensor ->
-            session.run(mapOf("input_leaf" to tensor)).use { results ->
+            runSession(tensor).use { results ->
                 @Suppress("UNCHECKED_CAST")
                 val features = (results[2].value as Array<FloatArray>)[0]
                 return features.copyOf()
@@ -79,7 +104,7 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
         val inputTensor = OnnxTensor.createTensor(ortEnv, buffer, inputShape)
 
         inputTensor.use { tensor ->
-            session.run(mapOf("input_leaf" to tensor)).use { results ->
+            runSession(tensor).use { results ->
                 @Suppress("UNCHECKED_CAST")
                 val baseProbabilities = (results[0].value as Array<FloatArray>)[0]
 

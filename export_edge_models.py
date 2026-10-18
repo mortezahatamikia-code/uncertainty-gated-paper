@@ -157,9 +157,15 @@ def main():
         output_names=["probabilities", "confidence", "features"],
         dynamic_axes={"input_leaf": {0: "batch_size"}, "probabilities": {0: "batch_size"}, "confidence": {0: "batch_size"}, "features": {0: "batch_size"}}
     )
-    quantize_dynamic(model_input=tier1_fp32, model_output=tier1_int8, weight_type=QuantType.QInt8, extra_options={"EnableSubgraph": True})
+    quantize_dynamic(
+        model_input=tier1_fp32,
+        model_output=tier1_int8,
+        op_types_to_quantize=['MatMul'],
+        weight_type=QuantType.QInt8,
+        extra_options={"EnableSubgraph": True}
+    )
     tier1_size = os.path.getsize(tier1_int8) / (1024 * 1024)
-    print(f"  [OK] Tier 1 INT8 Export Complete! Size: {tier1_size:.2f} MB")
+    print(f"  [OK] Tier 1 INT8 Export Complete! Size: {tier1_size:.2f} MB (Mobile-safe MatMul-only quantization)")
     
     # Copy to root and Android assets
     shutil.copyfile(tier1_int8, "biodino_mobile_int8.onnx")
@@ -195,9 +201,15 @@ def main():
     fp32_tier2_size = os.path.getsize(tier2_fp32) / (1024 * 1024)
     print(f"  • FP32 Companion Model Size: {fp32_tier2_size:.2f} MB. Applying INT8 quantization...")
 
-    quantize_dynamic(model_input=tier2_fp32, model_output=tier2_int8, weight_type=QuantType.QInt8, extra_options={"EnableSubgraph": True})
+    quantize_dynamic(
+        model_input=tier2_fp32,
+        model_output=tier2_int8,
+        op_types_to_quantize=['MatMul'],
+        weight_type=QuantType.QInt8,
+        extra_options={"EnableSubgraph": True}
+    )
     tier2_size = os.path.getsize(tier2_int8) / (1024 * 1024)
-    print(f"  [OK] Tier 2 INT8 Export Complete! Size: {tier2_size:.2f} MB")
+    print(f"  [OK] Tier 2 INT8 Export Complete! Size: {tier2_size:.2f} MB (Mobile-safe MatMul-only quantization)")
     
     # Keep Tier 2 companion model in root and cache for on-demand server hosting / download
     # (Do NOT copy into APK assets to keep the initial app bundle light at ~21 MB)
