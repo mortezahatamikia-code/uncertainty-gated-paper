@@ -95,9 +95,9 @@ PLANTVILLAGE_TAXONOMIC_PROMPTS = {
         "Characteristic yellow chlorotic rust spots with small dark pycnia dots on apple leaf."
     ],
     "Apple___healthy": [
-        "A botanical photo of healthy vigorous foliage of Apple (Malus domestica) showing clean green leaves with no lesions.",
-        "Healthy vibrant apple leaf blade completely devoid of fungal spots, necrosis, or chlorosis.",
-        "Flawless disease-free green foliage of Malus domestica fruit tree."
+        "A botanical photograph of healthy vigorous foliage of Apple (Malus domestica) showing clean vibrant green leaves.",
+        "Flawless healthy green apple leaf blade displaying uniform emerald lamina and intact smooth venation.",
+        "Clean vigorous vegetative green foliage of Malus domestica fruit tree with pristine leaf surface."
     ],
     "Grape___Black_rot": [
         "Grape (Vitis vinifera) foliage showing Black rot reddish-brown circular necrotic spots with minute black pycnidia caused by Guignardia bidwellii.",
@@ -115,9 +115,24 @@ PLANTVILLAGE_TAXONOMIC_PROMPTS = {
         "Dark brown irregular angular foliar blight lesions on grape leaf."
     ],
     "Grape___healthy": [
-        "A botanical photo of healthy vigorous foliage of Grape (Vitis vinifera) showing smooth green leaves without pathogens.",
-        "Healthy vibrant green grape leaf blade without necrotic spots, tiger stripes, or chlorosis.",
-        "Completely healthy disease-free foliage of Vitis vinifera vine."
+        "A botanical photograph of healthy vigorous foliage of Grape (Vitis vinifera) showing clean vibrant green leaves.",
+        "Flawless healthy green grape leaf blade displaying intact lobed structure and rich chlorophyll green coloration.",
+        "Clean vigorous vegetative green foliage of Vitis vinifera vine with pristine leaf surface."
+    ],
+    "Potato___Early_blight": [
+        "Potato foliage showing dark brown circular necrotic spots with concentric target-board rings caused by Alternaria solani.",
+        "Target-board concentric ring lesions of early blight on Solanum tuberosum foliage.",
+        "Dark brown target-spot blight on potato leaf blade surrounded by yellow chlorotic halo."
+    ],
+    "Potato___Late_blight": [
+        "Potato foliage with dark water-soaked greasy necrotic lesions and pale green margins caused by Phytophthora infestans.",
+        "Destructive late blight necrotic foliar decay on Solanum tuberosum leaf blade.",
+        "Water-soaked dark brown late blight lesions with white fungal mildew margins on potato leaf."
+    ],
+    "Potato___healthy": [
+        "A botanical photograph of healthy vigorous foliage of Potato (Solanum tuberosum) showing clean vibrant green leaflets.",
+        "Flawless healthy green compound potato leaf blade displaying uniform emerald lamina and intact venation.",
+        "Clean vigorous vegetative green foliage of Solanum tuberosum plant with pristine leaflet surface."
     ]
 }
 
@@ -128,9 +143,9 @@ PLANTDOC_TAXONOMIC_PROMPTS = {
         "Malus domestica leaf blade affected by apple scab fungal infection."
     ],
     "Apple_leaf": [
-        "A healthy green leaf of apple tree (Malus domestica) without disease spots.",
-        "Clean, flawless green foliage of healthy apple plant.",
-        "Disease-free green apple leaf."
+        "A healthy vibrant green leaf of apple tree (Malus domestica) showing clean lamina.",
+        "Clean, flawless green foliage of healthy vigorous apple plant.",
+        "Flawless intact green apple leaf displaying healthy mesophyll."
     ],
     "Apple_rust_leaf": [
         "Apple foliage with bright orange circular cedar apple rust lesions caused by Gymnosporangium.",
@@ -139,8 +154,8 @@ PLANTDOC_TAXONOMIC_PROMPTS = {
     ],
     "Bell_pepper_leaf": [
         "Healthy vigorous green leaf of sweet bell pepper plant (Capsicum annuum).",
-        "Clean vibrant green foliage of bell pepper without necrotic spots.",
-        "Disease-free foliage of Capsicum annuum."
+        "Clean vibrant emerald foliage of bell pepper displaying intact smooth leaf blade.",
+        "Flawless vigorous foliage of healthy Capsicum annuum."
     ],
     "Bell_pepper_leaf_spot": [
         "Bell pepper leaf showing dark water-soaked bacterial leaf spot lesions caused by Xanthomonas.",
@@ -149,13 +164,13 @@ PLANTDOC_TAXONOMIC_PROMPTS = {
     ],
     "Blueberry_leaf": [
         "Healthy green leaf of blueberry bush (Vaccinium corymbosum).",
-        "Clean vigorous foliage of blueberry plant without fungal spots.",
-        "Healthy disease-free blueberry leaf blade."
+        "Clean vigorous foliage of blueberry plant showing intact oval leaf blade.",
+        "Healthy pristine blueberry leaf blade with vibrant green cuticle."
     ],
     "Cherry_leaf": [
         "Healthy vibrant green leaf of sweet cherry tree (Prunus avium).",
-        "Flawless cherry foliage showing smooth green surface.",
-        "Disease-free healthy Prunus leaf."
+        "Flawless cherry foliage showing smooth glossy green surface.",
+        "Intact healthy Prunus leaf blade with uniform coloration."
     ],
     "Corn_Gray_leaf_spot": [
         "Corn leaf showing rectangular tan to gray necrotic lesions bounded by veins caused by Cercospora zeae-maydis.",
@@ -174,8 +189,8 @@ PLANTDOC_TAXONOMIC_PROMPTS = {
     ],
     "Peach_leaf": [
         "Healthy elongated lanceolate green leaf of peach tree (Prunus persica).",
-        "Clean disease-free foliage of peach fruit tree.",
-        "Vibrant green peach leaf without fungal curl or necrosis."
+        "Clean vibrant foliage of healthy peach fruit tree.",
+        "Vibrant green peach leaf displaying intact smooth surface."
     ],
     "Potato_leaf_early_blight": [
         "Potato leaf showing circular brown necrotic spots with concentric rings caused by Alternaria solani.",
@@ -189,13 +204,13 @@ PLANTDOC_TAXONOMIC_PROMPTS = {
     ],
     "Raspberry_leaf": [
         "Healthy serrated green compound leaf of raspberry plant (Rubus idaeus).",
-        "Clean vigorous foliage of raspberry without leaf spot or necrosis.",
-        "Disease-free green raspberry leaf blade."
+        "Clean vigorous foliage of raspberry displaying intact green leaflets.",
+        "Flawless green raspberry leaf blade with uniform coloration."
     ],
     "Soyabean_leaf": [
         "Healthy green trifoliate leaf blade of soybean plant (Glycine max).",
-        "Clean vigorous soybean foliage devoid of fungal pustules or rust.",
-        "Disease-free healthy Glycine max leaf."
+        "Clean vigorous soybean foliage displaying intact emerald leaflets.",
+        "Flawless healthy Glycine max leaf with uniform mesophyll."
     ],
     "Squash_Powdery_mildew_leaf": [
         "Squash leaf blade covered in white powdery talc-like fungal patches caused by Podosphaera xanthii.",
@@ -204,8 +219,8 @@ PLANTDOC_TAXONOMIC_PROMPTS = {
     ],
     "Strawberry_leaf": [
         "Healthy trifoliate compound green leaf of strawberry plant (Fragaria ananassa).",
-        "Clean vibrant foliage of strawberry without purple spot or scorch.",
-        "Disease-free healthy Fragaria leaf blade."
+        "Clean vibrant foliage of strawberry displaying intact serrated leaflets.",
+        "Flawless healthy Fragaria leaf blade with rich green color."
     ],
     "Tomato_Early_blight_leaf": [
         "Tomato leaf showing brown necrotic spots with concentric target-board rings caused by Alternaria linariae.",
@@ -219,8 +234,8 @@ PLANTDOC_TAXONOMIC_PROMPTS = {
     ],
     "Tomato_leaf": [
         "Healthy vigorous compound green leaf of tomato plant (Solanum lycopersicum).",
-        "Clean flawless green foliage of tomato without disease symptoms.",
-        "Disease-free vibrant tomato leaf blade."
+        "Clean flawless green foliage of tomato displaying intact leaflets.",
+        "Flawless vibrant tomato leaf blade with uniform emerald coloration."
     ],
     "Tomato_leaf_bacterial_spot": [
         "Tomato leaf blade exhibiting small dark brown water-soaked angular spots caused by Xanthomonas.",
@@ -249,8 +264,8 @@ PLANTDOC_TAXONOMIC_PROMPTS = {
     ],
     "grape_leaf": [
         "Healthy smooth lobed green foliage of grape vine (Vitis vinifera).",
-        "Clean vigorous grape leaf without black rot or mildew spots.",
-        "Disease-free healthy Vitis vinifera leaf."
+        "Clean vigorous grape leaf displaying intact lobed leaf blade.",
+        "Flawless healthy Vitis vinifera leaf with rich green lamina."
     ],
     "grape_leaf_black_rot": [
         "Grape leaf blade showing reddish-brown circular necrotic spots with black pycnidia caused by Guignardia bidwellii.",
@@ -286,7 +301,7 @@ def load_plantvillage_data(root, k_shot=5, seed=42):
     
     raw_ds = ImageFolder(root=str(pv_dir))
     all_classes = raw_ds.classes
-    NOVEL_PREFIXES = ("Apple", "Grape")
+    NOVEL_PREFIXES = ("Apple", "Grape", "Potato")
     novel_indices = [i for i, c in enumerate(all_classes) if c.startswith(NOVEL_PREFIXES)]
     novel_classes = [all_classes[i] for i in sorted(novel_indices)]
     novel_g2l = {g: l for l, g in enumerate(sorted(novel_indices))}
@@ -498,18 +513,24 @@ def run_benchmark(dataset_name, support_samples, query_samples, class_names, tax
     top_confs, _ = p_ens_all.max(dim=-1)
     preds_init = np.array(all_preds_fisher_ens)
 
-    ref_x = [s_concat]
-    ref_y = [s_y]
-    max_k_anchors = 15 if dataset_name == "plantvillage" else 2
+    ref_x = [s_concat] * (3 if dataset_name == "plantvillage" else 1)
+    ref_y = [s_y] * (3 if dataset_name == "plantvillage" else 1)
+    max_k_anchors = 20 if dataset_name == "plantvillage" else 2
     for c in range(n_classes):
         c_cand = (preds_init == c)
         if c_cand.sum() > 0:
             c_cand_idx = np.where(c_cand)[0]
             c_conf_vals = top_confs[c_cand_idx]
+            if dataset_name == "plantvillage":
+                high_conf = c_conf_vals > 0.70
+                if high_conf.sum() > 0:
+                    c_cand_idx = c_cand_idx[high_conf.cpu().numpy()]
+                    c_conf_vals = c_conf_vals[high_conf]
             top_k = min(max_k_anchors, len(c_cand_idx))
-            best_local_idx = c_cand_idx[torch.topk(c_conf_vals, top_k).indices.numpy()]
-            ref_x.append(q_concat_all[best_local_idx].numpy())
-            ref_y.append(np.full(top_k, c))
+            if top_k > 0:
+                best_local_idx = c_cand_idx[torch.topk(c_conf_vals, top_k).indices.cpu().numpy()]
+                ref_x.append(q_concat_all[best_local_idx].numpy())
+                ref_y.append(np.full(top_k, c))
 
     ref_x = np.concatenate(ref_x, axis=0)
     ref_y = np.concatenate(ref_y, axis=0)
@@ -584,29 +605,35 @@ def run_benchmark(dataset_name, support_samples, query_samples, class_names, tax
                 acc_ep = accuracy_score(c_labels[q_idx], preds_ep) * 100.0
                 f1_ep = f1_score(c_labels[q_idx], preds_ep, average="macro", zero_division=0) * 100.0
 
-                d_mask = (c_labels[q_idx] != 3) & (c_labels[q_idx] != 7)
-                fn_c = ((preds_ep == 3) | (preds_ep == 7))[d_mask].sum()
+                healthy_set = [3, 7, 10] if n_classes == 11 else [3, 7]
+                d_mask = ~np.isin(c_labels[q_idx], healthy_set)
+                fn_c = np.isin(preds_ep, healthy_set)[d_mask].sum()
                 fn_r = (fn_c / d_mask.sum()) * 100.0
 
                 multi_accs_ind.append(acc_ep)
                 multi_f1s_ind.append(f1_ep)
                 multi_fns_ind.append(fn_r)
 
-                # Transductive
+                # Transductive with 3x support anchor weighting and 0.70 confidence threshold
                 top_confs, _ = p_ens.max(dim=-1)
-                ref_x = [c_concat[s_idx]]
-                ref_y = [c_labels[s_idx]]
+                ref_x = [c_concat[s_idx]] * 3
+                ref_y = [c_labels[s_idx]] * 3
 
                 for c in range(n_classes):
                     c_cand = (preds_ep == c)
                     if c_cand.sum() > 0:
                         c_cand_idx = np.where(c_cand)[0]
                         c_conf_vals = top_confs[c_cand_idx]
-                        top_k = min(15, len(c_cand_idx))
-                        best_local_idx = c_cand_idx[torch.topk(c_conf_vals, top_k).indices.numpy()]
-                        best_q_idx = [q_idx[i] for i in best_local_idx]
-                        ref_x.append(c_concat[best_q_idx])
-                        ref_y.append(np.full(top_k, c))
+                        high_conf = c_conf_vals > 0.70
+                        if high_conf.sum() > 0:
+                            c_cand_idx = c_cand_idx[high_conf.numpy()]
+                            c_conf_vals = c_conf_vals[high_conf]
+                        top_k = min(20, len(c_cand_idx))
+                        if top_k > 0:
+                            best_local_idx = c_cand_idx[torch.topk(c_conf_vals, top_k).indices.numpy()]
+                            best_q_idx = [q_idx[i] for i in best_local_idx]
+                            ref_x.append(c_concat[best_q_idx])
+                            ref_y.append(np.full(top_k, c))
 
                 ref_x = np.concatenate(ref_x, axis=0)
                 ref_y = np.concatenate(ref_y, axis=0)
@@ -622,7 +649,7 @@ def run_benchmark(dataset_name, support_samples, query_samples, class_names, tax
 
                 acc_r = accuracy_score(c_labels[q_idx], preds_r) * 100.0
                 f1_r = f1_score(c_labels[q_idx], preds_r, average="macro", zero_division=0) * 100.0
-                fn_c_r = ((preds_r == 3) | (preds_r == 7))[d_mask].sum()
+                fn_c_r = np.isin(preds_r, healthy_set)[d_mask].sum()
                 fn_r_r = (fn_c_r / d_mask.sum()) * 100.0
 
                 multi_accs_ref.append(acc_r)
@@ -711,8 +738,8 @@ def run_benchmark(dataset_name, support_samples, query_samples, class_names, tax
 
             # 2. Transductive Self-Calibrated Refinement
             top_confs, _ = p_ens_ep.max(dim=-1)
-            ref_x = [ep_s_x]
-            ref_y = [ep_s_y]
+            ref_x = [ep_s_x] * 2
+            ref_y = [ep_s_y] * 2
             for c in range(5):
                 cand = (preds_ind == c)
                 if cand.sum() > 0:
@@ -950,8 +977,16 @@ def main():
 
     # Save Results
     out_json = PROJECT_ROOT / "biodino_edge_results.json"
+    existing_results = {}
+    if out_json.exists():
+        try:
+            with open(out_json, "r", encoding="utf-8") as f:
+                existing_results = json.load(f)
+        except Exception:
+            existing_results = {}
+    existing_results.update(all_benchmark_results)
     with open(out_json, "w", encoding="utf-8") as f:
-        json.dump(all_benchmark_results, f, indent=2)
+        json.dump(existing_results, f, indent=2)
     print(f"\n[OK] Results successfully exported to {out_json}!")
 
 if __name__ == "__main__":

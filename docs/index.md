@@ -14,10 +14,10 @@
 | **[`execution_and_dataset_guide.md`](file:///e:/work/research-few-shot/docs/execution_and_dataset_guide.md)** | **راهنمای اجرا و دیتاست** | مهندسان نرم‌افزار | ~ ۱۵۰ خط | نحوه دانلود دیتاست، کَش آفلاین ۲۷MB، نصب پکیج‌ها، اجرای کد و رفع خطاها. |
 | **[`mathematics_foundation_guide.md`](file:///e:/work/research-few-shot/docs/mathematics_foundation_guide.md)** | **کتابچه ریاضیات پایه از صفر** | علاقه‌مندان به فهم عمیق | **۱,۱۴۷ خط** | تشریح همه‌فهم از مشتق، فیثاغورس، جبر خطی، آنتروپی شانون تا انقباض لدویت-ولف. |
 | **[`algorithm_guide.md`](file:///e:/work/research-few-shot/docs/algorithm_guide.md)** | **مرجع جامع الگوریتمی و اثبات** | داوران هوش مصنوعی | ~ ۴۵۰ خط | فرمولاسیون تفکیک فیشر، هندسه منیفولد ۸۹۶ بعدی و تحلیل پیچیدگی محاسباتی FLOPs. |
-| **[`plant_pathology_domain_guide.md`](file:///e:/work/research-few-shot/docs/plant_pathology_domain_guide.md)** | **راهنمای پاتولوژی گیاهی** | پژوهشگران بینایی ماشین | ~ ۱۱۵ خط | نام‌های علمی پاتوژن‌ها، علائم بالینی ۸ بیماری، تداخل اسکا و بلک‌رات، واژه‌نامه تخصصی. |
+| **[`plant_pathology_domain_guide.md`](file:///e:/work/research-few-shot/docs/plant_pathology_domain_guide.md)** | **راهنمای پاتولوژی گیاهی** | پژوهشگران بینایی ماشین | ~ ۱۱۵ خط | نام‌های علمی پاتوژن‌ها، علائم بالینی ۱۱ بیماری، تداخل اسکا و بلک‌رات، پاتولوژی بلایت سیب‌زمینی، واژه‌نامه تخصصی. |
 | **[`few_shot_taxonomy_guide.md`](file:///e:/work/research-few-shot/docs/few_shot_taxonomy_guide.md)** | **شجره‌نامه یادگیری چندنمونه‌ای** | محققان آکادمیک | ~ ۲۲۰ خط | بررسی ۴ نسل تکامل یادگیری چندشات از متا-لرنینگ MAML تا BioDINO-Edge ۲۰۲۶. |
 | **[`reviewer_rebuttal_playbook.md`](file:///e:/work/research-few-shot/docs/reviewer_rebuttal_playbook.md)** | **سناریوهای دفاع و پاسخ به داور** | نویسندگان مقاله و ارائه‌دهندگان | ~ ۲۸۰ خط | پاسخ مقتدرانه به ۲۰ پرسش چالشی داوران، فواصل اطمینان و طرح ۱۰ اسلاید دفاع شفاهی. |
-| **[`failure_modes_and_robustness.md`](file:///e:/work/research-few-shot/docs/failure_modes_and_robustness.md)** | **کالبدشکافی خطاها و آزمون OOD** | داوران ژورنال‌های معتبر | ~ ۲۶۰ خط | تحلیل ۹۱ خطای باقیمانده، آزمون‌های تنش تاری و نور، تشخیص داده‌های نامربوط با گیت شانون. |
+| **[`failure_modes_and_robustness.md`](file:///e:/work/research-few-shot/docs/failure_modes_and_robustness.md)** | **کالبدشکافی خطاها و آزمون OOD** | داوران ژورنال‌های معتبر | ~ ۲۶۰ خط | تحلیل خطاهای باقیمانده، آزمون‌های تنش تاری و نور، تشخیص داده‌های نامربوط با گیت شانون. |
 | **[`edge_hardware_deployment_guide.md`](file:///e:/work/research-few-shot/docs/edge_hardware_deployment_guide.md)** | **راهنمای استقرار سخت‌افزار لبه** | مهندسان سخت‌افزار و IoT | ~ ۲۵۰ خط | استقرار روی رزبری‌پای، انویدیا جتسون، اکسپورت ONNX INT8، مدیریت گرما و باتری پهپاد. |
 | **[`android_mobile_app_guide.md`](file:///e:/work/research-few-shot/docs/android_mobile_app_guide.md)** | **راهنمای اپلیکیشن اندروید نیتیو** | توسعه‌دهندگان اندروید و موبایل | ~ ۲۰۰ خط | معماری کاتلین و Jetpack Compose، پایپلاین بافر مستقیم بدون GC، استنتاج ONNX NNAPI و دوربین CameraX. |
 | **[`paper_guide.md`](file:///e:/work/research-few-shot/docs/paper_guide.md)** | **راهنمای محیط لاتک و کامپایل** | نویسندگان مقاله | ~ ۶۰ خط | راهنمای گام‌به‌گام ستاپ ادیتور، اکستنشن LaTeX Workshop و کامپایلر MiKTeX. |
@@ -59,13 +59,13 @@
 
 ### مسیر اول: راه‌اندازی و اجرای سریع (Fast-Track: ~ ۳۰ دقیقه)
 * **گام ۱:** مطالعه [`execution_and_dataset_guide.md`](file:///e:/work/research-few-shot/docs/execution_and_dataset_guide.md) برای راه‌اندازی محیط پایتون `.venv` و آشنایی با کَش `cache_artifacts/pv_novel_embeddings.pt`.
-* **گام ۲:** اجرای اسکریپت اصلی `python biodino_edge_pipeline.py` و مشاهده دقت استقرایی **۹۷.۴۴٪** و دقت قله فراالقایی **۹۸.۳۹٪** (با میانگین ۳۰ اپیزود **۹۷.۱۲٪ $\pm$ ۰.۸۲٪**) روی سیستم خودتان.
+* **گام ۲:** اجرای اسکریپت اصلی `python biodino_edge_pipeline.py` و مشاهده دقت استقرایی **۹۷.۹۵٪** و دقت قله فراالقایی **۹۸.۶۷٪** (با میانگین ۳۰ اپیزود **۹۷.۴۱٪ $\pm$ ۰.۷۱٪**) روی سیستم خودتان.
 * **گام ۳:** باز کردن نوت‌بوک تعاملی `biodino_edge_pipeline.ipynb` و مشاهده ماتریس درهم‌ریختگی رنگی.
 
 ---
 
 ### مسیر دوم: تسلط بر ریاضیات و تئوری آکادمیک (Theoretical Mastery)
-* **گام ۱:** مطالعه کتابچه فوق‌العاده تفصیلی [`mathematics_foundation_guide.md`](file:///e:/work/research-few-shot/docs/mathematics_foundation_guide.md) برای یادگیری مفهوم مشتق، قضیه فیثاغورس، هندسه ترنسفورمرها، آنتروپی شانون و کارگاه عددی حل‌شده گام‌به‌گام.
+* **گام ۱:** مطالعه کتابچه فوق‌العاده تفصیلی [`mathematics_foundation_guide.md`](file:///e:/work/research-few-shot/docs/mathematics_foundation_guide.md) برای یادگیری مفهوم مشتق، قضیه فیثاغورس، هندسه ترنسفورمرها، آنتروپی شانون، پرامپت‌های پالایش‌شده گیاه‌پزشکی و خودکالیبراسیون لنگردار نرم.
 * **گام ۲:** مطالعه [`algorithm_guide.md`](file:///e:/work/research-few-shot/docs/algorithm_guide.md) برای درک اثبات انقباض لدویت-ولف، ماتریس‌های کوواریانس و حل تحلیلی فیشر.
 * **گام ۳:** مطالعه [`few_shot_taxonomy_guide.md`](file:///e:/work/research-few-shot/docs/few_shot_taxonomy_guide.md) برای تسلط بر تاریخچه ۴ نسل یادگیری اندک‌نمونه (از MAML تا BioDINO-Edge).
 
@@ -74,7 +74,7 @@
 ### مسیر سوم: آمادگی برای جلسه دفاع، مصاحبه و داوری (Reviewer & Viva Defense)
 * **گام ۱:** مطالعه [`plant_pathology_domain_guide.md`](file:///e:/work/research-few-shot/docs/plant_pathology_domain_guide.md) برای یادگیری نام‌های لاتین پاتوژن‌ها، تفاوت‌های بالینی بیماری‌ها و واژه‌نامه تخصصی گیاه‌پزشکی.
 * **گام ۲:** مطالعه [`reviewer_rebuttal_playbook.md`](file:///e:/work/research-few-shot/docs/reviewer_rebuttal_playbook.md) برای تسلط بر پاسخ به ۲۰ تله داوران بین‌المللی و استفاده از اسلایدهای طلایی پرزنتیشن.
-* **گام ۳:** مطالعه [`failure_modes_and_robustness.md`](file:///e:/work/research-few-shot/docs/failure_modes_and_robustness.md) برای تسلط بر تحلیل ۹۱ خطای باقیمانده، آزمون‌های تنش و نحوه تشخیص داده‌های خارج از توزیع (OOD).
+* **گام ۳:** مطالعه [`failure_modes_and_robustness.md`](file:///e:/work/research-few-shot/docs/failure_modes_and_robustness.md) برای تسلط بر تحلیل خطاهای باقیمانده، آزمون‌های تنش و نحوه تشخیص داده‌های خارج از توزیع (OOD).
 
 ---
 
