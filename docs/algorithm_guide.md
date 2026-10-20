@@ -360,3 +360,131 @@ for ep in range(30):
 2. اجرای الگوریتم فیشر-لدویت‌ولف در کمتر از ۱ ثانیه.
 3. رسم ماتریس درهم‌ریختگی به صورت هیت‌مپ رنگی با مات‌پلات‌لیب.
 4. مشاهده نمودارهای ارزیابی آماری ۳۰ اپیزودی.
+
+---
+
+## ۱۰. هوش مصنوعی توضیح‌پذیر در پاتولوژی گیاهی (Explainable AI via DINOv2 Saliency Maps)
+
+یکی از الزامات حیاتی استقرار مدل‌های بینایی ماشین در مزارع کشاورزی و پذیرش توسط کارشناسان گیاه‌پزشکی و داوران ژورنال‌های معتبر، **«توضیح‌پذیری بصری (Visual Explainability)»** تصمیمات مدل است. مدل نباید صرفاً یک جعبه سیاه (Black Box) باشد که بدون مشخص کردن کانون پاتولوژیک، خروجی طبقه‌بندی تولید کند.
+
+### الف) مکانیک ریاضی استخراج نقشه برجستگی توجه خودکار (DINOv2 Attention Rollout)
+در مدل پیش‌آموزش‌دیده خودنظارتی DINOv2 (`vit_small_patch14_dinov2`)، هر تصویر ورودی $224 \times 224$ به ۲۵۶ پچ تصویری $14 \times 14$ ($16 \times 16$ شبکه مشبک) تقسیم می‌شود. با افزودن توکن کلاس `[CLS]` به عنوان اولین توکن، دنباله ورودی به طول $N = 257$ تشکیل می‌گردد.
+
+در آخرین بلوک ترنسفورمر مدل (`dino_model.blocks[-1]`)، ماتریس کوئری $\mathbf{Q}$ و کلید $\mathbf{K}$ با بعد سر $d_k = 64$ و تعداد سرهای توجه $H = 6$ محاسبه می‌شوند:
+$$\mathbf{A}^{(h)} = \text{softmax}\left(\frac{\mathbf{Q}^{(h)} (\mathbf{K}^{(h)})^T}{\sqrt{d_k}}\right) \in \mathbb{R}^{257 \times 257}, \quad h \in \{1, \dots, 6\}$$
+
+ردیف اول این ماتریس، وزن توجه توکن `[CLS]` (نمایانگر بازنمایی کلان تصویر) به تمام ۲۵۶ پچ مکانی را مشخص می‌کند:
+$$\mathbf{a}_{\text{CLS}}^{(h)} = \mathbf{A}^{(h)}[0, 1:257] \in \mathbb{R}^{256}$$
+
+برای حذف سوگیری‌های موضعی هدهای مجزا، میانگین چندسری محاسبه شده و بردار فضایی به ماتریس مشبک دوبعدی $16 \times 16$ تبدیل می‌گردد:
+$$\bar{\mathbf{a}} = \frac{1}{H} \sum_{h=1}^H \mathbf{a}_{\text{CLS}}^{(h)}$$
+$$\mathbf{M}_{\text{grid}} = \text{Reshape}_{16 \times 16}(\bar{\mathbf{a}}) \in \mathbb{R}^{16 \times 16}$$
+
+سپس، نرمال‌سازی کمینه-بیشینه (Min-Max Scaling) برای مقیاس‌بندی تراکم توجه به بازه $[0, 1]$ انجام شده و از طریق درون‌یابی دوبی‌مکعبی پیوسته (Bicubic Interpolation) به رزولوشن اصلی تصویر ($224 \times 224$) نگاشت می‌شود:
+$$\mathbf{M}_{\text{norm}} = \frac{\mathbf{M}_{\text{grid}} - \min(\mathbf{M}_{\text{grid}})}{\max(\mathbf{M}_{\text{grid}}) - \min(\mathbf{M}_{\text{grid}}) + 10^{-8}}$$
+$$\mathbf{S} = \text{Bicubic}(\mathbf{M}_{\text{norm}}, (224, 224)) \in [0, 1]^{224 \times 224}$$
+
+در نهایت، نقشه حرارتی رنگی با پالت رنگی ادراکی `turbo` تولید شده و با وزن خطی متوازن با تصویر طبیعی برگ ترکیب (Alpha Blending) می‌شود:
+$$\mathbf{I}_{\text{overlay}} = 0.52 \cdot \mathbf{I}_{\text{RGB}} + 0.48 \cdot \text{TurboMap}(\mathbf{S})$$
+
+### ب) اعتبارسنجی بیولوژیکی روی ۴ بیماری شاخص پاتولوژی
+اسکریپت `generate_saliency_and_calibration.py` چهار نمونه بالینی متمایز را پردازش کرده و تطابق کانون توجه با الگوهای میکروسکوپی را اثبات می‌کند:
+
+| نام بیماری و پاتوژن | علائم بارز بافت گیاهی | تمرکز نقشه برجستگی DINOv2 (Saliency Finding) |
+| :--- | :--- | :--- |
+| **بلایت دیررس سیب‌زمینی**<br>(*Phytophthora infestans*) | زخم‌های تیره آب‌سوخته و در حال پیشروی سریع با لبه‌های نم‌دار | توجه مدل دقیقاً روی **مرز پیشروی زخم آب‌سوخته (Water-soaked margin)** و کانون تولید اسپور تمرکز دارد و بافت سبز سالم پس‌زمینه را نادیده می‌گیرد. |
+| **اسکای انگور / سیاهول**<br>(*Phaeomoniella chlamydospora*) | سوختگی و کلروز بین‌رگبرگی ایجادکننده الگوی نواری پوست‌ببری | اتنشن مدل دقیقاً مسیر نوارهای **نکروز بین‌رگبرگی (Interveinal Tiger-stripe)** را ردگیری کرده و رگبرگ‌های اصلی سبز را تفکیک می‌کند. |
+| **زنگ سیب و سرو**<br>(*Gymnosporangium juniperi*) | تاول‌های مدور زرد-نارنجی برجسته حاوی اندام‌های بارده قارچی | کانون توجه بر روی **خوشه‌های کروی اسپورهای پیکنیا و آسیا (Aecial Spore Clusters)** قفل شده و علائم اولیه بیماری را جداسازی می‌نماید. |
+| **بلک‌رات سیب / چشم‌قورباغه‌ای**<br>(*Botryosphaeria obtusa*) | لکه‌های نکروتیک مدور با مرکز قهوه‌ای روشن و حلقه‌های دوار تیره | نقشه برجستگی دقیقاً **مرکز نکروز و حلقه پیرامونی چشم‌قورباغه‌ای (Frog-eye ring)** را برجسته و ایزوله می‌سازد. |
+
+### ج) فایل‌های خروجی و دسترسی
+این تحلیل در قالب تصویر سه‌ردیفه (شامل: ۱. برگ ورودی، ۲. هیت‌مپ خام سلف‌اتنشن، ۳. هم‌پوشانی لزیون) در مسیرهای زیر برای چاپ ژورنالی و اسناد وب ذخیره شده است:
+* **نسخه وکتور چاپ مقاله (IEEE Camera-Ready, 300 DPI):** [`paper/fig_saliency.pdf`](file:///e:/work/research-few-shot/paper/fig_saliency.pdf)
+* **نسخه باکیفیت تصویری پیپر:** [`paper/fig_saliency.png`](file:///e:/work/research-few-shot/paper/fig_saliency.png)
+* **آرشیو اسناد و مستندات پروژه:** [`docs/assets/fig_saliency.png`](file:///e:/work/research-few-shot/docs/assets/fig_saliency.png)
+
+---
+
+## ۱۱. ارزیابی قابلیت اطمینان و کالیبراسیون احتمالات (Expected Calibration Error & Reliability Diagrams)
+
+در کاربردهای هوش مصنوعی در مزارع هوشمند (نظیر پهپادهای خودران سم‌پاش)، پیش‌بینی درست به تنهایی کافی نیست؛ بلکه **کالیبراسیون دقیق احتمالاتی (Confidence Calibration)** حیاتی است. اگر مدلی با اطمینان ۹۹٪ یک برگ سالم را بیماری قارچی خطرناک تشخیص دهد یا برعکس، منجر به پاشش غیرضروری سموم شیمیایی پرهزینه یا گسترش اپیدمی در مزرعه خواهد شد.
+
+### الف) فرمولاسیون ریاضی سنجه‌های ECE و MCE
+یک طبقه‌بند زمانی کاملاً کالیبره است که احتمال شرطی صحت پیش‌بینی با مقدار اطمینان اعلام‌شده برابر باشد:
+$$\mathbb{P}(\hat{y} = y \mid \hat{p} = p) = p, \quad \forall p \in [0, 1]$$
+
+برای ارزیابی تجربی بر روی تمام **۹,۳۳۰ تصویر آزمون**، بازه احتمالات $[0, 1]$ به $M = 10$ سطل مجزا (Bins) به طول یکسان $\Delta = 0.1$ افراز می‌شود:
+$$B_m = \left( \frac{m-1}{M}, \frac{m}{M} \right], \quad m \in \{1, \dots, 10\}$$
+
+برای هر سطل $B_m$، دو شاخص میانگین دقت تجربی ($\text{acc}(B_m)$) و میانگین اطمینان پیش‌بینی ($\text{conf}(B_m)$) به صورت زیر محاسبه می‌شوند:
+$$\text{acc}(B_m) = \frac{1}{|B_m|} \sum_{i \in B_m} \mathbf{1}(\hat{y}_i = y_i)$$
+$$\text{conf}(B_m) = \frac{1}{|B_m|} \sum_{i \in B_m} \hat{p}_i$$
+
+* **خطای کالیبراسیون مورد انتظار (Expected Calibration Error - ECE):** میانگین وزنی شکاف بین اطمینان و دقت تجربی در تمام سطل‌ها:
+  $$\text{ECE} = \sum_{m=1}^M \frac{|B_m|}{N} \left| \text{acc}(B_m) - \text{conf}(B_m) \right|$$
+* **بیشینه خطای کالیبراسیون (Maximum Calibration Error - MCE):** بیشترین شکاف انحراف مشاهده‌شده در بدترین سطل:
+  $$\text{MCE} = \max_{m \in \{1,\dots,M\}} \left| \text{acc}(B_m) - \text{conf}(B_m) \right|$$
+
+### ب) مقیاس‌بندی دمایی پسینی (Post-Hoc Temperature Scaling)
+در فریم‌ورک BioDINO-Edge، احتمالات پس از خودکالیبراسیون فراالقایی تحت تنظیم دمایی پیرامون توزیع شانون قرار می‌گیرند:
+$$\mathbf{p}_{\text{cal}} = \text{softmax}\left(\frac{\log(\mathbf{p}_{\text{trans}} + 10^{-12})}{T}\right), \quad T = 0.50$$
+این پارامتر با سرد کردن ملایم توزیع ($T < 1$)، خروجی‌های بااطمینان را شفاف کرده و همزمان گیت عدم‌قطعیت با سنجش مارجین-آنتروپی موارد پرنوسان را هدایت می‌کند.
+
+### ج) تحلیل مقایسه‌ای دیاگرام قابلیت اطمینان (Reliability Diagrams)
+در نمودار تولیدشده [`paper/fig_calibration.pdf`](file:///e:/work/research-few-shot/paper/fig_calibration.pdf)، رفتار مدل در دو پنل کنار هم مقایسه شده است:
+1. **پنل چپ: مدل پایه بدون کالیبره (Uncalibrated Baseline / Tip-Adapter / Cosine Protos):**
+   * خطای بسیار بالای کالیبراسیون و انحراف شدید ستون‌های دقت از خط قطری کالیبراسیون ایده‌آل ($y = x$).
+   * پدیده **بیش‌اطمینانی کاذب (Overconfidence)** که در آن مدل در نمونه‌های اشتباه نیز احتمالات بالای ۹۰٪ به کشاورز گزارش می‌دهد.
+2. **پنل راست: مدل پیشنهادی BioDINO-Edge (Calibrated & Gated):**
+   * تطابق عالی ستون‌های دقت با خط قطری نقطه‌چین کالیبراسیون ایده‌آل.
+   * به حداقل رسیدن شکاف کالیبراسیون (Calibration Gap) در تمامی ۱۰ سطل اطمینان.
+
+### د) فایل‌های خروجی و دسترسی
+* **نسخه برداری مقاله (IEEE Camera-Ready, 300 DPI):** [`paper/fig_calibration.pdf`](file:///e:/work/research-few-shot/paper/fig_calibration.pdf)
+* **نسخه تصویری پیپر:** [`paper/fig_calibration.png`](file:///e:/work/research-few-shot/paper/fig_calibration.png)
+* **آرشیو اسناد فنی پروژه:** [`docs/assets/fig_calibration.png`](file:///e:/work/research-few-shot/docs/assets/fig_calibration.png)
+
+---
+
+## ۱۲. اطلس اسکریپت‌های مصورسازی و نحوه بازتولید خودکار (Visualization Script Guide)
+
+برای تضمین بازتولیدپذیری شفاف (Scientific Reproducibility)، دو اسکریپت تخصصی پایتون در ریشه پروژه قرار گرفته‌اند:
+
+### ۱. اسکریپت `generate_saliency_and_calibration.py`
+این اسکریپت مسئول تولید همزمان نمودارهای کالیبراسیون ECE و نقشه‌های برجستگی DINOv2 است:
+* **نحوه اجرا:**
+  ```powershell
+  .\.venv\Scripts\python.exe -u generate_saliency_and_calibration.py
+  ```
+* **توابع درونی:**
+  * `generate_saliency_figures()`: بارگذاری DINOv2، هوک زدن به آخرین لایه Attention، استخراج سلف‌اتنشن توکن CLS، تولید اورلی رنگی و ذخیره در فرمت‌های PDF و PNG با کیفیت ۳۰۰ DPI.
+  * `generate_calibration_figures()`: بارگذاری کَش ویژگی‌های ۹,۳۳۰ نمونه آزمون، اجرای تفکیک فیشر و پالایش فراالقایی، محاسبه سنجه‌های ECE و MCE در ۱۰ سطل، و رسم دیاگرام قابلیت اطمینان.
+* **فایل‌های خروجی:**
+  * `paper/fig_saliency.pdf` و `paper/fig_saliency.png`
+  * `docs/assets/fig_saliency.png`
+  * `paper/fig_calibration.pdf` و `paper/fig_calibration.png`
+  * `docs/assets/fig_calibration.png`
+  * به‌روزرسانی بخش سنجه‌های کالیبراسیون در `biodino_edge_results.json`
+
+### ۲. اسکریپت `generate_error_gallery.py`
+این اسکریپت مسئول کالبدشکافی تصویری خطاهای باقیمانده مدل است:
+* **نحوه اجرا:**
+  ```powershell
+  .\.venv\Scripts\python.exe -u generate_error_gallery.py
+  ```
+* **فرآیند عملکرد:**
+  * استخراج پیش‌بینی‌های مدل روی نمونه‌های کوئری و شناسایی نمونه‌های خطادار.
+  * دسته‌بندی خطاها بر اساس جفت‌های پاتولوژیک رایج (نظیر تداخل بلک‌رات و اسکا، یا اسکب و بلک‌رات).
+  * گلچین ۱۲ نمونه چالش‌برانگیز شاخص و رندر ماتریس ۳×۴ با کادرهای رنگی تشخیصی، نام بیماری واقعی، نام کلاس پیش‌بینی‌شده اشتباه و درصد اطمینان مدل.
+* **فایل خروجی:**
+  * [`docs/assets/error_analysis_gallery.png`](file:///e:/work/research-few-shot/docs/assets/error_analysis_gallery.png) (تصویر باکیفیت ۶ مگابایتی برای درج در مقالات و ارائه سمینار).
+
+### جدول جامع نقشه‌ها و فایل‌های گرافیکی پروژه:
+
+| فایل خروجی | فرمت / رزولوشن | اسکریپت تولیدکننده | مبنای تئوریک / نقش در پژوهش |
+| :--- | :---: | :---: | :--- |
+| **[`paper/fig_saliency.pdf`](file:///e:/work/research-few-shot/paper/fig_saliency.pdf)** | Vector PDF / 300 DPI | `generate_saliency_and_calibration.py` | شکل اصلی مقاله: اثبات هوش مصنوعی توضیح‌پذیر و تمرکز اتنشن DINOv2 روی کانون لزیون‌ها |
+| **[`paper/fig_saliency.png`](file:///e:/work/research-few-shot/paper/fig_saliency.png)** | Raster PNG / 300 DPI | `generate_saliency_and_calibration.py` | نسخه رستر باکیفیت هیت‌مپ‌های سلف‌اتنشن برای وب و اسلاید |
+| **[`paper/fig_calibration.pdf`](file:///e:/work/research-few-shot/paper/fig_calibration.pdf)** | Vector PDF / 300 DPI | `generate_saliency_and_calibration.py` | شکل کالیبراسیون مقاله: دیاگرام قابلیت اطمینان و مقایسه شکاف کالیبراسیون ECE |
+| **[`paper/fig_calibration.png`](file:///e:/work/research-few-shot/paper/fig_calibration.png)** | Raster PNG / 300 DPI | `generate_saliency_and_calibration.py` | نسخه رستر دیاگرام قابلیت اطمینان ده سطلی ECE |
+| **[`docs/assets/error_analysis_gallery.png`](file:///e:/work/research-few-shot/docs/assets/error_analysis_gallery.png)** | 3200x2400 / 200 DPI | `generate_error_gallery.py` | ماتریس مصور ۳×۴ کالبدشکافی ۱۲ نمونه خطای باقیمانده جهت بازنگری داوران |

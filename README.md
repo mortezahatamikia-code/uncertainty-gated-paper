@@ -154,6 +154,7 @@ research-few-shot/
 ├── biodino_edge_pipeline.py            # 🚀 پایپلاین اصلی پایتون (سورس کامل و مستقل الگوریتم)
 ├── biodino_edge_pipeline.ipynb         # 📓 نوت‌بوک تعاملی ژوپیتر (شامل دیاگرام، کد و نمودارها)
 ├── demo_predict.py                     # ⚡ ابزار تعاملی ترمینال برای اسکن و پیش‌بینی زنده تک‌برگ با نمودار میله‌ای
+├── generate_saliency_and_calibration.py # 🔬 اسکریپت استخراج سلف‌اتنشن DINOv2 و نمودارهای کالیبراسیون ECE
 ├── generate_error_gallery.py           # 🖼️ اسکریپت استخراج و رسم خودکار گالری مصور خطاهای باقیمانده
 ├── biodino_edge_results.json           # 📊 گزارش عددی نتایج بنچمارک رسمی SOTA
 ├── CHANGELOG.md                        # 📜 تاریخچه تفصیلی تغییرات، نوآوری‌ها و نتایج در هر نسخه
@@ -175,6 +176,8 @@ research-few-shot/
 ├── paper/                              # 📝 پکیج کامل مقاله علمی آماده ارسال به ژورنال/کنفرانس
 │   ├── main.tex                        # کد منبع لاتک مقاله دو ستونه استاندارد IEEE
 │   ├── main.pdf                        # خروجی دوربین‌خوان کامپایل‌شده (۷ صفحه کامل استاندارد)
+│   ├── fig_saliency.pdf                # 🔬 نقشه برجستگی بصری سلف‌اتنشن DINOv2 (۳۰۰ DPI برداری)
+│   ├── fig_calibration.pdf             # 📊 دیاگرام قابلیت اطمینان و کالیبراسیون ECE ده سطلی
 │   ├── references.bib                  # بانک مراجع استاندارد BibTeX مقالات مرتبط
 │   └── IEEEtran.cls                    # قالب رسمی کنفرانس‌های IEEE
 │
@@ -183,7 +186,7 @@ research-few-shot/
     ├── android_mobile_app_guide.md     # 📱 راهنمای جامع معماری و اجرای اپلیکیشن اندروید نیتیو
     ├── execution_and_dataset_guide.md  # 🚀 راهنمای عملیاتی اجرا، دانلود دیتاست، کَش آفلاین و عیب‌یابی
     ├── mathematics_foundation_guide.md # 📐 کتابچه جامع و ۱۱۵۰ خطی ریاضیات از پایه راهنمایی تا تفکیک فیشر
-    ├── algorithm_guide.md              # 🧠 راهنمای عمیق ریاضی، تئوری فیشر-لدویت‌ولف و معماری لبه
+    ├── algorithm_guide.md              # 🧠 راهنمای عمیق ریاضی، تئوری فیشر-لدویت‌ولف، ECE و XAI
     ├── plant_pathology_domain_guide.md # 🌿 راهنمای پاتولوژی کشاورزی، شناخت پاتوژن‌ها و علائم بالینی
     ├── few_shot_taxonomy_guide.md      # 📜 شجره‌نامه و ۴ نسل یادگیری اندک‌نمونه (از MAML تا BioDINO-Edge)
     ├── reviewer_rebuttal_playbook.md   # 🛡️ سناریوهای ۲۰ گانه دفاع در برابر داوران و اسلایدهای پرزنتیشن
@@ -201,11 +204,14 @@ research-few-shot/
 | **[`biodino_edge_pipeline.py`](file:///e:/work/research-few-shot/biodino_edge_pipeline.py)** | کد منبع پایتون | **قلب اجرایی پروژه:** پایپلاین ماژولار و مستقل پایتون که تمام فرآیندهای لود مدل‌های DINOv2 و BioCLIP، استخراج بردارهای ساپورت چنددیدگاهی، نگاشت فیشر با انقباض لدویت-ولف، ارزیابی تک‌سید (۹۸.۳۰٪)، ارزیابی آماری ۳۰ اپیزودی و پروفایلینگ کوانتیزاسیون INT8 روی پردازنده لبه را از صفر تا صد انجام می‌دهد. |
 | **[`biodino_edge_pipeline.ipynb`](file:///e:/work/research-few-shot/biodino_edge_pipeline.ipynb)** | نوت‌بوک ژوپیتر | **محیط تعاملی و ویژوالایزیشن:** نوت‌بوک سلف‌کانتین شامل توضیحات تئوری، دیاگرام جریان داده، لود کَش بردارها در کمتر از ۱ ثانیه، اجرای آزمون‌ها و رسم ماتریس درهم‌ریختگی (Confusion Matrix) با تفکیک رنگی کلاسی. |
 | **[`demo_predict.py`](file:///e:/work/research-few-shot/demo_predict.py)** | ابزار تعاملی پایتون | **دموی تک‌تصویر زنده در ترمینال:** ابزار سبک CLI جهت اسکن بلادرنگ تصویر هر برگ دلخواه، نمایش تاخیر به میلی‌ثانیه، تصمیم گیت شانون و رسم نمودار میله‌ای ASCII توزیع احتمال ۱۱ بیماری. |
+| **[`generate_saliency_and_calibration.py`](file:///e:/work/research-few-shot/generate_saliency_and_calibration.py)** | اسکریپت ویژوالایزیشن | **استخراج سلف‌اتنشن و کالیبراسیون ECE:** اسکریپت هوک زدن به بلوک پایانی DINOv2 جهت استخراج هیت‌مپ‌های لزیون و تولید همزمان شکل‌های `fig_saliency` و `fig_calibration` (در دو فرمت برداری PDF و تصویری PNG برای مقاله و مستندات). |
 | **[`generate_error_gallery.py`](file:///e:/work/research-few-shot/generate_error_gallery.py)** | اسکریپت ویژوالایزیشن | **استخراج و رندر گالری خطاها:** اسکریپت خودکار استخراج خطاهای باقیمانده و تولید تصویر باکیفیت ماتریس ۳×۴ نمونه‌های چالش‌برانگیز در `docs/assets/error_analysis_gallery.png`. |
 | **[`biodino_edge_results.json`](file:///e:/work/research-few-shot/biodino_edge_results.json)** | داده ساختاریافته | **سند عددی رسمی بنچمارک:** شامل ارقام دقیق دقت تک‌سید، میانگین ۳۰ اپیزودی (اوج ۹۸.۶۷٪)، فواصل اطمینان ۹۵٪، ماتریس درهم‌ریختگی عددی و تاخیرهای دقیق سخت‌افزاری پردازنده لبه به میلی‌ثانیه. |
 | **[`CHANGELOG.md`](file:///e:/work/research-few-shot/CHANGELOG.md)** | مستندات فنی | **گاه‌شمار پیشرفت پژوهش:** تشریح گام‌به‌گام ارتقای مدل از نسخه پایه ۲۳.۴٪ تا ۸۱.۶٪، سپس ۸۸.۰٪، ۹۴.۷٪ و در نهایت رکورد تاریخی ۹۷.۳۴٪ با ذکر دقیق تغییرات اعمال‌شده در هر فاز. |
 | **[`paper/main.tex`](file:///e:/work/research-few-shot/paper/main.tex)** | سورس لاتک | **متن مقاله علمی:** مقاله کامل ۳ صفحه‌ای مطابق فرمت رسمی IEEE با فرمولاسیون ریاضی انقباض کوواریانس فیشر، گیت عدم قطعیت شانون، جداول مقایسه روش‌ها و تفکیک سنجه‌های پاتولوژی هر کلاس. |
 | **[`paper/main.pdf`](file:///e:/work/research-few-shot/paper/main.pdf)** | سند خروجی | **فایل PDF دوربین‌خوان (Camera-Ready):** خروجی کامپایل‌شده مقاله با موتور pdfTeX و MiKTeX آماده پرینت، ارسال به داوران ژورنال و پرزنتیشن برای اساتید. |
+| **[`paper/fig_saliency.pdf`](file:///e:/work/research-few-shot/paper/fig_saliency.pdf)** | شکل برداری (PDF) | **نقشه هوش مصنوعی توضیح‌پذیر (XAI):** شکل اصلی مقاله با کیفیت برداری ۳۰۰ DPI شامل اورلی توجه سلف‌اتنشن DINOv2 روی ۴ بیماری شاخص پاتولوژی گیاهی. |
+| **[`paper/fig_calibration.pdf`](file:///e:/work/research-few-shot/paper/fig_calibration.pdf)** | شکل برداری (PDF) | **دیاگرام قابلیت اطمینان و کالیبراسیون:** مقایسه ۱۰ سطلی کالیبراسیون مدل پایه در برابر مدل کالیبره‌شده BioDINO-Edge و نمایش شکاف ECE. |
 | **[`paper/references.bib`](file:///e:/work/research-few-shot/paper/references.bib)** | مراجع علمی | آرشیو BibTeX مراجع معتبر شامل مقالات DINOv2 (Meta AI), BioCLIP (Imageomics CVPR 2024), CLIP (OpenAI), Tip-Adapter و مراجع گیاه‌پزشکی. |
 | **[`docs/index.md`](file:///e:/work/research-few-shot/docs/index.md)** | دانشنامه و ایندکس | **نقشه راه جامع مستندات:** راهنمای مرکزی و جدول اطلس اسناد همراه با ۴ برنامه مطالعاتی پیشنهادی (سریع، تئوری، دفاع و سخت‌افزار). |
 | **[`docs/execution_and_dataset_guide.md`](file:///e:/work/research-few-shot/docs/execution_and_dataset_guide.md)** | راهنمای اجرایی | **راهنمای نصب، دیتاست و کَش:** نحوه دانلود دیتاست ۵۴ هزار تصویری PlantVillage، عملکرد کَش ۲۷MB، نصب پکیج‌ها و تنظیم هایپرپارامترها. |
