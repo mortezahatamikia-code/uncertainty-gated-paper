@@ -8,10 +8,13 @@ data class DiagnosisResult(
     val probability: Float,
     val confidence: Float,
     val latencyMs: Float,
-    val allProbabilities: FloatArray
+    val allProbabilities: FloatArray,
+    val foliageScore: Float = 1.0f,
+    val isFoliage: Boolean = true,
+    val isTooDark: Boolean = false
 ) {
     val isConfident: Boolean
-        get() = confidence >= 0.35f
+        get() = isFoliage && !isTooDark && confidence >= 0.35f
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -21,6 +24,9 @@ data class DiagnosisResult(
                 probability == other.probability &&
                 confidence == other.confidence &&
                 latencyMs == other.latencyMs &&
+                foliageScore == other.foliageScore &&
+                isFoliage == other.isFoliage &&
+                isTooDark == other.isTooDark &&
                 allProbabilities.contentEquals(other.allProbabilities)
     }
 
@@ -29,6 +35,9 @@ data class DiagnosisResult(
         result = 31 * result + probability.hashCode()
         result = 31 * result + confidence.hashCode()
         result = 31 * result + latencyMs.hashCode()
+        result = 31 * result + foliageScore.hashCode()
+        result = 31 * result + isFoliage.hashCode()
+        result = 31 * result + isTooDark.hashCode()
         result = 31 * result + allProbabilities.contentHashCode()
         return result
     }

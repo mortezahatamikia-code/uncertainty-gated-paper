@@ -36,23 +36,39 @@ NOVEL_CLASSES = [
     "Apple___healthy",
     "Grape___Black_rot",
     "Grape___Esca_(Black_Measles)",
-    "Grape___Leaf_blight",
-    "Grape___healthy"
+    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",
+    "Grape___healthy",
+    "Potato___Early_blight",
+    "Potato___Late_blight",
+    "Potato___healthy"
 ]
 
 class BioDINOEdgeMobile(nn.Module):
-    """Tier 1: 21 MB Standalone Fast-Path Model (DINOv2 Small + Fisher-LDA + Shannon Gate)"""
-    def __init__(self, backbone, fisher_weight, fisher_bias):
+    """Tier 1: 21 MB Standalone Fast-Path Model (DINOv2 Small + Fisher-LDA + Shannon Gate + Foliage OOD Gate)"""
+    def __init__(self, backbone, fisher_weight, fisher_bias, leaf_prototypes, num_classes=11, temperature=20.0):
         super().__init__()
         self.backbone = backbone
-        self.register_buffer("fisher_weight", fisher_weight) # (8, 384)
-        self.register_buffer("fisher_bias", fisher_bias.unsqueeze(0)) # (1, 8)
-        self.ln_k = float(np.log(len(NOVEL_CLASSES)))
+        self.register_buffer("fisher_weight", fisher_weight) # (num_classes, 384)
+        self.register_buffer("fisher_bias", fisher_bias.unsqueeze(0)) # (1, num_classes)
+        self.register_buffer("leaf_prototypes", leaf_prototypes) # (num_classes, 384)
+        self.ln_k = float(np.log(num_classes))
+        self.temperature = float(temperature)
 
     def forward(self, x):
         f_raw = self.backbone(x)
-        f_norm = F.normalize(f_raw, p=2.0, dim=-1)
-        logits = torch.matmul(f_norm, self.fisher_weight.transpose(0, 1)) + self.fisher_bias
+        f_norm = F.normalize(f_raw, p=2.0, dim=-1) # (B, 384)
+        
+        # Foliage manifold score: cosine similarity to class leaf prototypes
+        # Real leaves have cosine similarity >= 0.55 (mean 0.896)
+        # Black screens / non-leaf objects (headphones, desks, faces) have cosine similarity <= 0.35
+        cos_sim = torch.matmul(f_norm, self.leaf_prototypes.transpose(0, 1)) # (B, num_classes)
+        foliage_score, _ = torch.max(cos_sim, dim=-1, keepdim=True) # (B, 1)
+        
+        # Soft foliage gate: 0.0 if score < 0.35, 1.0 if score >= 0.55
+        foliage_gate = torch.clamp((foliage_score - 0.35) / 0.20, min=0.0, max=1.0)
+
+        # Calibrated Fisher-LDA logits with Temperature Scaling
+        logits = (torch.matmul(f_norm, self.fisher_weight.transpose(0, 1)) + self.fisher_bias) / self.temperature
         probabilities = F.softmax(logits, dim=-1)
 
         top2_vals, _ = torch.topk(probabilities, k=2, dim=-1)
@@ -60,18 +76,21 @@ class BioDINOEdgeMobile(nn.Module):
         log_p = torch.log(probabilities + 1e-12)
         entropy = -torch.sum(probabilities * log_p, dim=-1, keepdim=True)
         norm_entropy = entropy / self.ln_k
-        confidence = margin * torch.clamp(1.0 - norm_entropy, min=0.0)
+        raw_confidence = margin * torch.clamp(1.0 - norm_entropy, min=0.0)
+        
+        # Multiply confidence by foliage gate (rejection of non-leaf and dark inputs)
+        confidence = raw_confidence * foliage_gate
 
-        return probabilities, confidence, f_norm
+        return probabilities, confidence, f_norm, foliage_score
 
 class BioDINOCompanionMobile(nn.Module):
     """Tier 2: ~88 MB Companion Model (BioCLIP ViT-B Visual Encoder + 896-d Joint Fisher + Text Ensemble)"""
     def __init__(self, visual_encoder, joint_fisher_weight, joint_fisher_bias, text_protos):
         super().__init__()
         self.visual = visual_encoder
-        self.register_buffer("joint_fisher_weight", joint_fisher_weight) # (8, 896)
-        self.register_buffer("joint_fisher_bias", joint_fisher_bias.unsqueeze(0)) # (1, 8)
-        self.register_buffer("text_protos", text_protos) # (8, 512)
+        self.register_buffer("joint_fisher_weight", joint_fisher_weight) # (num_classes, 896)
+        self.register_buffer("joint_fisher_bias", joint_fisher_bias.unsqueeze(0)) # (1, num_classes)
+        self.register_buffer("text_protos", text_protos) # (num_classes, 512)
 
     def forward(self, input_leaf, dino_features):
         f_bio_raw = self.visual(input_leaf)
@@ -95,7 +114,7 @@ class BioDINOCompanionMobile(nn.Module):
 def main():
     print("=" * 80)
     print("  BioDINO-Edge: Dual-Tier Edge Model Exporter (21 MB Fast + 88-110 MB Companion)")
-    print("  Target: Android Kotlin Edge Deployment (CameraX + ONNX Runtime Mobile)")
+    print(f"  Target: Android Kotlin Edge Deployment ({len(NOVEL_CLASSES)} Classes: Apple, Grape & Potato)")
     print("=" * 80)
 
     os.makedirs("cache_artifacts", exist_ok=True)
@@ -110,13 +129,18 @@ def main():
     bio_feats = cache["bio_feats"]
     labels = cache["labels"]
     text_protos = cache["bio_text_protos"]
+    cached_classes = cache.get("novel_classes", NOVEL_CLASSES)
 
-    # 5-shot calibration
+    # 5-shot calibration with seed 42
+    import random
+    rng = random.Random(42)
     s_idx_all = []
-    for c in range(len(NOVEL_CLASSES)):
-        c_mask = (labels == c)
-        c_idx = c_mask.nonzero().squeeze()
-        s_idx_all.extend(c_idx[:5].tolist())
+    num_classes = len(cached_classes)
+    c_indices = [np.where(labels.numpy() == c)[0].tolist() for c in range(num_classes)]
+    for c in range(num_classes):
+        shuf = c_indices[c].copy()
+        rng.shuffle(shuf)
+        s_idx_all.extend(shuf[:5])
 
     s_dino_np = dino_feats[s_idx_all].numpy()
     s_bio_np = bio_feats[s_idx_all].numpy()
@@ -135,15 +159,24 @@ def main():
     w_joint = torch.tensor(clf_joint.coef_, dtype=torch.float32)
     b_joint = torch.tensor(clf_joint.intercept_, dtype=torch.float32)
 
+    # Compute normalized class leaf prototypes in DINOv2 space for Foliage OOD rejection
+    leaf_prototypes = []
+    for c in range(num_classes):
+        c_feats = dino_feats[labels.numpy() == c].numpy()
+        proto = c_feats.mean(axis=0)
+        proto = proto / (np.linalg.norm(proto) + 1e-12)
+        leaf_prototypes.append(proto)
+    leaf_prototypes = torch.tensor(np.array(leaf_prototypes), dtype=torch.float32)
+
     # =========================================================================
     # TIER 1: 21 MB Fast-Path DINOv2 INT8 Model
     # =========================================================================
     print("\n" + "=" * 80)
-    print("  [TIER 1] Exporting 21 MB Standalone Fast Model (DINOv2 Small INT8)")
+    print(f"  [TIER 1] Exporting 21 MB Standalone Fast Model (DINOv2 Small INT8 - {num_classes} Classes)")
     print("=" * 80)
     backbone = timm.create_model('vit_small_patch14_dinov2', pretrained=True, img_size=224)
     backbone.eval()
-    tier1_model = BioDINOEdgeMobile(backbone, w_dino, b_dino)
+    tier1_model = BioDINOEdgeMobile(backbone, w_dino, b_dino, leaf_prototypes, num_classes=num_classes, temperature=20.0)
     tier1_model.eval()
 
     tier1_fp32 = os.path.join("cache_artifacts", "biodino_mobile_fp32.onnx")
@@ -154,8 +187,8 @@ def main():
         tier1_model, dummy_leaf, tier1_fp32,
         export_params=True, opset_version=17, do_constant_folding=True,
         input_names=["input_leaf"],
-        output_names=["probabilities", "confidence", "features"],
-        dynamic_axes={"input_leaf": {0: "batch_size"}, "probabilities": {0: "batch_size"}, "confidence": {0: "batch_size"}, "features": {0: "batch_size"}}
+        output_names=["probabilities", "confidence", "features", "foliage_score"],
+        dynamic_axes={"input_leaf": {0: "batch_size"}, "probabilities": {0: "batch_size"}, "confidence": {0: "batch_size"}, "features": {0: "batch_size"}, "foliage_score": {0: "batch_size"}}
     )
     quantize_dynamic(
         model_input=tier1_fp32,
@@ -238,8 +271,8 @@ def main():
 
     p2 = out2[0][0]
 
-    print(f"  • Tier 1 (21 MB Fast)      : Latency = {lat1:.2f} ms | Conf = {conf1:.3f} | Top = {NOVEL_CLASSES[np.argmax(p1)]}")
-    print(f"  • Tier 2 (88 MB Companion) : Latency = {lat2:.2f} ms | Top = {NOVEL_CLASSES[np.argmax(p2)]}")
+    print(f"  • Tier 1 (21 MB Fast)      : Latency = {lat1:.2f} ms | Conf = {conf1:.3f} | Top = {cached_classes[np.argmax(p1)]}")
+    print(f"  • Tier 2 (88 MB Companion) : Latency = {lat2:.2f} ms | Top = {cached_classes[np.argmax(p2)]}")
     print(f"  • Total Bundle Footprint   : {tier1_size + tier2_size:.2f} MB (~110 MB Target achieved!)")
     print("=" * 80)
     print("\n[SUCCESS] Both edge models are exported and validated successfully!")

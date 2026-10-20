@@ -113,19 +113,29 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
 
                 val latencyMs = (System.nanoTime() - t0) / 1_000_000.0f
 
+                val foliageScore = if (results.size() > 3) {
+                    @Suppress("UNCHECKED_CAST")
+                    (results[3].value as Array<FloatArray>)[0][0]
+                } else {
+                    1.0f
+                }
+
+                val isDark = ImageQualityEvaluator.isTooDark(bitmap)
+
                 if (customPrototypes.isEmpty()) {
-                    return PathologyCatalog.buildDiagnosis(baseProbabilities, baseConfidence, latencyMs)
+                    return PathologyCatalog.buildDiagnosis(baseProbabilities, baseConfidence, latencyMs, foliageScore, isDark)
                 }
 
                 // If custom classes exist, evaluate similarity against custom support vectors
                 @Suppress("UNCHECKED_CAST")
                 val queryFeatures = (results[2].value as Array<FloatArray>)[0]
 
-                val totalClasses = 8 + customPrototypes.size
+                val baseClassesCount = baseProbabilities.size
+                val totalClasses = baseClassesCount + customPrototypes.size
                 val combinedLogits = FloatArray(totalClasses)
 
                 // Base class logits reconstructed from probabilities
-                for (i in 0 until 8) {
+                for (i in 0 until baseClassesCount) {
                     val p = max(baseProbabilities[i], 1e-12f)
                     combinedLogits[i] = ln(p)
                 }
@@ -137,7 +147,7 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
                     for (k in 0 until 384) {
                         dot += queryFeatures[k] * proto[k]
                     }
-                    combinedLogits[8 + j] = 20.0f * dot
+                    combinedLogits[baseClassesCount + j] = 20.0f * dot
                 }
 
                 // Softmax over all classes
@@ -180,12 +190,14 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
                     }
                 }
                 val normEntropy = (entropy / lnK).toFloat()
-                val dynamicConfidence = margin * max(0f, 1.0f - normEntropy)
+                val isFoliage = foliageScore >= 0.40f && !isDark
+                val foliageGate = if (isFoliage) kotlin.math.min(1.0f, kotlin.math.max(0.0f, (foliageScore - 0.35f) / 0.20f)) else 0.0f
+                val dynamicConfidence = margin * max(0f, 1.0f - normEntropy) * foliageGate
 
-                val selectedDisease = if (topIdx < 8) {
-                    PathologyCatalog.NOVEL_DISEASES[topIdx]
+                val selectedDisease = if (topIdx < baseClassesCount) {
+                    PathologyCatalog.NOVEL_DISEASES.getOrElse(topIdx) { PathologyCatalog.NOVEL_DISEASES[0] }
                 } else {
-                    customPrototypes[topIdx - 8].toDiseaseInfo(topIdx)
+                    customPrototypes[topIdx - baseClassesCount].toDiseaseInfo(topIdx)
                 }
 
                 return DiagnosisResult(
@@ -193,7 +205,10 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
                     probability = top1,
                     confidence = dynamicConfidence,
                     latencyMs = latencyMs,
-                    allProbabilities = combinedProbs
+                    allProbabilities = combinedProbs,
+                    foliageScore = foliageScore,
+                    isFoliage = isFoliage,
+                    isTooDark = isDark
                 )
             }
         }

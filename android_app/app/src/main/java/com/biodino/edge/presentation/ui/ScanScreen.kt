@@ -508,6 +508,8 @@ fun ScanScreen(
                 DiagnosticCard(
                     isFarsi = isFarsi,
                     isGalleryMode = state.galleryBitmap != null,
+                    isTooDark = state.isTooDark,
+                    isNonLeaf = state.isNonLeaf,
                     latestDiagnosis = state.latestDiagnosis,
                     smoothedConfidence = state.smoothedConfidence,
                     averageLatencyMs = state.averageLatencyMs,

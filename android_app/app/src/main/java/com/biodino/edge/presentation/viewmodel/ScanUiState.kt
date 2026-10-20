@@ -16,6 +16,8 @@ data class ScanUiState(
     val isTtsEnabled: Boolean = true,
     val isFarsi: Boolean = false,
     val isBlurred: Boolean = false,
+    val isTooDark: Boolean = false,
+    val isNonLeaf: Boolean = false,
     val isAtlasOpen: Boolean = false,
     val isHistoryOpen: Boolean = false,
     val isEnrollmentOpen: Boolean = false,
@@ -32,5 +34,5 @@ data class ScanUiState(
     val customEnrolledDiseases: List<CustomEnrolledDisease> = emptyList()
 ) {
     val isConfidentlyLocked: Boolean
-        get() = latestDiagnosis != null && smoothedConfidence >= 0.35f
+        get() = latestDiagnosis != null && !isTooDark && !isNonLeaf && smoothedConfidence >= 0.35f
 }

@@ -71,7 +71,7 @@ object PathologyCatalog {
         ),
         DiseaseInfo(
             id = 6,
-            rawKey = "Grape___Leaf_blight",
+            rawKey = "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",
             commonName = "Grape Leaf Blight (Isariopsis)",
             latinTaxonomy = "Pseudocercospora cladosporioides",
             hostPlant = "Vitis vinifera (Grape)",
@@ -88,10 +88,46 @@ object PathologyCatalog {
             isHealthy = true,
             primarySymptom = "Palmate lobed leaf structure with healthy serrated margins and robust turgidity.",
             actionableAdvice = "Optimal foliage health. Continue integrated pest management (IPM) scouting."
+        ),
+        DiseaseInfo(
+            id = 8,
+            rawKey = "Potato___Early_blight",
+            commonName = "Potato Early Blight",
+            latinTaxonomy = "Alternaria solani",
+            hostPlant = "Solanum tuberosum (Potato)",
+            isHealthy = false,
+            primarySymptom = "Dark brown circular necrotic spots with concentric target-board rings surrounded by chlorotic yellow halo.",
+            actionableAdvice = "Apply protective fungicides (Chlorothalonil, Mancozeb); avoid overhead sprinkler irrigation; rotate with non-solanaceous crops."
+        ),
+        DiseaseInfo(
+            id = 9,
+            rawKey = "Potato___Late_blight",
+            commonName = "Potato Late Blight",
+            latinTaxonomy = "Phytophthora infestans",
+            hostPlant = "Solanum tuberosum (Potato)",
+            isHealthy = false,
+            primarySymptom = "Water-soaked dark lesions rapidly expanding into destructive necrotic collapse with white fungal mildew margins on lower leaf surface.",
+            actionableAdvice = "Urgent: Apply systemic oomycete-targeted fungicides (Metalaxyl-M, Cymoxanil, Mandipropamid); destroy cull piles; eliminate standing moisture."
+        ),
+        DiseaseInfo(
+            id = 10,
+            rawKey = "Potato___healthy",
+            commonName = "Healthy Potato Foliage",
+            latinTaxonomy = "Solanum tuberosum",
+            hostPlant = "Solanum tuberosum (Potato)",
+            isHealthy = true,
+            primarySymptom = "Clean vibrant green compound leaflets, intact margins, active vigorous photosynthetic mesophyll tissue.",
+            actionableAdvice = "Optimal vegetative vigor. Maintain routine hilling, balanced nitrogen:potassium ratio, and preventive scouting."
         )
     )
 
-    fun buildDiagnosis(probabilities: FloatArray, confidence: Float, latencyMs: Float): DiagnosisResult {
+    fun buildDiagnosis(
+        probabilities: FloatArray,
+        confidence: Float,
+        latencyMs: Float,
+        foliageScore: Float = 1.0f,
+        isTooDark: Boolean = false
+    ): DiagnosisResult {
         var topIdx = 0
         var topProb = probabilities[0]
         for (i in probabilities.indices) {
@@ -101,12 +137,17 @@ object PathologyCatalog {
             }
         }
         val disease = NOVEL_DISEASES.getOrElse(topIdx) { NOVEL_DISEASES[0] }
+        val isFoliage = foliageScore >= 0.40f && !isTooDark
+        val effectiveConfidence = if (isFoliage && !isTooDark) confidence else 0f
         return DiagnosisResult(
             diseaseInfo = disease,
             probability = topProb,
-            confidence = confidence,
+            confidence = effectiveConfidence,
             latencyMs = latencyMs,
-            allProbabilities = probabilities
+            allProbabilities = probabilities,
+            foliageScore = foliageScore,
+            isFoliage = isFoliage,
+            isTooDark = isTooDark
         )
     }
 }

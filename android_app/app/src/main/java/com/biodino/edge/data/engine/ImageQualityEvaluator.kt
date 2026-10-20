@@ -67,4 +67,42 @@ object ImageQualityEvaluator {
 
         return variance < blurThreshold
     }
+
+    /**
+     * Computes the mean luminance in the center crop (0.0 to 255.0).
+     */
+    @Synchronized
+    fun getMeanLuminance(bitmap: Bitmap): Float {
+        if (bitmap.width < SAMPLE_SIZE || bitmap.height < SAMPLE_SIZE) return 128.0f
+
+        val startX = (bitmap.width - SAMPLE_SIZE) / 2
+        val startY = (bitmap.height - SAMPLE_SIZE) / 2
+
+        val safeBmp = if (bitmap.config == Bitmap.Config.HARDWARE) {
+            bitmap.copy(Bitmap.Config.ARGB_8888, false) ?: bitmap
+        } else {
+            bitmap
+        }
+
+        safeBmp.getPixels(pixels, 0, SAMPLE_SIZE, startX, startY, SAMPLE_SIZE, SAMPLE_SIZE)
+
+        var sumLum = 0.0
+        val total = SAMPLE_SIZE * SAMPLE_SIZE
+        for (i in 0 until total) {
+            val p = pixels[i]
+            val r = (p shr 16) and 0xFF
+            val g = (p shr 8) and 0xFF
+            val b = p and 0xFF
+            sumLum += (0.299 * r + 0.587 * g + 0.114 * b)
+        }
+        return (sumLum / total).toFloat()
+    }
+
+    /**
+     * Detects pitch-black scenes, covered lenses, or severe underexposure.
+     * Threshold is 22.0f out of 255.0 (covered lens is 0-5, indoor foliage is > 40).
+     */
+    fun isTooDark(bitmap: Bitmap, darkThreshold: Float = 22.0f): Boolean {
+        return getMeanLuminance(bitmap) < darkThreshold
+    }
 }

@@ -63,6 +63,26 @@ object DosageDatabase {
             unit = "g",
             phiDays = 0,
             targetDisease = "Grape Esca / Trunk Wounds"
+        ),
+        DosageChemical(
+            id = "metalaxyl",
+            tradeNameEn = "Ridomil Gold MZ 68 WG",
+            tradeNameFa = "ریدومیل گلد (متالاکسیل-ام + مانکوزب)",
+            activeIngredient = "Mefenoxam 4% + Mancozeb 64%",
+            dosePerLiter = 2.5f,
+            unit = "g",
+            phiDays = 7,
+            targetDisease = "Potato Late Blight / Phytophthora"
+        ),
+        DosageChemical(
+            id = "chlorothalonil",
+            tradeNameEn = "Daconil 720 SC",
+            tradeNameFa = "داکونیل (کلروتالونیل ۷۲٪)",
+            activeIngredient = "Chlorothalonil (Chloronitrile)",
+            dosePerLiter = 2.0f,
+            unit = "ml",
+            phiDays = 7,
+            targetDisease = "Potato Early Blight / Alternaria"
         )
     )
 

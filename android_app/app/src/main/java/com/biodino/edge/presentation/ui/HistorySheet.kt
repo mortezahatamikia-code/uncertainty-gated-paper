@@ -251,6 +251,7 @@ fun HistorySheet(
                                 item.isHealthy -> "🌿"
                                 item.commonName.contains("Apple", ignoreCase = true) -> "🍎"
                                 item.commonName.contains("Grape", ignoreCase = true) -> "🍇"
+                                item.commonName.contains("Potato", ignoreCase = true) -> "🥔"
                                 else -> "🌱"
                             }
 

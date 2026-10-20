@@ -121,7 +121,7 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun clearGalleryImage() {
-        _uiState.update { it.copy(galleryBitmap = null, latestDiagnosis = null, smoothedConfidence = 0f, errorMessage = null) }
+        _uiState.update { it.copy(galleryBitmap = null, latestDiagnosis = null, smoothedConfidence = 0f, isTooDark = false, isNonLeaf = false, errorMessage = null) }
     }
 
     fun clearErrorMessage() {
@@ -227,15 +227,18 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch(Dispatchers.Default) {
             try {
-                // Blur check
+                // Blur and Darkness check
                 val blurred = ImageQualityEvaluator.isBlurred(bitmap)
-                _uiState.update { it.copy(isBlurred = blurred) }
+                val tooDark = ImageQualityEvaluator.isTooDark(bitmap)
 
                 // Classification taking into account any custom enrolled prototypes
                 val result = engine.classify(bitmap, currentState.customEnrolledDiseases)
 
-                // For live detection, top softmax probability represents the classification strength
-                val frameScore = if (result.probability > 0f) result.probability else result.confidence
+                val effectiveDark = result.isTooDark || tooDark
+                val isNonLeaf = !result.isFoliage && !effectiveDark
+
+                // Frame score: if pitch black or non-leaf, score is 0.0
+                val frameScore = if (result.isFoliage && !effectiveDark) result.confidence else 0f
 
                 // Exponential Moving Average
                 val prevConf = if (currentState.smoothedConfidence == 0f) frameScore else currentState.smoothedConfidence
@@ -246,6 +249,9 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
 
                 _uiState.update {
                     it.copy(
+                        isBlurred = blurred,
+                        isTooDark = effectiveDark,
+                        isNonLeaf = isNonLeaf,
                         latestDiagnosis = result,
                         smoothedConfidence = smoothedConf,
                         averageLatencyMs = smoothedLat,
@@ -253,8 +259,8 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 }
 
-                // If confident lock is achieved, trigger TTS and record to history
-                if (smoothedConf >= 0.35f) {
+                // If confident lock is achieved on real foliage under good light, trigger TTS and record to history
+                if (smoothedConf >= 0.35f && result.isFoliage && !effectiveDark && !isNonLeaf) {
                     val key = result.diseaseInfo.rawKey
                     val timeSinceLastRecord = now - lastRecordedTimestamp
 
@@ -292,6 +298,8 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
                 galleryBitmap = bitmap,
                 latestDiagnosis = null,
                 smoothedConfidence = 0f,
+                isTooDark = false,
+                isNonLeaf = false,
                 errorMessage = null
             )
         }
@@ -299,14 +307,20 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.Default) {
             try {
                 val blurred = ImageQualityEvaluator.isBlurred(bitmap)
+                val tooDark = ImageQualityEvaluator.isTooDark(bitmap)
                 val result = engine.classify(bitmap, _uiState.value.customEnrolledDiseases)
 
-                // For static gallery images, top softmax probability represents the true classification strength
-                val displayConfidence = if (result.probability > 0f) result.probability else result.confidence
+                val effectiveDark = result.isTooDark || tooDark
+                val isNonLeaf = !result.isFoliage && !effectiveDark
+
+                // For static gallery images, true confidence is calibrated Shannon margin * foliage gate
+                val displayConfidence = if (result.isFoliage && !effectiveDark) result.confidence else 0f
 
                 _uiState.update {
                     it.copy(
                         isBlurred = blurred,
+                        isTooDark = effectiveDark,
+                        isNonLeaf = isNonLeaf,
                         latestDiagnosis = result,
                         smoothedConfidence = displayConfidence,
                         averageLatencyMs = result.latencyMs,
@@ -314,16 +328,19 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 }
 
-                historyRepo.addFromDiagnosis(result)
+                // Only record to history and trigger TTS if valid foliage and not dark
+                if (result.isFoliage && !effectiveDark && !isNonLeaf && displayConfidence >= 0.35f) {
+                    historyRepo.addFromDiagnosis(result)
 
-                if (_uiState.value.isTtsEnabled) {
-                    val percent = (displayConfidence * 100).toInt()
-                    ttsManager.speakDiagnosis(
-                        result.diseaseInfo.commonName,
-                        percent,
-                        result.diseaseInfo.isHealthy,
-                        force = true
-                    )
+                    if (_uiState.value.isTtsEnabled) {
+                        val percent = (displayConfidence * 100).toInt()
+                        ttsManager.speakDiagnosis(
+                            result.diseaseInfo.commonName,
+                            percent,
+                            result.diseaseInfo.isHealthy,
+                            force = true
+                        )
+                    }
                 }
             } catch (e: Throwable) {
                 _uiState.update { it.copy(errorMessage = "خطا در تحلیل هوش مصنوعی تصویر: ${e.message}") }

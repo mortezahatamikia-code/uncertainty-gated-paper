@@ -72,6 +72,9 @@ private fun getLocalizedDiseaseName(rawKey: String, commonName: String, isFarsi:
         rawKey.contains("Grape___Esca", ignoreCase = true) -> "اسکا انگور (سرخک سیاه / راه‌راه ببری)"
         rawKey.contains("Grape___Leaf_blight", ignoreCase = true) -> "سوختگی برگ انگور (بلایت)"
         rawKey.contains("Grape___healthy", ignoreCase = true) -> "برگ سالم مو (انگور)"
+        rawKey.contains("Potato___Early_blight", ignoreCase = true) -> "بلایت زودرس سیب‌زمینی (آلترناریا)"
+        rawKey.contains("Potato___Late_blight", ignoreCase = true) -> "بلایت دیررس / بادزدگی سیب‌زمینی (فیتوفتورا)"
+        rawKey.contains("Potato___healthy", ignoreCase = true) -> "برگ سالم سیب‌زمینی"
         else -> commonName
     }
 }
@@ -91,6 +94,7 @@ fun AtlasSheet(
             val matchesFilter = when (selectedFilter) {
                 "Apple" -> disease.rawKey.startsWith("Apple")
                 "Grape" -> disease.rawKey.startsWith("Grape")
+                "Potato" -> disease.rawKey.startsWith("Potato")
                 "Pathologies" -> !disease.isHealthy
                 "Healthy" -> disease.isHealthy
                 else -> true
@@ -211,7 +215,7 @@ fun AtlasSheet(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 // Filter Chips
-                val filterOptions = listOf("All", "Apple", "Grape", "Pathologies", "Healthy")
+                val filterOptions = listOf("All", "Apple", "Grape", "Potato", "Pathologies", "Healthy")
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -219,11 +223,12 @@ fun AtlasSheet(
                     items(filterOptions) { filter ->
                         val isSelected = selectedFilter == filter
                         val label = when (filter) {
-                            "All" -> if (isFarsi) "همه (۸)" else "All (8)"
+                            "All" -> if (isFarsi) "همه (۱۱)" else "All (11)"
                             "Apple" -> if (isFarsi) "🍎 سیب (۴)" else "🍎 Apple (4)"
                             "Grape" -> if (isFarsi) "🍇 انگور (۴)" else "🍇 Grape (4)"
-                            "Pathologies" -> if (isFarsi) "⚠️ بیماری‌ها (۶)" else "⚠️ Pathologies (6)"
-                            "Healthy" -> if (isFarsi) "🌿 سالم (۲)" else "🌿 Healthy (2)"
+                            "Potato" -> if (isFarsi) "🥔 سیب‌زمینی (۳)" else "🥔 Potato (3)"
+                            "Pathologies" -> if (isFarsi) "⚠️ بیماری‌ها (۸)" else "⚠️ Pathologies (8)"
+                            "Healthy" -> if (isFarsi) "🌿 سالم (۳)" else "🌿 Healthy (3)"
                             else -> filter
                         }
 
@@ -273,6 +278,7 @@ fun AtlasSheet(
                                 disease.isHealthy -> "🌿"
                                 disease.rawKey.startsWith("Apple") -> "🍎"
                                 disease.rawKey.startsWith("Grape") -> "🍇"
+                                disease.rawKey.startsWith("Potato") -> "🥔"
                                 else -> "🌱"
                             }
 
