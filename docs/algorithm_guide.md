@@ -328,9 +328,11 @@ for ep in range(30):
 
 ---
 
-## ۹. راهنمای گام‌به‌گام و داینامیک اجرای کدها (CLI Guide)
+## ۹. راهنمای گام‌به‌گام و داینامیک اجرای کدها (CLI Guide & Clean Architecture)
 
-کد اصلی پایپلاین (`biodino_edge_pipeline.py`) اکنون کاملاً داینامیک و ماژولار است و از طریق خط فرمان قابلیت کنترل دارد:
+کد اصلی پایپلاین ([`biodino_edge_pipeline.py`](file:///e:/work/research-few-shot/biodino_edge_pipeline.py)) با معماری تمیز و ماژولار در **۵۲۴ خط** بازنویسی شده است. پرامپت‌های گیاه‌شناسی در ماژول مجزای [`taxonomic_prompts.py`](file:///e:/work/research-few-shot/taxonomic_prompts.py) قرار گرفته، هایپرپارامترها درون دیتاکلاس متمرکز `BioDINOConfig` مدیریت می‌شوند، و تمام الگوریتم‌ها با توابع خالص و بدون تکرار (DRY) پیاده‌سازی شده‌اند. نسخه مونولیتیک ۹۹۴ خطی اولیه نیز در [`biodino_edge_pipeline_legacy.py`](file:///e:/work/research-few-shot/biodino_edge_pipeline_legacy.py) به عنوان پشتیبان در دسترس است.
+
+کد از طریق خط فرمان به صورت کاملاً داینامیک قابل کنترل است:
 
 ### ۱. اجرای مجزا روی PlantVillage (پیش‌فرض)
 ```powershell

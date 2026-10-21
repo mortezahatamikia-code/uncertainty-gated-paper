@@ -124,18 +124,23 @@ python -m venv .venv
 
 ---
 
-## ۵. جدول تنظیم هایپرپارامترهای کلیدی (Hyperparameter Reference)
+## ۵. جدول تنظیم هایپرپارامترهای کلیدی و ساختار ماژولار (Hyperparameter Reference & Clean Architecture)
 
-در داخل فایل `biodino_edge_pipeline.py` متغیرهای زیر رفتار الگوریتم را کنترل می‌کنند:
+در نسخه بهینه‌سازی‌شده و تمیز پایپلاین (`biodino_edge_pipeline.py`)، تمام هایپرپارامترها درون دیتاکلاس متمرکز [`BioDINOConfig`](file:///e:/work/research-few-shot/biodino_edge_pipeline.py#L52) کپسوله‌سازی شده‌اند و پرامپت‌های گیاه‌شناسی در ماژول مجزای [`taxonomic_prompts.py`](file:///e:/work/research-few-shot/taxonomic_prompts.py) نگهداری می‌شوند:
 
-| متغیر در کد | مقدار پیش‌فرض بهینه | توضیح عملکرد و نقش در مدل |
+| فیلد در `BioDINOConfig` | مقدار پیش‌فرض | نقش و عملکرد در مدل |
 | :--- | :---: | :--- |
-| `CONFIDENCE_THRESHOLD` | `0.35` | آستانه تصمیم‌گیری گیت شانون ($\tau_{\text{conf}}$)؛ اگر ضریب اطمینان بالای این عدد باشد، مسیر سریع DINOv2 در ۲۰ میلی‌ثانیه خروجی می‌دهد. |
-| `FISHER_WEIGHT` | `0.75` | وزن نمرات تبدیل خطی فیشر در انسامبل نهایی ($\alpha$). |
-| `BIOTEXT_WEIGHT` | `0.25` | وزن پرامپت‌های متنی تکسونومیک لاتین در انسامبل نهایی ($\beta$). |
-| `N_SHOT` | `5` | تعداد نمونه‌های ساپورت به ازای هر کلاس در سناریوی Few-Shot. |
-| `N_EPISODES` | `30` | تعداد دورهای ارزیابی آماری چنداپیزودی با سیدهای تصادفی مختلف. |
-| `EMBEDDING_CACHE_PATH` | `cache_artifacts/pv_novel_embeddings.pt` | مسیر فایل باینری کَش بردارها جهت بازآفرینی فوق‌سریع. |
+| `tau_conf` | `0.35` | آستانه تصمیم‌گیری گیت مارجین-آنتروپی شانون ($\tau_{\text{conf}}$)؛ فریم‌های با اطمینان بالاتر مستقیماً از مسیر سریع DINOv2 در کمتر از ۲۲ میلی‌ثانیه رد می‌شوند. |
+| `lda_ensemble_weight` | `0.75` | وزن فیشر در انسمبل خطی نهایی ($0.75 \times \text{LDA} + 0.25 \times \text{Text}$). |
+| `text_fusion_weight` | `0.20` | وزن پرامپت متنی در پروتوتایپ تلفیقی BioCLIP ($0.80 \times \text{Vis} + 0.20 \times \text{Text}$). |
+| `base_ensemble_weight` | `0.65` | ضریب تلفیق لاجیت پایه ($0.65 \times \text{BioCLIP} + 0.35 \times \text{DINOv2}$). |
+| `logit_scale` | `20.0` | ضریب اسکیل کسینوسی لاجیت‌ها قبل از Softmax. |
+| `k_shot` | `5` | تعداد نمونه‌های پشتیبان به ازای هر کلاس در سناریوی Few-Shot. |
+| `support_views` | `8` | تعداد نماهای افزوده (۱ تصویر اصلی + ۷ آگمنتیشن چندنما) به ازای هر نمونه ساپورت. |
+| `batch_size` | `128` | اندازه دسته‌های استنتاج کوئری برای بالاترین بهره‌وری حافظه GPU/CPU. |
+
+> [!NOTE]
+> **تفکیک ماژولار پرامپت‌ها (`taxonomic_prompts.py`):** پرامپت‌های زیستی ۱۱ کلاس PlantVillage و ۲۷ کلاس PlantDoc اکنون در فایلی مجزا قرار دارند تا تغییر یا اضافه کردن توصیف پاتولوژی نیازی به دستکاری در کدهای پردازشی پایپلاین نداشته باشد. همچنین نسخه مونولیتیک اولیه ۹۹۴ خطی در [`biodino_edge_pipeline_legacy.py`](file:///e:/work/research-few-shot/biodino_edge_pipeline_legacy.py) به عنوان پشتیبان محفوظ مانده است.
 
 ---
 
