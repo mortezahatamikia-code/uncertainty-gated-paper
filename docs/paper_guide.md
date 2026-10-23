@@ -53,7 +53,7 @@ winget install MiKTeX.MiKTeX
 
 برای اینکه در هر سیستمی این تنظیمات در ۱ ثانیه اعمال شود، یک فایل با نام **`settings.json`** درون پوشه **`.vscode`** در ریشه پروژه قرار دهید با محتوای زیر:
 
-مسیر فایل: `e:\work\research-few-shot\.vscode\settings.json`
+مسیر فایل: `.vscode/settings.json`
 
 ```json
 {

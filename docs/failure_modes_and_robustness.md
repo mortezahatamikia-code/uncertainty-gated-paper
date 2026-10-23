@@ -34,7 +34,7 @@
 
 > [!TIP]
 > **گالری تصویری با رزولوشن بالا (Visual Error Gallery):**  
-> برای مشاهده تفکیک مصور و کنار همِ نمونه‌های خطای بالا در یک ماتریس ۳×۴ با کادرهای رنگی و درصد اطمینان، تصویر [`docs/assets/error_analysis_gallery.png`](file:///e:/work/research-few-shot/docs/assets/error_analysis_gallery.png) را ملاحظه فرمایید. این تصویر به صورت خودکار توسط اسکریپت [`generate_error_gallery.py`](file:///e:/work/research-few-shot/generate_error_gallery.py) در کسری از ثانیه تولید شده است.
+> برای مشاهده تفکیک مصور و کنار همِ نمونه‌های خطای بالا در یک ماتریس ۳×۴ با کادرهای رنگی و درصد اطمینان، تصویر [`assets/error_analysis_gallery.png`](assets/error_analysis_gallery.png) را ملاحظه فرمایید. این تصویر به صورت خودکار توسط اسکریپت [`generate_error_gallery.py`](../generate_error_gallery.py) در کسری از ثانیه تولید شده است.
 
 ---
 

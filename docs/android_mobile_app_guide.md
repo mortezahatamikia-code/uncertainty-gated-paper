@@ -189,7 +189,7 @@ $$\mathbf{p}_{\text{custom}} = \frac{\sum_{s=1}^5 \mathbf{f}_s}{\|\sum_{s=1}^5 \
 
 ```powershell
 # ورود به پوشه اپلیکیشن
-cd e:\work\research-few-shot\android_app
+cd android_app
 
 # ۱. بیلد بهینه‌شده و فوق‌سبک نهایی Release (پیشنهادی برای نصب و انتشار - فقط ۲۲.۷ مگابایت):
 .\gradlew.bat assembleRelease
@@ -229,17 +229,41 @@ cd e:\work\research-few-shot\android_app
 > **نکته بهینه‌سازی فشرده‌سازی و صفر درصد افت دقت:**  
 > با فعال‌سازی فشرده‌سازی استاندارد Deflate برای دارایی مدل و باینری‌های C++ و پالایش محلی‌سازی‌ها به زبان‌های فارسی و انگلیسی، حجم بسته نصبی به ۲۲.۷ مگابایت رسید؛ در حالی که هیچ تغییری در اوزان شبکه، محاسبات فیشر و سرعت استنتاج (<۲۰ms) ایجاد نمی‌شود.
 
----
+### روش ۱: بیلد مستقیم و سبک با خط فرمان Gradle (بدون نیاز به باز کردن Android Studio):
+اگر در لینوکس یا ویندوز هستید و می‌خواهید APK را سریع و بدون سربار رم کامپایل کنید:
 
-### روش ۲: نصب مستقیم روی گوشی متصل به کامپیوتر با کابل USB:
-اگر گوشی خود را با کابل به سیستم وصل کرده و گزینه USB Debugging را فعال کرده باشید:
-```powershell
-# نصب مستقیم نسخه Release روی گوشی
-adb install -r app\build\outputs\apk\release\app-release.apk
+**در لینوکس / مک:**
+```bash
+cd android_app
+chmod +x gradlew
+# کامپایل نسخه سبک Release
+./gradlew assembleRelease
+# یا کامپایل نسخه Debug برای تست و لاگ‌گیری
+./gradlew assembleDebug
 ```
 
+**در ویندوز (PowerShell):**
+```powershell
+cd android_app
+.\gradlew.bat assembleRelease
+```
+
+---
+
+### روش ۲: نصب مستقیم و مانیتورینگ بلادرنگ با ADB:
+اگر گوشی با کابل USB متصل و گزینه Developer Options / USB Debugging فعال باشد:
+```bash
+# نصب نسخه کامپایل‌شده روی گوشی
+adb install -r app/build/outputs/apk/release/app-release.apk
+
+# پایش بلادرنگ لاگ‌های تاخیر استنتاج و گیت شانون در ترمینال
+adb logcat -s "BioDINO"
+```
+
+---
+
 ### روش ۳: باز کردن در Android Studio:
-کافی است نرم‌افزار Android Studio را باز کرده و پوشه `e:\work\research-few-shot\android_app` را به عنوان پروژه انتخاب نمایید. تمام وابستگی‌ها، تم Compose و ابزارهای Preview به طور خودکار بارگذاری خواهند شد.
+کافی است نرم‌افزار Android Studio را باز کرده و پوشه [`android_app/`](../android_app) را به عنوان پروژه انتخاب نمایید. تمام وابستگی‌ها، تم Compose و ابزارهای Preview به طور خودکار بارگذاری خواهند شد.
 
 ---
 
@@ -257,7 +281,7 @@ adb install -r app\build\outputs\apk\release\app-release.apk
 
 ### ۱. خطای `could not find an implementation for convinteger(10) node with name '/backbone/patch_embed/proj/Conv_quant'`
 * **علت:** کتابخانه `onnxruntime-android` روی موبایل عملگرهای `ConvInteger` را پیاده‌سازی نکرده است. در ترنسفورمرها پچ ابتدایی کانولوشن ۲ بعدی است. کوانتیزاسیون پیش‌فرض سعی می‌کرد این کانولوشن را هم کوانتیزه کند.
-* **راه حل:** در [export_edge_models.py](file:///e:/work/research-few-shot/export_edge_models.py) پارامتر `op_types_to_quantize=['MatMul']` تنظیم شد. لایه پچ ابتدایی به صورت `Conv` استاندارد FP32 باقی ماند و تمامی لایه‌های ماتریسی به صورت بهینه کوانتیزه شدند.
+* **راه حل:** در [`export_edge_models.py`](../export_edge_models.py) پارامتر `op_types_to_quantize=['MatMul']` تنظیم شد. لایه پچ ابتدایی به صورت `Conv` استاندارد FP32 باقی ماند و تمامی لایه‌های ماتریسی به صورت بهینه کوانتیزه شدند.
 
 ### ۲. رفع خطای تطابق نوع در مقداردهی نشست ONNX (`Type mismatch: inferred type is OrtSession?`)
 * **علت:** در کاتلین متغیرهای تغییرپذیر نال‌پذیر در بلوک‌های شرطی گاهی دچار خطای Smart Cast می‌شوند.
