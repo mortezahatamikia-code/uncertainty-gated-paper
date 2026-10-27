@@ -30,7 +30,10 @@ NOVEL_CLASSES = [
     "Grape___Black_rot",
     "Grape___Esca_(Black_Measles)",
     "Grape___Leaf_blight",
-    "Grape___healthy"
+    "Grape___healthy",
+    "Potato___Early_blight",
+    "Potato___Late_blight",
+    "Potato___healthy"
 ]
 
 SHORT_NAMES = {
@@ -41,7 +44,10 @@ SHORT_NAMES = {
     "Grape___Black_rot": "Grape Black Rot",
     "Grape___Esca_(Black_Measles)": "Grape Esca",
     "Grape___Leaf_blight": "Grape Leaf Blight",
-    "Grape___healthy": "Grape Healthy"
+    "Grape___healthy": "Grape Healthy",
+    "Potato___Early_blight": "Potato Early Blight",
+    "Potato___Late_blight": "Potato Late Blight",
+    "Potato___healthy": "Potato Healthy"
 }
 
 def main():

@@ -18,7 +18,7 @@ from PIL import Image
 import timm
 from torchvision import transforms as T
 
-PROJECT_ROOT = Path(r"e:\work\research-few-shot")
+PROJECT_ROOT = Path(__file__).resolve().parent if "__file__" in locals() else Path(".").resolve()
 PAPER_DIR = PROJECT_ROOT / "paper"
 DOCS_ASSETS = PROJECT_ROOT / "docs" / "assets"
 PAPER_DIR.mkdir(exist_ok=True)

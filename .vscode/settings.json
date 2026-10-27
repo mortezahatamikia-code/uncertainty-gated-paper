@@ -60,5 +60,7 @@
         "${workspaceFolder}/.venv/Lib/site-packages",
         "${workspaceFolder}/.venv/lib/python3.12/site-packages",
         "${workspaceFolder}/.venv/lib/python3.11/site-packages"
-    ]
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.defaultPackageManager": "ms-python.python:pip"
 }
