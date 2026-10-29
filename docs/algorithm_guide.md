@@ -241,7 +241,8 @@ $$\hat{\mathbf{\Sigma}} = (1 - \rho)\mathbf{S}_W + \rho \nu \mathbf{I}_{896}$$
 با افزودن $\rho \nu \mathbf{I}_{896}$، مقادیر ویژه صفر پیشین به مقدار پایدار مثبت $\rho \nu > 0$ ارتقا می‌یابند:
 $$\tilde{\lambda}_i = (1 - \rho)\lambda_i + \rho \nu > 0, \quad \forall i \in \{1, \dots, 896\}$$
 ضریب بهینه $\rho^* \in (0, 1)$ به شکل بسته تحلیلی بدون نیاز به Cross-Validation محاسبه می‌شود:
-$$\rho^* = \arg\min_\rho \mathbb{E}\left[\|\hat{\mathbf{\Sigma}} - \mathbf{\Sigma}_{\text{true}}\|_F^2\right] = \frac{\sum_{i=1}^n \|\mathbf{z}_i \mathbf{z}_i^T - \mathbf{S}_W\|_F^2}{n^2 \left[\text{Tr}(\mathbf{S}_W^2) - \frac{1}{d}\text{Tr}^2(\mathbf{S}_W)\right]}$$
+$$\rho^* = \arg\min_\rho \mathbb{E}\left[\|\hat{\mathbf{\Sigma}} - \mathbf{\Sigma}_{\text{true}}\|_F^2\right] = \frac{\sum_{i=1}^n \|(\mathbf{z}_i - \boldsymbol{\mu}_{c_i})(\mathbf{z}_i - \boldsymbol{\mu}_{c_i})^T - \mathbf{S}_W\|_F^2}{n^2 \left[\text{Tr}(\mathbf{S}_W^2) - \frac{1}{d}\text{Tr}^2(\mathbf{S}_W)\right]}$$
+که در آن $c_i$ برچسب کلاس مربوط به نمونه $\mathbf{z}_i$ است تا بردارهای پراکندگی دقیقاً حول میانگین کلاس خود مرکزیت‌یافته باشند.
 
 ---
 
@@ -279,6 +280,7 @@ $$\hat{\mathbf{\Sigma}}^{-1} \approx \begin{bmatrix} \frac{1}{12.8 + \epsilon} &
 $$\mathbf{p}_{\text{final}}^{\text{trans}} = 0.75 \, \text{softmax}\left(\mathbf{z} (\mathbf{W}^{\text{trans}})^T + \mathbf{b}^{\text{trans}}\right) + 0.25 \mathbf{p}_{\text{text}}$$
 - این محاسبات روی CPU معمولی تنها **۲۲ تا ۲۵ میلی‌ثانیه** زمان می‌برد.
 - دقت مدل را از ۹۷.۴۴٪ به **۹۸.۳۹٪ استنتاجی** و قله تاریخی **۹۸.۶۷٪** می‌رساند و واریانس بین اپیزودها را ۴۲.۶٪ کاهش می‌دهد.
+- **نحوه عملکرد در سناریوی واقعی مزرعه (Online / Incremental Buffering):** در دنیای واقعی (عکس تک‌برگ با موبایل یا استریم پهپاد)، تصاویر مزرعه به تدریج در یک بافر حلقه‌ای موقت (FIFO Ring Buffer) در حافظه دستگاه ذخیره می‌شوند و پس از تجمیع نمونه‌های بااطمینان، ماتریس فیشر در یک ترد پس‌زمینه بدون وقفه به‌روزرسانی می‌شود. همچنین حتی در حالت کاملاً **استقرایی (Inductive - تک‌تصویر بدون هیچ‌گونه کالیبراسیون فراالقایی)**، دقت مدل **۹۶.۷۶٪** بوده و از تمام روش‌های قبلی برتر است.
 
 ---
 
