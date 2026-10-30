@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Generate a publication-grade, vector-quality architecture diagram for BioDINO-Edge.
-Outputs both PDF (for LaTeX compilation) and PNG (for raster review).
+Produces both PDF (for LaTeX publication) and high-res PNG.
+Clean left-to-right cascaded layout with zero line crossings or text collisions.
 """
 
 import matplotlib
@@ -15,7 +16,6 @@ PAPER_DIR = PROJECT_ROOT / "paper"
 PAPER_DIR.mkdir(exist_ok=True)
 
 def create_architecture_diagram():
-    # Set publication-standard font styling
     plt.rcParams.update({
         'font.sans-serif': 'DejaVu Sans',
         'font.family': 'sans-serif',
@@ -24,226 +24,234 @@ def create_architecture_diagram():
         'figure.titlesize': 11
     })
 
-    fig = plt.figure(figsize=(14.0, 7.8), dpi=300)
+    fig = plt.figure(figsize=(14.2, 7.6), dpi=300)
     ax = fig.add_axes((0.0, 0.0, 1.0, 1.0))
     ax.axis('off')
     ax.set_xlim(0, 100)
     ax.set_ylim(0, 60)
 
-    # Palette
-    c_blue_dark   = "#1A365D"
-    c_blue_med    = "#2B6CB0"
-    c_blue_light  = "#EBF8FF"
-    c_blue_border = "#3182CE"
+    # Cohesive, publication-grade color palette
+    c_navy_dark    = "#0F172A"  # Slate 900
+    c_subtext      = "#475569"  # Slate 600
 
-    c_teal_dark   = "#1D4044"
-    c_teal_med    = "#285E61"
-    c_teal_light  = "#E6FFFA"
-    c_teal_border = "#319795"
+    # Stage I: Professional Blue theme
+    c_blue_box_bg  = "#F0F9FF"
+    c_blue_box_brd = "#0284C7"
+    c_blue_txt     = "#0369A1"
 
-    c_amber_dark  = "#744210"
-    c_amber_med   = "#B7791F"
-    c_amber_light = "#FEFCBF"
-    c_amber_border= "#D69E2E"
+    # Fast-Path / Tier 1: Emerald theme
+    c_green_bg     = "#F0FDF4"
+    c_green_brd    = "#16A34A"
+    c_green_txt    = "#15803D"
+    c_green_pill   = "#DCFCE7"
 
-    c_green_dark  = "#1C4532"
-    c_green_med   = "#276749"
-    c_green_light = "#F0FFF4"
-    c_green_border= "#38A169"
+    # Companion / Tier 2: Royal Purple theme
+    c_purple_bg    = "#FAF5FF"
+    c_purple_brd   = "#9333EA"
+    c_purple_txt   = "#7E22CE"
+    c_purple_box   = "#F3E8FF"
 
-    c_purple_dark = "#44337A"
-    c_purple_med  = "#6B46C1"
-    c_purple_light= "#FAF5FF"
-    c_purple_border = "#805AD5"
+    # Fusion & Manifold: Warm Amber / Gold theme
+    c_amber_bg     = "#FEFCE8"
+    c_amber_brd    = "#CA8A04"
+    c_amber_txt    = "#A16207"
 
-    c_gray_bg     = "#F7FAFC"
-    c_gray_border = "#CBD5E0"
-    c_text_dark   = "#2D3748"
-
-    # -------------------------------------------------------------
-    # Helper functions
-    # -------------------------------------------------------------
-    def draw_box(x, y, w, h, bg, border, title="", subtitle="", radius=1.0, title_color="#000", sub_color="#4A5568", fontsize=8.5):
-        box = patches.FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0.2,rounding_size={radius}",
-                                     facecolor=bg, edgecolor=border, linewidth=1.4, zorder=2)
+    # Helper: Draw smooth rounded cards
+    def draw_card(x, y, w, h, bg, border, title="", subtitle="", detail="",
+                  radius=0.9, lw=1.3, title_color="#0F172A", sub_color="#475569", detail_color="#64748B",
+                  fontsize=8.2, zorder=2):
+        box = patches.FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0.25,rounding_size={radius}",
+                                     facecolor=bg, edgecolor=border, linewidth=lw, zorder=zorder)
         ax.add_patch(box)
-        if title and subtitle:
-            ax.text(x + w/2, y + h*0.62, title, ha='center', va='center', fontsize=fontsize, fontweight='bold', color=title_color, zorder=3)
-            ax.text(x + w/2, y + h*0.30, subtitle, ha='center', va='center', fontsize=fontsize-1.2, color=sub_color, zorder=3)
+        
+        if title and subtitle and detail:
+            ax.text(x + w/2, y + h*0.72, title, ha='center', va='center', fontsize=fontsize, fontweight='bold', color=title_color, zorder=zorder+1)
+            ax.text(x + w/2, y + h*0.42, subtitle, ha='center', va='center', fontsize=fontsize-1.1, color=sub_color, zorder=zorder+1)
+            ax.text(x + w/2, y + h*0.18, detail, ha='center', va='center', fontsize=fontsize-1.6, color=detail_color, zorder=zorder+1)
+        elif title and subtitle:
+            ax.text(x + w/2, y + h*0.64, title, ha='center', va='center', fontsize=fontsize, fontweight='bold', color=title_color, zorder=zorder+1)
+            ax.text(x + w/2, y + h*0.30, subtitle, ha='center', va='center', fontsize=fontsize-1.2, color=sub_color, zorder=zorder+1)
         elif title:
-            ax.text(x + w/2, y + h/2, title, ha='center', va='center', fontsize=fontsize, fontweight='bold', color=title_color, zorder=3)
+            ax.text(x + w/2, y + h/2, title, ha='center', va='center', fontsize=fontsize, fontweight='bold', color=title_color, zorder=zorder+1)
 
-    def draw_arrow(x1, y1, x2, y2, color="#4A5568", style='->', lw=1.5, ls='-', label="", label_pos=0.5, label_offset=(0, 1.2), label_fontsize=7.5, label_color="#2D3748"):
+    # Helper: Draw clean orthogonal or straight arrows
+    def draw_arrow(x1, y1, x2, y2, color="#475569", lw=1.4, ls='-', label="", label_pos=0.5,
+                   label_offset=(0, 0), label_color="#0F172A", label_bg="white", label_fs=7.2):
         ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
-                    arrowprops=dict(arrowstyle=style, color=color, lw=lw, linestyle=ls, shrinkA=0, shrinkB=0), zorder=4)
+                    arrowprops=dict(arrowstyle="->,head_width=0.32,head_length=0.45",
+                                    color=color, lw=lw, linestyle=ls, shrinkA=0, shrinkB=0), zorder=6)
         if label:
             lx = x1 + (x2 - x1) * label_pos + label_offset[0]
             ly = y1 + (y2 - y1) * label_pos + label_offset[1]
-            ax.text(lx, ly, label, ha='center', va='center', fontsize=label_fontsize, color=label_color, fontweight='bold', zorder=5,
-                    bbox=dict(boxstyle="round,pad=0.15", facecolor="white", edgecolor=color, alpha=0.9, lw=0.8))
+            ax.text(lx, ly, label, ha='center', va='center', fontsize=label_fs,
+                    color=label_color, fontweight='bold', zorder=7,
+                    bbox=dict(boxstyle="round,pad=0.22", facecolor=label_bg, edgecolor=color, alpha=0.96, lw=0.8))
 
-    # -------------------------------------------------------------
+    # =========================================================================
     # 1. Background Section Panels
-    # -------------------------------------------------------------
-    # Panel A: Offline Preparation (Left Column)
-    panel_a = patches.FancyBboxPatch((2, 3), 29, 54, boxstyle="round,pad=0.4,rounding_size=1.5",
-                                     facecolor="#F7FAFC", edgecolor="#CBD5E0", linewidth=1.5, linestyle="--", zorder=1)
-    ax.add_patch(panel_a)
-    ax.text(16.5, 55.2, "STAGE I: OFFLINE SUPPORT CALIBRATION", ha='center', va='center',
-            fontsize=9.5, fontweight='bold', color=c_blue_dark, zorder=3)
-    ax.text(16.5, 53.6, "One-Time Analytical Processing (~50 ms, Zero-Backpropagation)", ha='center', va='center',
-            fontsize=7.5, color="#4A5568", zorder=3)
+    # =========================================================================
+    # Panel I: Offline Support Calibration (Left)
+    panel_i = patches.FancyBboxPatch((2.0, 2.5), 26.5, 55.0, boxstyle="round,pad=0.4,rounding_size=1.2",
+                                     facecolor="#F8FAFC", edgecolor="#94A3B8", linewidth=1.4, linestyle="--", zorder=1)
+    ax.add_patch(panel_i)
+    ax.text(15.25, 55.4, "STAGE I: OFFLINE SUPPORT CALIBRATION", ha='center', va='center',
+            fontsize=9.2, fontweight='bold', color="#0F172A", zorder=3)
+    ax.text(15.25, 53.6, "One-Time Analytical Processing (~50 ms, No Backprop)", ha='center', va='center',
+            fontsize=7.3, color=c_subtext, zorder=3)
 
-    # Panel B: Online Inference & Dynamic Gating (Middle & Right Columns)
-    panel_b = patches.FancyBboxPatch((33, 3), 65, 54, boxstyle="round,pad=0.4,rounding_size=1.5",
-                                     facecolor="#FFFFFF", edgecolor="#CBD5E0", linewidth=1.5, zorder=1)
-    ax.add_patch(panel_b)
-    ax.text(65.5, 55.2, "STAGE II: DUAL-TIER CASCADED INFERENCE & ADAPTIVE GATING", ha='center', va='center',
-            fontsize=9.5, fontweight='bold', color=c_green_dark, zorder=3)
-    ax.text(65.5, 53.6, "Real-Time Streaming Edge Architecture (Sub-22 ms Latency on ARM CPU)", ha='center', va='center',
-            fontsize=7.5, color="#4A5568", zorder=3)
+    # Panel II: Online Inference & Adaptive Gating (Right)
+    panel_ii = patches.FancyBboxPatch((30.0, 2.5), 68.0, 55.0, boxstyle="round,pad=0.4,rounding_size=1.2",
+                                      facecolor="#FFFFFF", edgecolor="#94A3B8", linewidth=1.4, zorder=1)
+    ax.add_patch(panel_ii)
+    ax.text(64.0, 55.4, "STAGE II: DUAL-TIER CASCADED INFERENCE & ADAPTIVE GATING", ha='center', va='center',
+            fontsize=9.2, fontweight='bold', color="#0F172A", zorder=3)
+    ax.text(64.0, 53.6, "Real-Time Streaming Edge Architecture (Sub-22 ms Latency on 4-Thread ARM CPU)", ha='center', va='center',
+            fontsize=7.3, color=c_subtext, zorder=3)
 
-    # -------------------------------------------------------------
-    # Stage I Elements (Offline Calibration)
-    # -------------------------------------------------------------
-    # Few-shot support box
-    draw_box(4.5, 45.0, 24, 6.2, c_blue_light, c_blue_border,
-             "Few-Shot Support Foliage", r"$\mathcal{S} = \{(x_i, y_i)\}_{i=1}^{N_s}$ ($K=5$ shots per class)",
-             title_color=c_blue_dark)
+    # =========================================================================
+    # 2. Stage I: Offline Support Alignment (Top-to-Bottom Flow)
+    # =========================================================================
+    # 1) Few-shot support leaves
+    draw_card(4.0, 45.2, 22.5, 6.2, c_blue_box_bg, c_blue_box_brd,
+              "Few-Shot Support Foliage", r"$\mathcal{S} = \{(x_i, y_i)\}_{i=1}^{N_s}$ ($K=5$ shots per class)",
+              title_color=c_blue_txt)
 
-    # Multi-view orbital augmentation
-    draw_box(4.5, 36.2, 24, 6.0, "#FFFFFF", c_blue_med,
-             r"Multi-View Fréchet Orbit ($V=8$)", r"Rotation, Jitter, Flip $\to N_{\mathrm{eff}} = 440$ vectors",
-             title_color=c_blue_dark)
-    draw_arrow(16.5, 45.0, 16.5, 42.2, color=c_blue_med)
+    # 2) Multi-View Orbit
+    draw_card(4.0, 36.2, 22.5, 6.0, "#FFFFFF", "#64748B",
+              r"Multi-View Fréchet Orbit ($V=8$)", r"Rotation, Jitter, Flip $\to N_{\mathrm{eff}} = 440$ vectors",
+              title_color="#1E293B")
+    draw_arrow(15.25, 45.2, 15.25, 42.2, color="#0284C7")
 
-    # Dual extraction split
-    draw_box(4.5, 27.5, 11.2, 6.0, c_teal_light, c_teal_border,
-             "DINOv2 Small", r"$\mathbf{f}_{\mathrm{dino}} \in \mathbb{R}^{384}$", title_color=c_teal_dark)
-    draw_box(17.3, 27.5, 11.2, 6.0, c_purple_light, c_purple_border,
-             "BioCLIP ViT-B", r"$\mathbf{f}_{\mathrm{bio}} \in \mathbb{R}^{512}$", title_color=c_purple_dark)
+    # 3) Parallel Dual Feature Extraction (Side-by-Side!)
+    # Left: DINOv2
+    draw_card(4.0, 25.0, 10.8, 8.0, "#F0FDFA", "#0D9488",
+              "DINOv2 Small", r"$\mathbf{f}_{\mathrm{dino}} \in \mathbb{R}^{384}$",
+              "Spatial Patch Tokens", title_color="#0F766E", fontsize=7.8)
+    # Right: BioCLIP + Purified Botanical Taxonomy
+    draw_card(15.7, 25.0, 10.8, 8.0, c_purple_box, c_purple_brd,
+              "BioCLIP ViT-B", r"$\mathbf{f}_{\mathrm{bio}} \in \mathbb{R}^{512}$",
+              "+ Botanical Prompts", title_color=c_purple_txt, fontsize=7.8)
 
-    draw_arrow(12.0, 36.2, 10.1, 33.5, color=c_teal_med)
-    draw_arrow(21.0, 36.2, 22.9, 33.5, color=c_purple_med)
+    draw_arrow(10.0, 36.2, 9.4, 33.0, color="#0D9488")
+    draw_arrow(20.5, 36.2, 21.1, 33.0, color=c_purple_brd)
 
-    # Purified Domain Prompts
-    draw_box(4.5, 19.0, 24, 6.0, c_purple_light, c_purple_border,
-             "Purified Botanical Taxonomy", "Latin binomials & positive structural etiology",
-             title_color=c_purple_dark)
-    draw_arrow(22.9, 27.5, 22.9, 25.0, color=c_purple_med)
+    # 4) Joint Manifold & Ledoit-Wolf Fisher-LDA
+    draw_card(4.0, 12.0, 22.5, 9.5, c_amber_bg, c_amber_brd,
+              r"Joint 896-d Manifold ($\mathcal{H}_{\mathrm{dino}} \oplus \mathcal{H}_{\mathrm{bio}}$)",
+              r"Analytical Shrinkage: $\hat{\mathbf{\Sigma}} = (1-\rho^*)\mathbf{S}_W + \rho^* \nu \mathbf{I}_{896}$",
+              r"Fisher Weights: $\mathbf{W} = \hat{\mathbf{\Sigma}}^{-1}[\boldsymbol{\mu}_1,\dots,\boldsymbol{\mu}_C]^T$",
+              title_color=c_amber_txt, fontsize=7.8)
 
-    # Joint Manifold & Ledoit-Wolf Fisher-LDA
-    draw_box(4.5, 9.8, 24, 6.8, c_amber_light, c_amber_border,
-             r"Joint 896-d Manifold ($\mathcal{H}_{\mathrm{dino}} \oplus \mathcal{H}_{\mathrm{bio}}$)",
-             r"Ledoit-Wolf Shrinkage: $\hat{\mathbf{\Sigma}} = (1-\rho^*)\mathbf{S}_W + \rho^* \nu \mathbf{I}$" + "\n" + r"$\to \mathbf{W} = \hat{\mathbf{\Sigma}}^{-1}[\boldsymbol{\mu}_1,\dots,\boldsymbol{\mu}_C]^T$",
-             title_color=c_amber_dark, fontsize=8.0)
+    draw_arrow(9.4, 25.0, 9.4, 21.5, color="#0D9488")
+    draw_arrow(21.1, 25.0, 21.1, 21.5, color=c_purple_brd)
 
-    draw_arrow(10.1, 27.5, 10.1, 16.6, color=c_amber_med)
-    draw_arrow(22.9, 19.0, 22.9, 16.6, color=c_amber_med)
+    # Output Arrow from Manifold into Tier 2 Companion (Clean gap between panels)
+    draw_arrow(26.5, 16.75, 33.5, 16.75, color=c_amber_brd, lw=1.8,
+               label=r"Fisher $(\mathbf{W}, \mathbf{b})$", label_pos=0.5, label_offset=(0, 1.4),
+               label_color=c_amber_txt, label_bg="#FEFCE8", label_fs=7.0)
 
-    # Output weights arrow to online stage
-    draw_arrow(28.5, 13.2, 63.5, 13.2, color=c_amber_med, lw=1.8, style='->',
-               label="Trained Fisher Head (W, b) [<10 KB]", label_pos=0.45, label_offset=(0, 1.4), label_color=c_amber_dark)
+    # =========================================================================
+    # 3. Stage II: Cascaded Dual-Tier Inference (Clean Left-to-Right Flow)
+    # =========================================================================
+    # A) Input Query Leaf
+    draw_card(31.8, 41.5, 12.5, 7.5, "#F1F5F9", "#64748B",
+              "Input Query Leaf", r"$x_q \in \mathbb{R}^{H \times W \times 3}$",
+              "Field / UAV Leaf Photo", title_color="#1E293B", fontsize=7.8)
 
-    # -------------------------------------------------------------
-    # Stage II Elements (Online Cascaded Inference)
-    # -------------------------------------------------------------
-    # Input Query Leaf
-    draw_box(35.5, 45.0, 18.0, 6.2, c_green_light, c_green_border,
-             "Input Query Leaf", r"$x_q \in \mathbb{R}^{H \times W \times 3}$ (Field Photo / UAV Stream)",
-             title_color=c_green_dark)
+    # B) Container Tier 1: Standalone Fast-Path
+    tier1_rect = patches.FancyBboxPatch((46.5, 35.5), 37.0, 15.8, boxstyle="round,pad=0.3,rounding_size=1.0",
+                                        facecolor=c_green_bg, edgecolor=c_green_brd, linewidth=1.3, linestyle=":", zorder=2)
+    ax.add_patch(tier1_rect)
+    ax.text(65.0, 49.8, "TIER 1: STANDALONE FAST-PATH (APK BUNDLE, 22.05 MB INT8)",
+            ha='center', va='center', fontsize=7.8, fontweight='bold', color=c_green_txt, zorder=4)
 
-    # Tier 1 Box (Enclosing Fast Path)
-    tier1_bg = patches.FancyBboxPatch((57.5, 33.5), 38.5, 18.5, boxstyle="round,pad=0.3,rounding_size=1.0",
-                                     facecolor="#F0FFF4", edgecolor=c_green_border, linewidth=1.4, linestyle=":", zorder=1)
-    ax.add_patch(tier1_bg)
-    ax.text(76.75, 50.4, "TIER 1: STANDALONE FAST-PATH (APK BUNDLE, ~21 MB INT8)",
-            ha='center', va='center', fontsize=8.0, fontweight='bold', color=c_green_dark, zorder=3)
+    # Inside Tier 1:
+    # 1) DINOv2 Small Fast-Extractor
+    draw_card(48.5, 37.5, 15.0, 10.2, "#FFFFFF", "#0D9488",
+              "DINOv2 Small (INT8)", r"$\mathbf{f}_{\mathrm{dino}} \in \mathbb{R}^{384}$" + "\n" + r"Latency: 21.1 ms (CPU)",
+              "Fast Spatial Feature", title_color="#0F766E", fontsize=7.8)
+    draw_arrow(44.3, 45.2, 48.5, 45.2, color="#0D9488", lw=1.6)
 
-    # DINOv2 Fast-Path
-    draw_box(59.5, 42.0, 15.0, 6.5, "#FFFFFF", c_teal_med,
-             "DINOv2 Small", r"$\mathbf{f}_{\mathrm{dino}} \in \mathbb{R}^{384}$" + "\n" + r"Latency: 21.1 ms",
-             title_color=c_teal_dark, fontsize=8.0)
+    # 2) Shannon Margin-Entropy Gate
+    draw_card(66.5, 37.5, 15.0, 10.2, c_amber_bg, c_amber_brd,
+              r"Shannon Gate $\mathcal{C}(\mathbf{x})$",
+              r"$\Delta p \cdot (1 - \tilde{\mathcal{H}}_{\mathrm{norm}})$" + "\n" + r"$\tau_{\mathrm{conf}} = 0.35$",
+              "Uncertainty Metric", title_color=c_amber_txt, fontsize=7.8)
+    draw_arrow(63.5, 42.6, 66.5, 42.6, color=c_amber_brd, lw=1.6)
 
-    draw_arrow(53.5, 48.1, 59.5, 45.2, color=c_teal_med, lw=1.6)
+    # C) Gating Routing:
+    # Path 1: Fast-Exit Branch (Straight Right into Confident Exit)
+    draw_card(86.0, 39.5, 10.5, 8.0, c_green_pill, c_green_brd,
+              "Fast-Exit", "88.4% Queries", ">45 FPS | Confident",
+              title_color=c_green_txt, fontsize=8.0)
+    draw_arrow(81.5, 43.5, 86.0, 43.5, color=c_green_brd, lw=1.8,
+               label=r"$\mathcal{C} \geq 0.35$", label_pos=0.48, label_offset=(0, 1.3),
+               label_color=c_green_txt, label_bg="#F0FDF4")
 
-    # Shannon Margin-Entropy Gate
-    draw_box(78.5, 41.5, 15.5, 7.5, c_amber_light, c_amber_border,
-             r"Shannon Gate $\mathcal{C}(\mathbf{x})$",
-             r"$\Delta p \cdot (1 - \tilde{\mathcal{H}}(\mathbf{p}))$" + "\n" + r"Threshold: $\tau_{\mathrm{conf}} = 0.35$",
-             title_color=c_amber_dark, fontsize=8.0)
+    # D) Container Tier 2: On-Demand Deep Companion
+    tier2_rect = patches.FancyBboxPatch((31.8, 4.5), 51.7, 26.5, boxstyle="round,pad=0.3,rounding_size=1.0",
+                                        facecolor=c_purple_bg, edgecolor=c_purple_brd, linewidth=1.3, linestyle=":", zorder=2)
+    ax.add_patch(tier2_rect)
+    ax.text(57.65, 29.5, "TIER 2: ON-DEMAND DEEP COMPANION (83.57 MB INT8, 896-d FISHER + TRANSDUCTIVE)",
+            ha='center', va='center', fontsize=7.6, fontweight='bold', color=c_purple_txt, zorder=4)
 
-    draw_arrow(74.5, 45.2, 78.5, 45.2, color=c_amber_med, lw=1.6)
+    # Path 2: Ambiguous Fallback Arrow from Shannon Gate down into Tier 2 (Label sits in empty band between boxes)
+    draw_arrow(74.0, 37.5, 74.0, 23.5, color=c_purple_brd, lw=1.6, ls='--',
+               label=r"$\mathcal{C} < 0.35$ (Ambiguous / 11.6%)", label_pos=0.42, label_offset=(-7.6, 0),
+               label_color=c_purple_txt, label_bg="#FAF5FF")
 
-    # Decision branches from Gate
-    # Branch 1: Fast-Exit (Green)
-    draw_box(79.0, 35.0, 14.5, 4.5, "#C6F6D5", c_green_dark,
-             r"Fast-Exit (88.4% Queries)", ">45 FPS | High Certainty",
-             title_color=c_green_dark, fontsize=7.5)
-    draw_arrow(86.25, 41.5, 86.25, 39.5, color=c_green_dark, lw=1.8,
-               label=r"$\mathcal{C} \geq 0.35$", label_pos=0.5, label_offset=(2.8, 0), label_color=c_green_dark)
+    # Inside Tier 2:
+    # 1) BioCLIP ViT-B Companion Extractor
+    draw_card(33.5, 15.5, 13.5, 9.5, "#FFFFFF", c_purple_brd,
+              "BioCLIP ViT-B (INT8)", r"$\mathbf{f}_{\mathrm{bio}} \in \mathbb{R}^{512}$",
+              "Taxonomic Prior + Prompts", title_color=c_purple_txt, fontsize=7.6)
+    # Feed from Query Leaf down into BioCLIP
+    draw_arrow(38.0, 41.5, 38.0, 25.0, color="#64748B", lw=1.4, ls=':')
 
-    # Branch 2: Ambiguous Fallback to Tier 2
-    # Tier 2 Box (Enclosing Deep Path)
-    tier2_bg = patches.FancyBboxPatch((35.5, 5.0), 60.5, 25.5, boxstyle="round,pad=0.3,rounding_size=1.0",
-                                     facecolor="#FAF5FF", edgecolor=c_purple_border, linewidth=1.4, linestyle=":", zorder=1)
-    ax.add_patch(tier2_bg)
-    ax.text(65.75, 29.0, "TIER 2: ON-DEMAND DEEP COMPANION (~84 MB INT8, 896-d FISHER + TRANSDUCTIVE)",
-            ha='center', va='center', fontsize=8.0, fontweight='bold', color=c_purple_dark, zorder=3)
+    # 2) 896-d Concatenation
+    draw_card(49.5, 15.5, 14.5, 9.5, c_amber_bg, c_amber_brd,
+              "896-d Concatenation", r"$\mathbf{z}_q = [\mathbf{f}_{\mathrm{bio}}, \mathbf{f}_{\mathrm{dino}}]$",
+              "Joint Geometry", title_color=c_amber_txt, fontsize=7.8)
+    draw_arrow(47.0, 20.25, 49.5, 20.25, color=c_purple_brd, lw=1.5)
+    # Clean downward feed of f_dino from Tier 1 into Concatenation
+    draw_arrow(56.0, 37.5, 56.0, 25.0, color="#0D9488", lw=1.4, ls=':')
 
-    # Arrow from Gate to Tier 2
-    draw_arrow(86.25, 41.5, 86.25, 26.5, color=c_purple_med, lw=1.8, style='->',
-               label=r"$\mathcal{C} < 0.35$ (Ambiguous / 11.6%)", label_pos=0.6, label_offset=(7.5, 0), label_color=c_purple_dark)
+    # 3) Fisher + Text Ensemble
+    draw_card(66.5, 15.5, 15.0, 9.5, "#FFFFFF", "#0284C7",
+              "Fisher + Text Blend", r"$\mathbf{p} = 0.75 \mathbf{p}_{\mathrm{fish}} + 0.25 \mathbf{p}_{\mathrm{text}}$",
+              "Regularized Projection", title_color="#0369A1", fontsize=7.6)
+    draw_arrow(64.0, 20.25, 66.5, 20.25, color=c_amber_brd, lw=1.5)
 
-    # BioCLIP in Tier 2
-    draw_box(37.5, 17.5, 16.0, 6.5, "#FFFFFF", c_purple_med,
-             "BioCLIP ViT-B", r"$\mathbf{f}_{\mathrm{bio}} \in \mathbb{R}^{512}$" + "\n" + r"Taxonomic Vision",
-             title_color=c_purple_dark, fontsize=8.0)
+    # 4) Soft-Anchored Transductive Recalibration (Underneath Concatenation & Blend)
+    draw_card(42.0, 6.0, 39.5, 7.5, c_purple_box, c_purple_brd,
+              r"Soft-Anchored Transductive Recalibration ($3\times$ Anchor)",
+              r"Online Buffer $\to$ Closed-Form $\hat{\mathbf{\Sigma}}^{\mathrm{trans}}$ & $\mathbf{W}^{\mathrm{trans}}$ Re-estimation (<22 ms)",
+              "Resolves 5-Shot Prototype Shift Without Backprop",
+              title_color=c_purple_txt, fontsize=7.6)
+    draw_arrow(74.0, 15.5, 74.0, 13.5, color=c_purple_brd, lw=1.5)
 
-    # Query image arrow to BioCLIP
-    draw_arrow(44.5, 45.0, 44.5, 24.0, color=c_purple_med, lw=1.5, style='->', ls='--')
+    # E) Unified Final Decision & Calibrated Diagnosis Block (Far Right)
+    draw_card(85.5, 6.0, 11.5, 26.5, "#F0FDF4", "#15803D",
+              "Final Diagnostic\nDecision & ECE",
+              "Peak Acc: 98.72%\nMean: 97.37%\nECE: 0.81%\n($T=0.50$)\n\nCross-Crop: 0.01%\nFN-Rate: 0.60%",
+              "Calibrated Output",
+              radius=1.0, lw=1.6, title_color="#14532D", sub_color="#166534", detail_color="#15803D", fontsize=7.8)
 
-    # Concatenate 896-d
-    draw_box(57.5, 17.5, 15.0, 6.5, c_amber_light, c_amber_border,
-             r"896-d Concatenation", r"$\mathbf{z}_q = [\mathbf{f}_{\mathrm{bio}}, \mathbf{f}_{\mathrm{dino}}]$",
-             title_color=c_amber_dark, fontsize=8.0)
+    # Fast-Exit connection down into Final Decision
+    draw_arrow(91.25, 39.5, 91.25, 32.5, color="#16A34A", lw=1.8,
+               label="Routine Path", label_pos=0.5, label_offset=(0, 0), label_color="#15803D", label_bg="#F0FDF4")
 
-    draw_arrow(53.5, 20.75, 57.5, 20.75, color=c_amber_med, lw=1.5)
-    # DINOv2 feature link into concatenation
-    ax.plot([67.0, 67.0], [42.0, 24.0], color=c_teal_med, lw=1.4, linestyle=':')
-    draw_arrow(67.0, 24.0, 67.0, 24.0, color=c_teal_med)
+    # Transductive calibrated connection right into Final Decision
+    draw_arrow(81.5, 9.75, 85.5, 9.75, color=c_purple_brd, lw=1.8,
+               label="Deep Path", label_pos=0.5, label_offset=(0, 1.4), label_color=c_purple_txt, label_bg="#FAF5FF")
 
-    # Fisher Alignment & Text Blend
-    draw_box(76.0, 17.5, 18.0, 6.5, "#FFFFFF", c_blue_med,
-             r"Fisher + Text Ensemble", r"$\mathbf{p} = 0.75 \mathbf{p}_{\mathrm{fisher}} + 0.25 \mathbf{p}_{\mathrm{text}}$",
-             title_color=c_blue_dark, fontsize=8.0)
-    draw_arrow(72.5, 20.75, 76.0, 20.75, color=c_blue_med, lw=1.5)
-
-    # Transductive Self-Calibration / Incremental Buffer
-    draw_box(63.5, 7.5, 30.5, 6.8, c_purple_light, c_purple_border,
-             r"Soft-Anchored Transductive Recalibration ($3\times$ Anchor)",
-             r"Online Buffer $\to$ Closed-Form $\hat{\mathbf{\Sigma}}^{\mathrm{trans}}$ & $\mathbf{W}^{\mathrm{trans}}$ re-estimation (<22 ms)",
-             title_color=c_purple_dark, fontsize=7.8)
-
-    draw_arrow(85.0, 17.5, 85.0, 14.3, color=c_purple_med, lw=1.5)
-
-    # Output Box: Diagnosis & Calibrated Confidence
-    draw_box(37.5, 7.5, 22.0, 6.8, "#FFFFFF", c_green_dark,
-             r"Diagnostic Prediction \& ECE",
-             r"Peak Accuracy: 98.67% | ECE: 0.79%" + "\n" + r"Temperature Scaling ($T=0.50$)",
-             title_color=c_green_dark, fontsize=8.0)
-
-    draw_arrow(63.5, 10.9, 59.5, 10.9, color=c_green_dark, lw=1.8)
-    draw_arrow(86.25, 35.0, 48.5, 14.3, color=c_green_dark, lw=1.5, ls='--',
-               label="Fast-Exit Routing", label_pos=0.65, label_offset=(-3.5, 1.0), label_color=c_green_dark)
-
-    # Save outputs
+    # Save vector PDF and high-res raster PNG
     pdf_path = PAPER_DIR / "fig_architecture.pdf"
     png_path = PAPER_DIR / "fig_architecture.png"
     plt.savefig(pdf_path, format='pdf', bbox_inches='tight', pad_inches=0.04)
     plt.savefig(png_path, format='png', bbox_inches='tight', pad_inches=0.04, dpi=300)
     plt.close()
-    print(f"[OK] Saved {pdf_path} and {png_path} successfully!")
+    print(f"[SUCCESS] Saved publication-grade {pdf_path} and {png_path}!")
 
 if __name__ == "__main__":
     create_architecture_diagram()
