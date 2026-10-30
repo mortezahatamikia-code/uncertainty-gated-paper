@@ -41,6 +41,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.biodino.edge.data.locale.AppLanguage
+import com.biodino.edge.data.locale.I18n
+import com.biodino.edge.data.locale.LocalAppLanguage
+import com.biodino.edge.data.locale.LocalAppStrings
 import com.biodino.edge.presentation.theme.AlertAmber
 import com.biodino.edge.presentation.theme.AlertCrimson
 import com.biodino.edge.presentation.theme.EmeraldNeon
@@ -51,7 +55,8 @@ import com.biodino.edge.presentation.theme.TextPrimary
 @Composable
 fun ReticleOverlay(
     modifier: Modifier = Modifier,
-    isFarsi: Boolean = false,
+    language: AppLanguage = LocalAppLanguage.current,
+    isFarsi: Boolean = language == AppLanguage.PERSIAN,
     isScanningPaused: Boolean,
     isBlurred: Boolean,
     isEcoMode: Boolean,
@@ -59,6 +64,7 @@ fun ReticleOverlay(
     isConfidentlyLocked: Boolean
 ) {
     val haptic = LocalHapticFeedback.current
+    val strings = LocalAppStrings.current
 
     // Trigger physical haptic feedback when the Shannon uncertainty gate locks
     LaunchedEffect(isConfidentlyLocked) {
@@ -194,27 +200,17 @@ fun ReticleOverlay(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (isFarsi) {
-                            when {
-                                isScanningPaused -> "اسکن متوقف شد"
-                                isBlurred -> "⚠️ دوربین را ثابت نگه دارید (تاری)"
-                                isConfidentlyLocked -> "قفل هدف روی برگ (${(smoothedConfidence * 100).toInt()}%)"
-                                smoothedConfidence >= 0.20f -> "در حال تحلیل علائم بیماری..."
-                                else -> "برگ را درون کادر تنظیم کنید"
-                            }
-                        } else {
-                            when {
-                                isScanningPaused -> "PAUSED"
-                                isBlurred -> "HOLD CAMERA STEADY (BLUR)"
-                                isConfidentlyLocked -> "LEAF LOCKED (${(smoothedConfidence * 100).toInt()}%)"
-                                smoothedConfidence >= 0.20f -> "ANALYZING SYMPTOMS..."
-                                else -> "ALIGN LEAF IN RETICLE"
-                            }
+                        text = when {
+                            isScanningPaused -> strings.reticlePaused
+                            isBlurred -> strings.reticleSteadyBlur
+                            isConfidentlyLocked -> "${strings.reticleLocked} (${(smoothedConfidence * 100).toInt()}%)"
+                            smoothedConfidence >= 0.20f -> strings.reticleAnalyzing
+                            else -> strings.reticleAlignLeaf
                         },
                         color = TextPrimary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = if (isFarsi) 0.sp else 0.8.sp
+                        letterSpacing = if (language.isRtl) 0.sp else 0.8.sp
                     )
                 }
             }
@@ -236,7 +232,7 @@ fun ReticleOverlay(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (isFarsi) "مصرف بهینه ۱۵ فریم" else "ECO 15 FPS",
+                        text = strings.reticleEco15Fps,
                         color = EmeraldNeon,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold

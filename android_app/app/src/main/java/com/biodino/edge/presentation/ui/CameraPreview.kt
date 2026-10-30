@@ -33,6 +33,7 @@ fun CameraPreview(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var camera by remember { mutableStateOf<Camera?>(null) }
+    var cameraProviderRef by remember { mutableStateOf<ProcessCameraProvider?>(null) }
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
 
     LaunchedEffect(isTorchActive, camera) {
@@ -41,6 +42,9 @@ fun CameraPreview(
 
     DisposableEffect(Unit) {
         onDispose {
+            try {
+                cameraProviderRef?.unbindAll()
+            } catch (_: Exception) {}
             cameraExecutor.shutdown()
         }
     }
@@ -55,6 +59,7 @@ fun CameraPreview(
             val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
             cameraProviderFuture.addListener({
                 val cameraProvider = cameraProviderFuture.get()
+                cameraProviderRef = cameraProvider
 
                 val preview = Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)

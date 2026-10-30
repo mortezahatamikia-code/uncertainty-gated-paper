@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.biodino.edge.data.engine.BioDinoOnnxEngine
 import com.biodino.edge.data.engine.ImageQualityEvaluator
+import com.biodino.edge.data.locale.AppLanguage
 import com.biodino.edge.data.service.TtsManager
 import com.biodino.edge.domain.model.CustomEnrolledDisease
 import com.biodino.edge.domain.repository.CustomPrototypesRepository
@@ -68,6 +69,19 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(isCameraPermissionGranted = granted) }
     }
 
+    fun toggleCameraActive(active: Boolean? = null) {
+        _uiState.update { current ->
+            val next = active ?: !current.isCameraActive
+            if (!next) {
+                ttsManager.stop()
+            }
+            current.copy(
+                isCameraActive = next,
+                isTorchActive = if (!next) false else current.isTorchActive
+            )
+        }
+    }
+
     fun toggleScanningPause() {
         _uiState.update { it.copy(isScanningPaused = !it.isScanningPaused) }
     }
@@ -89,7 +103,18 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun toggleFarsi() {
-        _uiState.update { it.copy(isFarsi = !it.isFarsi) }
+        _uiState.update { current ->
+            val next = if (current.currentLanguage == AppLanguage.PERSIAN) AppLanguage.ENGLISH else AppLanguage.PERSIAN
+            current.copy(currentLanguage = next)
+        }
+    }
+
+    fun setLanguage(lang: AppLanguage) {
+        _uiState.update { it.copy(currentLanguage = lang, isLanguageDialogVisible = false) }
+    }
+
+    fun showLanguageDialog(show: Boolean) {
+        _uiState.update { it.copy(isLanguageDialogVisible = show) }
     }
 
     fun openAtlas(open: Boolean) {
@@ -106,6 +131,10 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
 
     fun openCalculator(open: Boolean) {
         _uiState.update { it.copy(isCalculatorOpen = open) }
+    }
+
+    fun openCareGuide(open: Boolean) {
+        _uiState.update { it.copy(isCareGuideOpen = open) }
     }
 
     fun openWeather(open: Boolean) {
@@ -135,8 +164,10 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     fun speakCurrentDiagnosis() {
         val diag = _uiState.value.latestDiagnosis ?: return
         val percent = (diag.confidence * 100).toInt()
+        val lang = _uiState.value.currentLanguage
+        val localizedName = diag.diseaseInfo.getLocalizedName(lang)
         ttsManager.speakDiagnosis(
-            diag.diseaseInfo.commonName,
+            localizedName,
             percent,
             diag.diseaseInfo.isHealthy,
             force = true
@@ -211,7 +242,7 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun analyzeFrame(bitmap: Bitmap) {
         val currentState = _uiState.value
-        if (currentState.isScanningPaused || currentState.galleryBitmap != null) return
+        if (currentState.isScanningPaused || !currentState.isCameraActive || currentState.galleryBitmap != null) return
 
         val now = System.currentTimeMillis()
         // Eco Mode: throttle to ~15 FPS (66ms) instead of 60 FPS

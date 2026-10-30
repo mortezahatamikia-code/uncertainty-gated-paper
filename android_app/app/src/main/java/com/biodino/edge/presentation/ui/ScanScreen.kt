@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EnergySavingsLeaf
 import androidx.compose.material.icons.filled.FlashOff
@@ -40,6 +41,8 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocalFlorist
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,6 +50,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,12 +61,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.compose.material.icons.filled.Warning
 import com.biodino.edge.data.engine.BitmapUtils
+import com.biodino.edge.data.locale.AppLanguage
+import com.biodino.edge.data.locale.AppStrings
+import com.biodino.edge.data.locale.I18n
+import com.biodino.edge.data.locale.LocalAppLanguage
+import com.biodino.edge.data.locale.LocalAppStrings
 import com.biodino.edge.presentation.theme.AlertAmber
 import com.biodino.edge.presentation.theme.AlertCrimson
 import com.biodino.edge.presentation.theme.BorderHighlight
@@ -81,7 +93,10 @@ fun ScanScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val isFarsi = state.isFarsi
+    val language = state.currentLanguage
+    val strings = I18n.getStrings(language)
+    val isFarsi = language == AppLanguage.PERSIAN
+    val layoutDirection = if (language.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -99,14 +114,10 @@ fun ScanScreen(
                 if (bitmap != null) {
                     viewModel.analyzeGalleryImage(bitmap)
                 } else {
-                    viewModel.onGalleryError(
-                        if (isFarsi) "قالب تصویر قابل پردازش نیست یا حجم تصویر بسیار بالاست." else "Unable to decode foliage image from storage."
-                    )
+                    viewModel.onGalleryError(strings.errorUnableToDecodeGallery)
                 }
             } catch (t: Throwable) {
-                viewModel.onGalleryError(
-                    if (isFarsi) "خطا در خواندن فایل از حافظه: ${t.localizedMessage}" else "Failed to load image: ${t.localizedMessage}"
-                )
+                viewModel.onGalleryError(strings.errorLoadingGallery(t.localizedMessage ?: ""))
             }
         }
     }
@@ -122,11 +133,16 @@ fun ScanScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ForestDark)
+    CompositionLocalProvider(
+        LocalLayoutDirection provides layoutDirection,
+        LocalAppLanguage provides language,
+        LocalAppStrings provides strings
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ForestDark)
+        ) {
         if (state.isCameraPermissionGranted) {
             // Camera Stream OR Gallery Inspection View
             if (state.galleryBitmap != null) {
@@ -154,7 +170,7 @@ fun ScanScreen(
                             Icon(Icons.Default.Close, contentDescription = null, tint = EmeraldNeon, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isFarsi) "حالت بازبینی گالری • لمس برای بازگشت به دوربین زنده" else "Gallery View • Tap to return to Live Camera",
+                                text = strings.galleryModeReturnHint,
                                 color = TextPrimary,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
@@ -163,22 +179,31 @@ fun ScanScreen(
                     }
                 }
             } else {
-                CameraPreview(
-                    isTorchActive = state.isTorchActive,
-                    onFrameAvailable = { bitmap ->
-                        viewModel.analyzeFrame(bitmap)
-                    }
-                )
+                if (state.isCameraActive) {
+                    CameraPreview(
+                        isTorchActive = state.isTorchActive,
+                        onFrameAvailable = { bitmap ->
+                            viewModel.analyzeFrame(bitmap)
+                        }
+                    )
 
-                // High-Tech Organic Reticle
-                ReticleOverlay(
-                    isFarsi = isFarsi,
-                    isScanningPaused = state.isScanningPaused,
-                    isBlurred = state.isBlurred,
-                    isEcoMode = state.isEcoMode,
-                    smoothedConfidence = state.smoothedConfidence,
-                    isConfidentlyLocked = state.isConfidentlyLocked
-                )
+                    // High-Tech Organic Reticle
+                    ReticleOverlay(
+                        language = language,
+                        isFarsi = isFarsi,
+                        isScanningPaused = state.isScanningPaused,
+                        isBlurred = state.isBlurred,
+                        isEcoMode = state.isEcoMode,
+                        smoothedConfidence = state.smoothedConfidence,
+                        isConfidentlyLocked = state.isConfidentlyLocked
+                    )
+                } else {
+                    CameraStandbyView(
+                        language = language,
+                        isFarsi = isFarsi,
+                        onResumeCamera = { viewModel.toggleCameraActive(true) }
+                    )
+                }
             }
 
             // Top Bar: Clean Minimalist Brand, Language Toggle & Controls
@@ -232,16 +257,16 @@ fun ScanScreen(
                         .padding(horizontal = 4.dp, vertical = 2.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // FA / EN Switch
+                        // Language Selector Pill (EN, FA, DE, FR)
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
-                                .clickable { viewModel.toggleFarsi() }
+                                .clickable { viewModel.showLanguageDialog(true) }
                                 .padding(horizontal = 8.dp, vertical = 6.dp)
                         ) {
                             Text(
-                                text = if (isFarsi) "FA 🇮🇷" else "EN 🌐",
-                                color = if (isFarsi) EmeraldNeon else TextPrimary,
+                                text = "${language.code.uppercase()} ${language.flagEmoji}",
+                                color = EmeraldNeon,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -320,12 +345,49 @@ fun ScanScreen(
                 }
             }
 
-            // Bottom Stack: Floating Action Dock + Diagnostic Card
+            // Bottom Stack: Camera Toggle Pill + Floating Action Dock + Diagnostic Card
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
             ) {
+                // Quick Camera Power / Battery Saver Toggle Button (Under Camera Viewport)
+                if (state.galleryBitmap == null) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(bottom = 8.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(if (state.isCameraActive) ForestSurfaceGlass else EmeraldNeon.copy(alpha = 0.22f))
+                            .border(1.dp, if (state.isCameraActive) BorderHighlight else EmeraldNeon, RoundedCornerShape(20.dp))
+                            .clickable { viewModel.toggleCameraActive() }
+                            .padding(horizontal = 14.dp, vertical = 7.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(if (state.isCameraActive) EmeraldNeon else AlertAmber)
+                            )
+                            Spacer(modifier = Modifier.width(7.dp))
+                            Icon(
+                                imageVector = if (state.isCameraActive) Icons.Default.VideocamOff else Icons.Default.Videocam,
+                                contentDescription = null,
+                                tint = if (state.isCameraActive) TextSecondary else EmeraldNeon,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (state.isCameraActive) strings.btnTurnOffCamera else strings.btnTurnOnCamera,
+                                color = if (state.isCameraActive) TextSecondary else EmeraldNeon,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
                 // Floating Action Tool Dock (Scrollable thumb-friendly dock)
                 val dockScrollState = rememberScrollState()
                 Row(
@@ -360,7 +422,7 @@ fun ScanScreen(
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
-                                text = if (isFarsi) "تشخیص زنده" else "Live Scan",
+                                text = strings.tabLiveScan,
                                 color = if (isLiveMode) EmeraldNeon else TextPrimary,
                                 fontSize = 11.sp,
                                 fontWeight = if (isLiveMode) FontWeight.Bold else FontWeight.Medium
@@ -387,7 +449,7 @@ fun ScanScreen(
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
-                                text = if (isFarsi) "گالری" else "Gallery",
+                                text = strings.tabGallery,
                                 color = if (isGalleryMode) Color(0xFF00B0FF) else TextPrimary,
                                 fontSize = 11.sp,
                                 fontWeight = if (isGalleryMode) FontWeight.Bold else FontWeight.SemiBold
@@ -407,11 +469,11 @@ fun ScanScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.LocalFlorist, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(17.dp))
                             Spacer(modifier = Modifier.width(5.dp))
-                            Text(if (isFarsi) "اطلس" else "Atlas", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text(strings.tabAtlas, color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
 
-                    // 4. Dosage Calculator
+                    // 4. Dosage Calculator (With Integrated Weather Recommendation)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
@@ -423,27 +485,11 @@ fun ScanScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Calculate, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(17.dp))
                             Spacer(modifier = Modifier.width(5.dp))
-                            Text(if (isFarsi) "محاسبه دوز" else "Dosage", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text(strings.tabDosage, color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
 
-                    // 5. Weather Spray Window
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(ForestSurface)
-                            .border(1.dp, BorderHighlight, RoundedCornerShape(16.dp))
-                            .clickable { viewModel.openWeather(true) }
-                            .padding(horizontal = 10.dp, vertical = 7.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.WbSunny, contentDescription = null, tint = AlertAmber, modifier = Modifier.size(17.dp))
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(if (isFarsi) "هواشناسی سم" else "Weather", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-
-                    // 6. History
+                    // 5. History
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
@@ -455,7 +501,7 @@ fun ScanScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.History, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(17.dp))
                             Spacer(modifier = Modifier.width(5.dp))
-                            Text(if (isFarsi) "تاریخچه" else "History", color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text(strings.tabHistory, color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
 
@@ -472,7 +518,7 @@ fun ScanScreen(
                             Icon(Icons.Default.AddCircle, contentDescription = null, tint = EmeraldAccent, modifier = Modifier.size(17.dp))
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
-                                text = if (isFarsi) "+ افزودن بیماری جدید (۵-شات)" else "+ Enroll Class (5-Shot)",
+                                text = strings.tabEnrollClass,
                                 color = EmeraldAccent,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Medium
@@ -498,7 +544,7 @@ fun ScanScreen(
                             )
                             if (state.isEcoMode) {
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("ECO", color = EmeraldNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Text(strings.ecoModeTag, color = EmeraldNeon, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -506,6 +552,7 @@ fun ScanScreen(
 
                 // Progressive Disclosure Diagnostic Card
                 DiagnosticCard(
+                    language = language,
                     isFarsi = isFarsi,
                     isGalleryMode = state.galleryBitmap != null,
                     isTooDark = state.isTooDark,
@@ -515,7 +562,8 @@ fun ScanScreen(
                     averageLatencyMs = state.averageLatencyMs,
                     isHardwareAccelerated = state.isHardwareAccelerated,
                     onSpeakDiagnosis = { viewModel.speakCurrentDiagnosis() },
-                    onOpenCalculator = { viewModel.openCalculator(true) }
+                    onOpenCalculator = { viewModel.openCalculator(true) },
+                    onOpenCareGuide = { viewModel.openCareGuide(true) }
                 )
             }
 
@@ -544,14 +592,14 @@ fun ScanScreen(
                 }
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    text = if (isFarsi) "مجوز دسترسی به دوربین الزامی است" else "Camera Permission Required",
+                    text = strings.cameraPermissionTitle,
                     color = TextPrimary,
                     fontSize = 21.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = if (isFarsi) "سامانه BioDINO-Edge برای اسکن برگ‌ها و تشخیص زنده بیماری‌های گیاهی به دسترسی دوربین نیاز دارد." else "BioDINO-Edge runs real-time plant pathology vision on your device. Camera access is needed to scan foliage.",
+                    text = strings.cameraPermissionDesc,
                     color = TextSecondary,
                     fontSize = 14.sp,
                     lineHeight = 20.sp,
@@ -568,7 +616,7 @@ fun ScanScreen(
                     modifier = Modifier.height(48.dp)
                 ) {
                     Text(
-                        text = if (isFarsi) "تایید و فعال‌سازی دوربین" else "Enable Camera Access",
+                        text = strings.btnEnableCamera,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
@@ -579,6 +627,8 @@ fun ScanScreen(
         // Modals & Bottom Sheets
         if (state.isEnrollmentOpen) {
             FewShotEnrollmentSheet(
+                language = language,
+                isFarsi = isFarsi,
                 customClasses = state.customEnrolledDiseases,
                 onEnroll = { name, host, latin, healthy, advice, photos ->
                     viewModel.enrollCustomClass(name, host, latin, healthy, advice, photos)
@@ -590,13 +640,25 @@ fun ScanScreen(
 
         if (state.isCalculatorOpen) {
             DosageCalculatorSheet(
+                language = language,
                 isFarsi = isFarsi,
+                targetDisease = state.latestDiagnosis?.diseaseInfo,
                 onDismiss = { viewModel.openCalculator(false) }
+            )
+        }
+
+        if (state.isCareGuideOpen) {
+            PlantCareSheet(
+                language = language,
+                isFarsi = isFarsi,
+                disease = state.latestDiagnosis?.diseaseInfo,
+                onDismiss = { viewModel.openCareGuide(false) }
             )
         }
 
         if (state.isWeatherOpen) {
             WeatherWindowSheet(
+                language = language,
                 isFarsi = isFarsi,
                 onDismiss = { viewModel.openWeather(false) }
             )
@@ -604,6 +666,7 @@ fun ScanScreen(
 
         if (state.isAtlasOpen) {
             AtlasSheet(
+                language = language,
                 isFarsi = isFarsi,
                 onDismiss = { viewModel.openAtlas(false) }
             )
@@ -611,11 +674,217 @@ fun ScanScreen(
 
         if (state.isHistoryOpen) {
             HistorySheet(
+                language = language,
                 isFarsi = isFarsi,
                 historyItems = state.scanHistory,
                 onClearHistory = { viewModel.clearHistory() },
                 onDismiss = { viewModel.openHistory(false) }
             )
+        }
+
+        // Language Selection Dialog (EN, FA, DE, FR)
+        if (state.isLanguageDialogVisible) {
+            LanguageSelectionDialog(
+                currentLanguage = language,
+                strings = strings,
+                onSelectLanguage = { selected ->
+                    viewModel.setLanguage(selected)
+                },
+                onDismiss = { viewModel.showLanguageDialog(false) }
+            )
+        }
+    }
+}
+}
+
+@Composable
+fun CameraStandbyView(
+    language: AppLanguage = LocalAppLanguage.current,
+    isFarsi: Boolean = language == AppLanguage.PERSIAN,
+    onResumeCamera: () -> Unit
+) {
+    val strings = I18n.getStrings(language)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ForestDark)
+            .clickable { onResumeCamera() },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(88.dp)
+                    .clip(CircleShape)
+                    .background(ForestSurface)
+                    .border(1.5.dp, BorderHighlight, CircleShape)
+                    .clickable { onResumeCamera() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.VideocamOff,
+                    contentDescription = null,
+                    tint = AlertAmber,
+                    modifier = Modifier.size(42.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Text(
+                text = strings.cameraStandbyTitle,
+                color = TextPrimary,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = strings.cameraStandbyDesc,
+                color = TextSecondary,
+                fontSize = 12.sp,
+                lineHeight = 18.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(
+                onClick = onResumeCamera,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = EmeraldNeon,
+                    contentColor = ForestDark
+                ),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.height(44.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Videocam,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = strings.btnTurnOnCamera,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LanguageSelectionDialog(
+    currentLanguage: AppLanguage,
+    strings: AppStrings,
+    onSelectLanguage: (AppLanguage) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(ForestDark)
+                .border(1.dp, BorderHighlight, RoundedCornerShape(24.dp))
+                .padding(20.dp)
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(EmeraldNeon.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Language, contentDescription = null, tint = EmeraldNeon, modifier = Modifier.size(20.dp))
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = strings.selectLanguageTitle,
+                            color = TextPrimary,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextSecondary, modifier = Modifier.size(18.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // List of Languages
+                AppLanguage.entries.forEach { lang ->
+                    val isSelected = lang == currentLanguage
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (isSelected) EmeraldNeon.copy(alpha = 0.18f) else ForestSurface)
+                            .border(
+                                1.dp,
+                                if (isSelected) EmeraldNeon else BorderHighlight,
+                                RoundedCornerShape(14.dp)
+                            )
+                            .clickable { onSelectLanguage(lang) }
+                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = lang.flagEmoji,
+                                    fontSize = 20.sp
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = lang.nativeName,
+                                        color = if (isSelected) EmeraldNeon else TextPrimary,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = lang.displayName,
+                                        color = TextSecondary,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                            if (isSelected) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = EmeraldNeon,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
