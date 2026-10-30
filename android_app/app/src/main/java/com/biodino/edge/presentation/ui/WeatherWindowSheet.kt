@@ -27,13 +27,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.biodino.edge.data.locale.AppLanguage
+import com.biodino.edge.data.locale.I18n
+import com.biodino.edge.data.locale.LocalAppLanguage
+import com.biodino.edge.data.locale.LocalAppStrings
 import com.biodino.edge.presentation.theme.AlertAmber
 import com.biodino.edge.presentation.theme.BorderHighlight
 import com.biodino.edge.presentation.theme.EmeraldNeon
@@ -44,10 +51,19 @@ import com.biodino.edge.presentation.theme.TextSecondary
 
 @Composable
 fun WeatherWindowSheet(
-    isFarsi: Boolean,
+    language: AppLanguage = LocalAppLanguage.current,
+    isFarsi: Boolean = language == AppLanguage.PERSIAN,
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
+    val layoutDirection = if (language.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+    val strings = I18n.getStrings(language)
+
+    CompositionLocalProvider(
+        LocalLayoutDirection provides layoutDirection,
+        LocalAppLanguage provides language,
+        LocalAppStrings provides strings
+    ) {
+        Dialog(onDismissRequest = onDismiss) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -212,4 +228,5 @@ fun WeatherWindowSheet(
             }
         }
     }
+}
 }

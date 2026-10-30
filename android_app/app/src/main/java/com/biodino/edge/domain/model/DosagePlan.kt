@@ -97,6 +97,26 @@ object DosageDatabase {
             phiDays = chemical.phiDays
         )
     }
+
+    /**
+     * Finds the clinically recommended chemical for a diagnosed plant pathology rawKey.
+     * Returns null if foliage is healthy or no chemical intervention is needed.
+     */
+    fun getRecommendedChemicalForDisease(rawKey: String?): DosageChemical? {
+        if (rawKey == null) return null
+        val k = rawKey.lowercase()
+        return when {
+            k.contains("apple_scab") -> CHEMICALS.firstOrNull { it.id == "captan" }
+            k.contains("black_rot") && k.contains("apple") -> CHEMICALS.firstOrNull { it.id == "captan" }
+            k.contains("cedar_apple_rust") -> CHEMICALS.firstOrNull { it.id == "myclobutanil" }
+            k.contains("black_rot") && k.contains("grape") -> CHEMICALS.firstOrNull { it.id == "mancozeb" }
+            k.contains("esca") -> CHEMICALS.firstOrNull { it.id == "trichoderma" }
+            k.contains("leaf_blight") -> CHEMICALS.firstOrNull { it.id == "copper" }
+            k.contains("early_blight") -> CHEMICALS.firstOrNull { it.id == "chlorothalonil" }
+            k.contains("late_blight") -> CHEMICALS.firstOrNull { it.id == "metalaxyl" }
+            else -> null
+        }
+    }
 }
 
 data class DosageResult(
