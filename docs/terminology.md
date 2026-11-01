@@ -169,6 +169,11 @@
 | ۹۴ | **Peak Accuracy** | دقت قله / بیشینه | بالاترین دقت ثبت‌شده در بهترین اپیزود شبیه‌سازی | Highest empirical accuracy recorded among all evaluated splits |
 | ۹۵ | **PlantVillage** | دیتاست پلنت‌ویلیج | دیتاست استاندارد آزمایشگاهی با پس‌زمینه تک‌رنگ یکدست | Standard laboratory plant leaf benchmark with plain backgrounds |
 | ۹۶ | **PlantDoc** | دیتاست پلنت‌داک | دیتاست چالشی تصاویر طبیعی مزرعه با پس‌زمینه‌های شلوغ و نویزی | Challenging real-world field plant pathology benchmark |
+| ۹۷ | **Maximum Calibration Error (MCE)** | بیشترین خطای کالیبراسیون | حداکثر اختلاف بین دقت و اطمینان در بحرانی‌ترین سطل آماری | Worst-case calibration gap observed across all evaluated bins |
+| ۹۸ | **Calibration Gap** | شکاف کالیبراسیون | قدرمطلق تفاضل بین دقت تجربی واقعی و میانگین اطمینان پیش‌بینی‌شده | Absolute difference between empirical accuracy and mean confidence |
+| ۹۹ | **Underconfidence** | کم‌اطمینانی مفرط | شرایطی که مدل دقت بالایی دارد اما احتمالات پایینی صادر می‌کند | Regime where model accuracy strictly exceeds predicted probability |
+| ۱۰۰ | **Overconfidence** | بیش‌اطمینانی کاذب | شرایطی که مدل با اطمینان ۹۹٪ یک پاسخ کاملاً اشتباه صادر می‌کند | Regime where predicted probability dangerously exceeds accuracy |
+| ۱۰۱ | **Peak Logit Dilution** | رقیق‌شدگی لوجیت بیشینه | افت احتمال کلاس برنده در اثر ادغام خطی با پرامپت‌های با آنتروپی بالا | Softening of max logit caused by convex mixing with diffuse posteriors |
 
 ---
 
