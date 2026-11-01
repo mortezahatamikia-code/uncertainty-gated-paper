@@ -34,19 +34,19 @@
       "name": "plantvillage-dataset",
       "path": "plantvillage/plantvillage dataset/color",
       "format": "image/jpeg",
-      "description": "54,305 leaf images spanning 38 agricultural disease classes (30 Base classes, 8 Novel classes)."
+      "description": "54,305 leaf images spanning 38 agricultural disease classes (27 Base classes, 11 Novel classes across Apple, Grape, and Potato)."
     },
     {
       "name": "biodino-edge-pipeline",
-      "path": "biodino_edge_pipeline.py",
+      "path": "pipeline/biodino_edge_pipeline.py",
       "format": "text/x-python",
-      "description": "End-to-end Python pipeline for few-shot evaluation, Fisher-LDA fitting, multi-episode audit, and INT8 edge CPU benchmarking."
+      "description": "End-to-end Python pipeline for few-shot evaluation across 11 novel classes, Fisher-LDA fitting, multi-episode audit, and INT8 edge CPU benchmarking."
     },
     {
       "name": "biodino-edge-notebook",
-      "path": "biodino_edge_pipeline.ipynb",
+      "path": "pipeline/biodino_unified_pipeline.ipynb",
       "format": "application/x-ipynb+json",
-      "description": "Interactive Jupyter Notebook with step-by-step theory, execution, and confusion matrix visualizations."
+      "description": "Interactive unified 5-section Jupyter Notebook with step-by-step theory, execution, and 11-class confusion matrix visualizations."
     },
     {
       "name": "ieee-paper-manuscript",

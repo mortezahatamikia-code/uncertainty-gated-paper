@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkedIn Banner Designer — Reyhane Javidi</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f4f4f5;
+      color: #18181b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px;
+    }
+
+    .instructions {
+      max-width: 1584px;
+      width: 100%;
+      margin-bottom: 20px;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 8px;
+      padding: 18px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .instructions-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .instructions-text h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #09090b;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .instructions-text p {
+      font-size: 13px;
+      color: #71717a;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 7px 13px;
+      font-size: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-btn {
+      border: 1px solid #d4d4d8;
+      background: #f4f4f5;
+      color: #27272a;
+    }
+
+    .theme-btn.active {
+      background: #09090b;
+      color: #ffffff;
+      border-color: #09090b;
+      font-weight: bold;
+    }
+
+    .selector-btn {
+      border: 1px solid #e4e4e7;
+      background: #ffffff;
+      color: #52525b;
+      font-size: 11.5px;
+    }
+
+    .selector-btn:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .selector-btn.active {
+      border-color: #E30613;
+      color: #E30613;
+      background: #fff5f5;
+      font-weight: 700;
+    }
+
+    .gradient-toggle-btn {
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #0369a1;
+      font-weight: 600;
+      font-size: 11.5px;
+    }
+
+    .gradient-toggle-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+    }
+
+    .toggle-avatar-btn {
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #475569;
+    }
+
+    .toggle-avatar-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .download-btn {
+      border: 1px solid #09090b;
+      background: #09090b;
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .download-btn:hover {
+      background: #27272a;
+    }
+
+    /* THE EXACT LINKEDIN BANNER FRAME (1584 x 396 px) */
+    .banner-container {
+      position: relative;
+      width: 1584px;
+      height: 396px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e4e4e7;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* THEME 1: EDITORIAL SWISS PAPER (LIGHT) */
+    .theme-paper {
+      background-color: #fafaf9;
+      color: #09090b;
+    }
+
+    .theme-paper.has-gradient {
+      background: radial-gradient(circle at 82% 35%, #ffffff 0%, #fafaf9 52%, #f0f0ee 100%) !important;
+    }
+
+    .theme-paper .subtle-border {
+      border-color: #d4d4d8;
+    }
+
+    .theme-paper .meta-tag {
+      color: #27272a;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .theme-paper .desc-text {
+      color: #52525b;
+    }
+
+    .theme-paper .accent-color {
+      color: #E30613;
+    }
+
+    .theme-paper .accent-bg {
+      background-color: #E30613;
+    }
+
+    /* THEME 2: SOFT GRAPHITE CHARCOAL (SOFTENED DARK) */
+    .theme-charcoal {
+      background-color: #191c24;
+      color: #f4f4f5;
+    }
+
+    .theme-charcoal.has-gradient {
+      background: radial-gradient(circle at 82% 35%, #272d3b 0%, #1a1d26 55%, #13151c 100%) !important;
+    }
+
+    .theme-charcoal .subtle-border {
+      border-color: #383c48;
+    }
+
+    .theme-charcoal .meta-tag {
+      color: #f4f4f5;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .theme-charcoal .desc-text {
+      color: #9ca3af;
+    }
+
+    .theme-charcoal .accent-color {
+      color: #E30613;
+    }
+
+    .theme-charcoal .accent-bg {
+      background-color: #E30613;
+    }
+
+    /* THEME 4: MUTED SLATE (EVEN SOFTER MATTE DARK) */
+    .theme-slate {
+      background-color: #232733;
+      color: #f8fafc;
+    }
+
+    .theme-slate.has-gradient {
+      background: radial-gradient(circle at 82% 35%, #343c4e 0%, #242936 55%, #1c202a 100%) !important;
+    }
+
+    .theme-slate .subtle-border {
+      border-color: #475569;
+    }
+
+    .theme-slate .meta-tag {
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .theme-slate .desc-text {
+      color: #cbd5e1;
+    }
+
+    .theme-slate .accent-color {
+      color: #E30613;
+    }
+
+    .theme-slate .accent-bg {
+      background-color: #E30613;
+    }
+
+    /* THEME 3: ARCHITECTURAL PURE WHITE */
+    .theme-white {
+      background-color: #ffffff;
+      color: #000000;
+    }
+
+    .theme-white.has-gradient {
+      background: radial-gradient(circle at 82% 35%, #ffffff 0%, #fafbfc 50%, #f1f5f9 100%) !important;
+    }
+
+    .theme-white .subtle-border {
+      border-color: #e5e5e5;
+    }
+
+    .theme-white .meta-tag {
+      color: #18181b;
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+    }
+
+    .theme-white .desc-text {
+      color: #4b5563;
+    }
+
+    .theme-white .accent-color {
+      color: #0284c7;
+    }
+
+    .theme-white .accent-bg {
+      background-color: #0284c7;
+    }
+
+    /* WAVY LINES (MANIFOLD CURVES): Tuned for balanced visibility in Light & Dark */
+    .manifold-curve {
+      stroke: currentColor;
+    }
+
+    .c1 {
+      stroke-width: 1.1;
+    }
+
+    .c2 {
+      stroke-width: 1.0;
+    }
+
+    .c3 {
+      stroke-width: 1.0;
+      stroke-dasharray: 5 5;
+    }
+
+    .c4 {
+      stroke-width: 0.9;
+    }
+
+    .c5 {
+      stroke-width: 1.0;
+      stroke-dasharray: 3 4;
+    }
+
+    /* LIGHT MODE: Visible and smooth (strongest line softened from 0.12 to 0.08, faintest boosted from 0.02 to 0.055) */
+    .theme-paper .c1,
+    .theme-white .c1 {
+      opacity: 0.080;
+    }
+
+    .theme-paper .c2,
+    .theme-white .c2 {
+      opacity: 0.070;
+    }
+
+    .theme-paper .c3,
+    .theme-white .c3 {
+      opacity: 0.065;
+    }
+
+    .theme-paper .c4,
+    .theme-white .c4 {
+      opacity: 0.055;
+    }
+
+    .theme-paper .c5,
+    .theme-white .c5 {
+      opacity: 0.070;
+    }
+
+    /* DARK MODES: Exact rich contrast preserved */
+    .theme-charcoal .c1,
+    .theme-slate .c1 {
+      opacity: 0.12;
+    }
+
+    .theme-charcoal .c2,
+    .theme-slate .c2 {
+      opacity: 0.095;
+    }
+
+    .theme-charcoal .c3,
+    .theme-slate .c3 {
+      opacity: 0.080;
+    }
+
+    .theme-charcoal .c4,
+    .theme-slate .c4 {
+      opacity: 0.060;
+    }
+
+    .theme-charcoal .c5,
+    .theme-slate .c5 {
+      opacity: 0.095;
+    }
+
+    /* FRAME GRID LINES: CLEAR, CRISP & VISIBLE IN BOTH MODES */
+    .theme-paper .frame-h-line {
+      stroke: #52525b;
+      opacity: 0.48;
+    }
+
+    .theme-paper .frame-v-axis {
+      stroke: #18181b;
+      opacity: 0.72;
+    }
+
+    .theme-paper .frame-v-edge {
+      stroke: #52525b;
+      opacity: 0.48;
+    }
+
+    .theme-charcoal .frame-h-line,
+    .theme-slate .frame-h-line {
+      stroke: #a1a1aa;
+      opacity: 0.55;
+    }
+
+    .theme-charcoal .frame-v-axis,
+    .theme-slate .frame-v-axis {
+      stroke: #f4f4f5;
+      opacity: 0.85;
+    }
+
+    .theme-charcoal .frame-v-edge,
+    .theme-slate .frame-v-edge {
+      stroke: #a1a1aa;
+      opacity: 0.55;
+    }
+
+    .theme-white .frame-h-line {
+      stroke: #64748b;
+      opacity: 0.48;
+    }
+
+    .theme-white .frame-v-axis {
+      stroke: #0f172a;
+      opacity: 0.72;
+    }
+
+    .theme-white .frame-v-edge {
+      stroke: #64748b;
+      opacity: 0.48;
+    }
+
+    /* SINGLE VERTICAL AXIS DIVIDER */
+    .theme-paper .axis-line-main {
+      stroke: #18181b;
+      opacity: 0.75;
+    }
+
+    .theme-charcoal .axis-line-main,
+    .theme-slate .axis-line-main {
+      stroke: #f4f4f5;
+      opacity: 0.85;
+    }
+
+    .theme-white .axis-line-main {
+      stroke: #0f172a;
+      opacity: 0.75;
+    }
+
+    /* INNER LAYOUT */
+    .banner-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 44px 72px;
+      z-index: 20;
+    }
+
+    /* RIGHT CONTENT BOX */
+    .content-box {
+      position: relative;
+      z-index: 10;
+      max-width: 720px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 26px;
+    }
+
+    .top-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 3px;
+      width: fit-content;
+    }
+
+    .top-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .headline-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .headline {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.1;
+    }
+
+    .tagline-statement {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      line-height: 1.3;
+      margin-top: 2px;
+    }
+
+    .sub-pillars {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+      letter-spacing: 0.02em;
+    }
+
+    .sub-pillars span.sep {
+      opacity: 0.35;
+    }
+
+    /* METRIC PILLS MATRIX */
+    .metrics-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .metric-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 3px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .metric-pill .metric-val {
+      font-weight: 700;
+    }
+
+    /* AVATAR GHOST OVERLAY */
+    .avatar-ghost {
+      position: absolute;
+      left: 76px;
+      bottom: -64px;
+      width: 176px;
+      height: 176px;
+      border-radius: 50%;
+      border: 3px dashed #ef4444;
+      background: rgba(239, 68, 68, 0.08);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 12px;
+      pointer-events: none;
+    }
+
+    .avatar-ghost span {
+      font-size: 11px;
+      font-family: ui-monospace, monospace;
+      color: #991b1b;
+      font-weight: 700;
+      background: #fee2e2;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .avatar-ghost p {
+      font-size: 10px;
+      color: #b91c1c;
+      margin-top: 4px;
+    }
+
+    /* BACKGROUND GRAPHIC LAYERS */
+    .bg-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .bg-layer svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .axis-mark {
+      position: absolute;
+      font-family: ui-monospace, monospace;
+      opacity: 0.65;
+      font-size: 10px;
+      pointer-events: none;
+    }
+
+    /* EDITORIAL EXPLANATION PANEL */
+    .color-spec-box {
+      max-width: 1584px;
+      width: 100%;
+      margin-top: 24px;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 8px;
+      padding: 22px 28px;
+      font-size: 13.5px;
+      color: #52525b;
+      line-height: 1.7;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .color-spec-box strong {
+      color: #09090b;
+    }
+
+    .color-swatch {
+      display: inline-block;
+      width: 13px;
+      height: 13px;
+      vertical-align: middle;
+      border-radius: 2px;
+      margin: 0 4px;
+      border: 1px solid #d4d4d8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- CONTROL BAR -->
+  <div class="instructions">
+
+    <!-- Row 1: Header + Theme + Actions -->
+    <div class="instructions-header">
+      <div class="instructions-text">
+        <h1>
+          <span>LinkedIn Academic Banner (1584 × 396 px)</span>
+          <span
+            style="font-size: 11px; font-weight: 500; background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 3px;">Swiss
+            Editorial</span>
+        </h1>
+        <p>محتوا کاملاً در سمت راست قرار گرفته تا عکس پروفایل روی آن نیفتد. با گزینه‌های زیر سبک خطوط و پس‌زمینه را به
+          دلخواه تست کنید.</p>
+      </div>
+
+      <div class="controls-row">
+        <!-- Theme buttons -->
+        <button class="btn theme-btn active" onclick="setTheme('paper')">Swiss Paper (#fafaf9)</button>
+        <button class="btn theme-btn" onclick="setTheme('white')">Pure White (#ffffff)</button>
+        <button class="btn theme-btn" onclick="setTheme('charcoal')">Soft Charcoal (#191c24)</button>
+        <button class="btn theme-btn" onclick="setTheme('slate')">Muted Slate (#232733)</button>
+
+        <button class="btn toggle-avatar-btn" onclick="toggleAvatarGuide()">راهنمای عکس پروفایل</button>
+        <button class="btn download-btn" onclick="downloadBanner()">دانلود تصویر PNG</button>
+      </div>
+    </div>
+
+    <!-- Row 2: Tagline Options -->
+    <div class="controls-row" style="padding-top: 10px; border-top: 1px solid #f4f4f5;">
+      <span style="font-size: 11px; color: #71717a; font-family: monospace; font-weight: 600;">اسلوگان پژوهشی:</span>
+      <button class="btn selector-btn tagline-btn active" onclick="setTagline(1)">۱. ریاضیات دقیق و سیستم‌های لبه
+        (پیشنهادی اساتید)</button>
+      <button class="btn selector-btn tagline-btn" onclick="setTagline(2)">۲. بینایی بنیادی روی سخت‌افزار لبه</button>
+      <button class="btn selector-btn tagline-btn" onclick="setTagline(3)">۳. از تئوری الگوریتم تا سیستم
+        بلادرنگ</button>
+    </div>
+
+    <!-- Row 3: Line Modes + Independent Gradient Toggle -->
+    <div class="controls-row" style="padding-top: 10px; border-top: 1px solid #f4f4f5;">
+      <span style="font-size: 11px; color: #71717a; font-family: monospace; font-weight: 600;">سبک خطوط:</span>
+      <button class="btn selector-btn line-btn active" onclick="setLineMode('manifold')">۱. امواج کانتوری ریاضی
+        (Manifold Curves)</button>
+      <button class="btn selector-btn line-btn" onclick="setLineMode('frame')">۲. چهارچوب گرید مهندسی (Swiss Grid
+        Frame)</button>
+      <button class="btn selector-btn line-btn" onclick="setLineMode('axis')">۳. خط شاقول عمودی (Single Vertical
+        Axis)</button>
+      <button class="btn selector-btn line-btn" onclick="setLineMode('clean')">۴. بدون خط (Clean)</button>
+
+      <!-- SEPARATE TOGGLE TO COMBINE GRADIENT WITH ANY LINE STYLE -->
+      <span style="height: 18px; width: 1px; background: #e4e4e7; margin: 0 4px;"></span>
+      <button id="gradientToggleBtn" class="btn gradient-toggle-btn active" onclick="toggleGradient()">✨ گرادیان
+        آتلیه‌ای: روشن</button>
+    </div>
+
+  </div>
+
+  <!-- LINKEDIN BANNER CANVAS (1584x396) -->
+  <div id="banner" class="banner-container theme-paper has-gradient">
+
+    <!-- BG LAYER 1: MATHEMATICAL MANIFOLD WAVES (Topographical Loss Landscape) -->
+    <!-- کنتراست دقیق و هماهنگ: در لایت نه بیش از حد پررنگ و نه محو، در دارک شارپ و گیرا -->
+    <div id="layerManifold" class="bg-layer">
+      <svg viewBox="0 0 1584 396" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Curve 1: Deep sweep from avatar bottom-left across center -->
+        <path d="M-60,340 C180,380 340,160 680,240 C1020,320 1280,180 1640,240" class="manifold-curve c1" />
+        <!-- Curve 2: Parallel contour line -->
+        <path d="M-60,300 C200,340 370,110 730,190 C1080,270 1320,130 1640,190" class="manifold-curve c2" />
+        <!-- Curve 3: Higher manifold contour with dashes -->
+        <path d="M-60,260 C230,300 400,60 780,140 C1140,220 1370,80 1640,140" class="manifold-curve c3" />
+        <!-- Curve 4: Ambient subtle top wave -->
+        <path d="M-60,220 C250,260 440,20 830,90 C1200,160 1410,40 1640,90" class="manifold-curve c4" />
+        <!-- Curve 5: Low anchor wave -->
+        <path d="M-60,380 C160,400 310,210 630,280 C950,350 1220,230 1640,290" class="manifold-curve c5" />
+      </svg>
+    </div>
+
+    <!-- BG LAYER 2: CLASSIC SWISS GRID FRAME (خطوط چهارچوب کاملاً پررنگ، مشخص و واضح در هر دو حالت لایت و دارک) -->
+    <div id="layerFrame" class="bg-layer" style="display: none;">
+      <svg viewBox="0 0 1584 396" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Top horizontal line (dashed) -->
+        <line x1="0" y1="36" x2="1584" y2="36" class="frame-h-line" stroke-dasharray="6 6" stroke-width="1.2" />
+        <!-- Bottom horizontal line (solid) -->
+        <line x1="0" y1="360" x2="1584" y2="360" class="frame-h-line" stroke-width="1.2" />
+        <!-- Vertical dividing line (DASHED, BOLD & FULLY VISIBLE AT x=450) -->
+        <line x1="450" y1="0" x2="450" y2="396" class="frame-v-axis" stroke-dasharray="6 6" stroke-width="1.6" />
+        <!-- Right vertical margin line (solid at x=1528) -->
+        <line x1="1528" y1="0" x2="1528" y2="396" class="frame-v-edge" stroke-width="1.2" />
+      </svg>
+    </div>
+
+    <!-- BG LAYER 3: SINGLE VERTICAL AXIS (Swiss Plumb-line Divider — خط شاقول عمودی پررنگ و مشخص) -->
+    <div id="layerAxis" class="bg-layer" style="display: none;">
+      <svg viewBox="0 0 1584 396" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="440" y1="0" x2="440" y2="396" class="axis-line-main" stroke-width="1.6" />
+      </svg>
+      <div class="axis-mark desc-text" style="left: 433px; top: 28px;">+</div>
+      <div class="axis-mark desc-text" style="left: 433px; bottom: 28px;">+</div>
+      <div class="axis-mark desc-text" style="left: 448px; top: 28px; letter-spacing: 0.15em;">SEC // 01 &bull; RESEARCH
+        ARCHITECTURE</div>
+      <div class="axis-mark desc-text"
+        style="left: 448px; bottom: 28px; letter-spacing: 0.12em; font-size: 9px; opacity: 0.4;">COORD [35.6892° N,
+        51.3890° E]</div>
+    </div>
+
+    <!-- AVATAR GHOST OVERLAY (Desktop Safe-Zone Indicator) -->
+    <div id="avatarGhost" class="avatar-ghost">
+      <span>محل عکس پروفایل</span>
+      <p>این محدوده پوشانده می‌شود<br>(هیچ متنی در این بخش نیست)</p>
+    </div>
+
+    <!-- MAIN RIGHT-SIDE EDITORIAL CONTENT -->
+    <div class="banner-inner">
+      <div class="content-box">
+
+
+
+        <!-- Headline & Name -->
+        <div class="headline-row">
+          <div class="headline">
+            Reyhane Javidi
+          </div>
+          <div id="taglineDisplay" class="tagline-statement desc-text">
+            Bridging Mathematical Rigor &amp; Efficient Edge Systems.
+          </div>
+        </div>
+
+        <!-- Category Pill (Clean & Single) -->
+        <div class="metrics-bar">
+
+          <div class="metric-pill meta-tag">
+            <span class="accent-color" style="font-weight: 900;">&bull;</span>
+            <span>Computer Engineering</span>
+          </div>
+          <div class="metric-pill meta-tag">
+            <span class="accent-color" style="font-weight: 900;">&bull;</span>
+            <span>Systems Research</span>
+          </div>
+          <div class="metric-pill meta-tag">
+            <span class="accent-color" style="font-weight: 900;">&bull;</span>
+            <span>Edge AI</span>
+          </div>
+        </div>
+
+        <!-- Core Technical Focus Pillars (Clean Pill Badges) -->
+        <!-- <div class="metrics-bar">
+          <div class="metric-pill meta-tag">
+            <span class="accent-color" style="font-weight: 900;">&bull;</span>
+            <span>Foundation Vision</span>
+          </div>
+
+          <div class="metric-pill meta-tag">
+            <span class="accent-color" style="font-weight: 900;">&bull;</span>
+            <span>Few-Shot Learning</span>
+          </div>
+
+          <div class="metric-pill meta-tag">
+            <span class="accent-color" style="font-weight: 900;">&bull;</span>
+            <span>On-Device Inference</span>
+          </div>
+
+          <div class="metric-pill meta-tag">
+            <span class="accent-color" style="font-weight: 900;">&bull;</span>
+            <span>Algorithmic Optimization</span>
+          </div>
+        </div> -->
+
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITORIAL DESIGN ADVISORY -->
+  <div class="color-spec-box">
+    <p>
+      <strong>✨ اصلاحات اعمال‌شده بر اساس بازخورد شما:</strong>
+    </p>
+    <ul style="margin: 10px 0 0 20px; list-style-type: disc; line-height: 1.8;">
+      <li>
+        <strong>تنظیم دقیق امواج مواج (Manifold):</strong> در حالت <em>Dark Charcoal</em> همان وضوح و گیرایی مطلوب شما
+        حفظ شده، اما در حالت‌های <em>Swiss Paper</em> و <em>Pure White</em> شفافیت امواج با ضریب <code>0.42</code> کاهش
+        یافته تا کاملاً ملایم، آرام و بدون هرگونه غلبه بر متن‌ها دیده شوند.
+      </li>
+      <li>
+        <strong>پررنگ و ملموس شدن خطوط چهارچوب (Swiss Frame Grid):</strong> کدهای خطوط بالا، پایین و به‌ویژه خط عمودی
+        محور (x=450) بازنویسی شدند و با ضخامت ۱.۶ پیکسل و کنتراست ۵۰٪ تا ۷۲٪ در حالت لایت و ۵۵٪ تا ۸۵٪ در حالت دارک،
+        کاملاً مشخص، باصلابت و خوانا نمایش داده می‌شوند.
+      </li>
+      <li>
+        <strong>ترکیب آزاد گرادیان نوری:</strong> دکمه آبی رنگ <em>«✨ گرادیان آتلیه‌ای»</em> به شما اجازه می‌دهد نور
+        ملایم استودیو را روی هریک از حالت‌های خطوط به دلخواه روشن یا خاموش کنید.
+      </li>
+    </ul>
+  </div>
+
+  <script>
+    const taglines = {
+      1: "Bridging Mathematical Rigor &amp; Efficient Edge Systems.",
+      2: "Formulating Efficient Foundation Vision on Edge Devices.",
+      3: "From Algorithmic Theory to Real-Time Edge Intelligence."
+    };
+
+    function setTagline(idx) {
+      document.getElementById('taglineDisplay').innerHTML = taglines[idx];
+      const buttons = document.querySelectorAll('.tagline-btn');
+      buttons.forEach((btn, i) => {
+        if (i + 1 === idx) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+    }
+
+    function setLineMode(mode) {
+      const layerManifold = document.getElementById('layerManifold');
+      const layerFrame = document.getElementById('layerFrame');
+      const layerAxis = document.getElementById('layerAxis');
+
+      // Hide all line layers
+      layerManifold.style.display = 'none';
+      layerFrame.style.display = 'none';
+      layerAxis.style.display = 'none';
+
+      if (mode === 'manifold') {
+        layerManifold.style.display = 'block';
+      } else if (mode === 'frame') {
+        layerFrame.style.display = 'block';
+      } else if (mode === 'axis') {
+        layerAxis.style.display = 'block';
+      }
+      // 'clean' leaves all line layers hidden
+
+      // Update button states
+      const buttons = document.querySelectorAll('.line-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      const activeIdx = { manifold: 0, frame: 1, axis: 2, clean: 3 }[mode];
+      if (buttons[activeIdx]) buttons[activeIdx].classList.add('active');
+    }
+
+    function toggleGradient() {
+      const banner = document.getElementById('banner');
+      const btn = document.getElementById('gradientToggleBtn');
+      const isGrad = banner.classList.toggle('has-gradient');
+
+      if (isGrad) {
+        btn.classList.add('active');
+        btn.innerText = '✨ گرادیان آتلیه‌ای: روشن';
+      } else {
+        btn.classList.remove('active');
+        btn.innerText = '✨ گرادیان آتلیه‌ای: خاموش';
+      }
+    }
+
+    function setTheme(themeName) {
+      const banner = document.getElementById('banner');
+      const isGradientActive = banner.classList.contains('has-gradient');
+      banner.className = 'banner-container theme-' + themeName + (isGradientActive ? ' has-gradient' : '');
+
+      const buttons = document.querySelectorAll('.theme-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+
+      if (themeName === 'paper') buttons[0].classList.add('active');
+      if (themeName === 'white') buttons[1].classList.add('active');
+      if (themeName === 'charcoal') buttons[2].classList.add('active');
+      if (themeName === 'slate') buttons[3].classList.add('active');
+    }
+
+    function toggleAvatarGuide() {
+      const ghost = document.getElementById('avatarGhost');
+      ghost.style.display = ghost.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    async function downloadBanner() {
+      const ghost = document.getElementById('avatarGhost');
+      const wasVisible = ghost.style.display !== 'none';
+      ghost.style.display = 'none';
+
+      try {
+        const banner = document.getElementById('banner');
+        const canvas = await html2canvas(banner, {
+          scale: 2, // High resolution (Retina 3168x792)
+          useCORS: true,
+          width: 1584,
+          height: 396
+        });
+
+        const link = document.createElement('a');
+        link.download = 'linkedin-banner-reyhane-javidi.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (e) {
+        alert('لطفاً از بنر اسکرین‌شات بگیرید (Win + Shift + S).');
+      } finally {
+        if (wasVisible) ghost.style.display = 'flex';
+      }
+    }
+  </script>
+</body>
+
+</html>

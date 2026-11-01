@@ -43,7 +43,7 @@
 برای رسیدن به بیشترین بازدهی، مدل نباید با پایتون سنگین روی لبه اجرا شود؛ بلکه به فرمت استاندارد باینری کامپایل می‌گردد:
 
 ```text
-  [مدل PyTorch در biodino_edge_pipeline.py]
+  [مدل PyTorch در pipeline/biodino_edge_pipeline.py]
                     │
                     ▼  (مشخص کردن ابعاد ثابت 1x3x224x224)
           torch.onnx.export()
@@ -62,9 +62,9 @@
 
 ### الف) اسکریپت پایتون تبدیل مدل به ONNX و اعمال کوانتیزاسیون INT8:
 
-مدل کامل با استفاده از اسکریپت اختصاصی [`export_edge_models.py`](../export_edge_models.py) به یک گراف باینری خودکفا تبدیل می‌شود:
+مدل کامل با استفاده از اسکریپت اختصاصی [`export_edge_models.py`](../pipeline/export_edge_models.py) به یک گراف باینری خودکفا تبدیل می‌شود:
 ```bash
-python export_edge_models.py
+python pipeline/export_edge_models.py
 ```
 * **حجم مدل FP32 اولیه:** ۸۲.۶۷ مگابایت.
 * **معماری دوپله‌ای لبه (Dual-Tier Edge Architecture):**

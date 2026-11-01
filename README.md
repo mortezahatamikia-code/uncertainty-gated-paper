@@ -131,18 +131,18 @@ resources:
 
 ### ۲. اجرای پایپلاین کامل و بنچمارک
 ```powershell
-.\.venv\Scripts\python.exe -u biodino_edge_pipeline.py
+.\.venv\Scripts\python.exe -u pipeline\biodino_edge_pipeline.py
 ```
 
 ### ۳. آزمایش زنده و دموی تک‌تصویر در ترمینال (Single-Leaf Live Demo)
 برای مشاهده آنی زمان استنتاج، گیت عدم قطعیت شانون و نمودار توزیع احتمالاتی یک تصویر دلخواه:
 ```powershell
-.\.venv\Scripts\python.exe -u demo_predict.py
+.\.venv\Scripts\python.exe -u pipeline\demo_predict.py
 ```
 
 ### ۴. اجرای تعاملی در نوت‌بوک ژوپیتر
 برای مصورسازی ماتریس درهم‌ریختگی، تحلیل لزیون‌ها و نمودارهای توزیع:
-فایل **`biodino_edge_pipeline.ipynb`** را در VS Code یا Jupyter باز کرده و سلول‌ها را اجرا نمایید.
+فایل **`pipeline/biodino_unified_pipeline.ipynb`** را در VS Code یا Jupyter باز کرده و سلول‌ها را اجرا نمایید.
 
 ---
 
@@ -151,11 +151,14 @@ resources:
 ```text
 research-few-shot/
 │
-├── biodino_edge_pipeline.py            # 🚀 پایپلاین اصلی پایتون (سورس کامل و مستقل الگوریتم)
-├── biodino_edge_pipeline.ipynb         # 📓 نوت‌بوک تعاملی ژوپیتر (شامل دیاگرام، کد و نمودارها)
-├── demo_predict.py                     # ⚡ ابزار تعاملی ترمینال برای اسکن و پیش‌بینی زنده تک‌برگ با نمودار میله‌ای
-├── generate_saliency_and_calibration.py # 🔬 اسکریپت استخراج سلف‌اتنشن DINOv2 و نمودارهای کالیبراسیون ECE
-├── generate_error_gallery.py           # 🖼️ اسکریپت استخراج و رسم خودکار گالری مصور خطاهای باقیمانده
+├── pipeline/                           # 🚀 پوشه ماژولار پایپلاین، اسکریپت‌ها و نوت‌بوک یکپارچه
+│   ├── biodino_edge_pipeline.py        # پایپلاین اصلی پایتون (سورس کامل و مستقل الگوریتم)
+│   ├── biodino_unified_pipeline.ipynb   # نوت‌بوک تعاملی یکپارچه ژوپیتر (۵ بخش کامل)
+│   ├── demo_predict.py                 # ⚡ ابزار تعاملی ترمینال برای اسکن و پیش‌بینی زنده تک‌برگ با نمودار میله‌ای
+│   ├── export_edge_models.py           # ⚙️ اسکریپت اکسپورت سرتاسری مدل به ONNX و کوانتیزاسیون پویای INT8
+│   ├── generate_architecture_diagram.py # 📐 اسکریپت تولید دیاگرام معماری (شکل ۱ مقاله)
+│   ├── generate_saliency_and_calibration.py # 🔬 اسکریپت استخراج سلف‌اتنشن DINOv2 و نمودارهای کالیبراسیون ECE
+│   └── taxonomic_prompts.py            # 🌿 پایگاه دانش واژگانی پرامپت‌های تکسونومیک گیاه‌پزشکی
 ├── biodino_edge_results.json           # 📊 گزارش عددی نتایج بنچمارک رسمی SOTA
 ├── CHANGELOG.md                        # 📜 تاریخچه تفصیلی تغییرات، نوآوری‌ها و نتایج در هر نسخه
 ├── requirements.txt                    # 📋 فهرست وابستگی‌های نرم‌افزاری با پشتیبانی CUDA 12.4
@@ -170,8 +173,6 @@ research-few-shot/
 │   ├── app/src/main/assets/            # مدل کوانتیزه‌شده biodino_mobile_int8.onnx (۲۱.۴MB)
 │   ├── app/src/main/java/com/biodino/  # کدهای Clean Architecture، بافر مستقیم بدون GC و UI
 │   └── build.gradle.kts                # کانفیگ گریدل با پشتیبانی از اندروید ۷.۰ به بالا (minSdk 24)
-│
-├── export_mobile_onnx.py               # ⚙️ اسکریپت اکسپورت سرتاسری مدل به ONNX و کوانتیزاسیون پویای INT8
 │
 ├── paper/                              # 📝 پکیج کامل مقاله علمی آماده ارسال به ژورنال/کنفرانس
 │   ├── main.tex                        # کد منبع لاتک مقاله دو ستونه استاندارد IEEE
@@ -199,13 +200,13 @@ research-few-shot/
 
 | نام فایل / پوشه | نوع فایل | نقش در پروژه و توضیحات محتوایی |
 | **[`android_app/`](file:///e:/work/research-few-shot/android_app/)** | پروژه اندروید نیتیو | **اپلیکیشن کاتلین موبایل:** پروژه کامل Jetpack Compose با بافر مستقیم بدون GC، استنتاج ONNX NNAPI بلادرنگ روی دوربین گوشی (>۵۵ FPS) و پشتیبانی از اندروید ۷.۰ به بالا. |
-| **[`export_mobile_onnx.py`](file:///e:/work/research-few-shot/export_mobile_onnx.py)** | اسکریپت پایتون | **اکسپورت و کوانتیزاسیون موبایل:** تبدیل سرتاسری DINOv2 و گیت عدم قطعیت شانون به ONNX و کوانتیزاسیون پویای INT8 با کاهش حجم از ۸۲.۶MB به ۲۱.۴MB. |
+| **[`pipeline/export_edge_models.py`](file:///e:/work/research-few-shot/pipeline/export_edge_models.py)** | اسکریپت پایتون | **اکسپورت و کوانتیزاسیون دو سطحی:** تبدیل سرتاسری مدل پایه و مکمل به ONNX و کوانتیزاسیون پویای INT8 با تولید `biodino_mobile_int8.onnx` (۲۲MB) و `biodino_companion_int8.onnx` (۸۳MB). |
 | **[`docs/android_mobile_app_guide.md`](file:///e:/work/research-few-shot/docs/android_mobile_app_guide.md)** | مستندات فنی | **راهنمای جامع اپلیکیشن اندروید:** مستندات کامل معماری Clean/MVI، بافر مستقیم، رتیکل پویا و پاسخ به سوالات داوران در حوزه Edge AI موبایل. |
-| **[`biodino_edge_pipeline.py`](file:///e:/work/research-few-shot/biodino_edge_pipeline.py)** | کد منبع پایتون | **قلب اجرایی پروژه:** پایپلاین ماژولار و مستقل پایتون که تمام فرآیندهای لود مدل‌های DINOv2 و BioCLIP، استخراج بردارهای ساپورت چنددیدگاهی، نگاشت فیشر با انقباض لدویت-ولف، ارزیابی تک‌سید (۹۸.۳۰٪)، ارزیابی آماری ۳۰ اپیزودی و پروفایلینگ کوانتیزاسیون INT8 روی پردازنده لبه را از صفر تا صد انجام می‌دهد. |
-| **[`biodino_edge_pipeline.ipynb`](file:///e:/work/research-few-shot/biodino_edge_pipeline.ipynb)** | نوت‌بوک ژوپیتر | **محیط تعاملی و ویژوالایزیشن:** نوت‌بوک سلف‌کانتین شامل توضیحات تئوری، دیاگرام جریان داده، لود کَش بردارها در کمتر از ۱ ثانیه، اجرای آزمون‌ها و رسم ماتریس درهم‌ریختگی (Confusion Matrix) با تفکیک رنگی کلاسی. |
-| **[`demo_predict.py`](file:///e:/work/research-few-shot/demo_predict.py)** | ابزار تعاملی پایتون | **دموی تک‌تصویر زنده در ترمینال:** ابزار سبک CLI جهت اسکن بلادرنگ تصویر هر برگ دلخواه، نمایش تاخیر به میلی‌ثانیه، تصمیم گیت شانون و رسم نمودار میله‌ای ASCII توزیع احتمال ۱۱ بیماری. |
-| **[`generate_saliency_and_calibration.py`](file:///e:/work/research-few-shot/generate_saliency_and_calibration.py)** | اسکریپت ویژوالایزیشن | **استخراج سلف‌اتنشن و کالیبراسیون ECE:** اسکریپت هوک زدن به بلوک پایانی DINOv2 جهت استخراج هیت‌مپ‌های لزیون و تولید همزمان شکل‌های `fig_saliency` و `fig_calibration` (در دو فرمت برداری PDF و تصویری PNG برای مقاله و مستندات). |
-| **[`generate_error_gallery.py`](file:///e:/work/research-few-shot/generate_error_gallery.py)** | اسکریپت ویژوالایزیشن | **استخراج و رندر گالری خطاها:** اسکریپت خودکار استخراج خطاهای باقیمانده و تولید تصویر باکیفیت ماتریس ۳×۴ نمونه‌های چالش‌برانگیز در `docs/assets/error_analysis_gallery.png`. |
+| **[`pipeline/biodino_edge_pipeline.py`](file:///e:/work/research-few-shot/pipeline/biodino_edge_pipeline.py)** | کد منبع پایتون | **قلب اجرایی پروژه:** پایپلاین ماژولار و مستقل پایتون که تمام فرآیندهای لود مدل‌های DINOv2 و BioCLIP، استخراج بردارهای ساپورت چنددیدگاهی، نگاشت فیشر با انقباض لدویت-ولف، ارزیابی تک‌سید (۹۸.۳۲٪)، ارزیابی آماری ۳۰ اپیزودی (۹۷.۳۷٪) و پروفایلینگ کوانتیزاسیون INT8 روی پردازنده لبه را از صفر تا صد انجام می‌دهد. |
+| **[`pipeline/biodino_unified_pipeline.ipynb`](file:///e:/work/research-few-shot/pipeline/biodino_unified_pipeline.ipynb)** | نوت‌بوک ژوپیتر | **محیط تعاملی یکپارچه (۵ بخش):** نوت‌بوک سلف‌کانتین شامل توضیحات تئوری، لود کَش بردارها در کمتر از ۱ ثانیه، اجرای آزمون‌ها و رسم ماتریس درهم‌ریختگی ۱۱ کلاسه (سیب، انگور و سیب‌زمینی). |
+| **[`pipeline/demo_predict.py`](file:///e:/work/research-few-shot/pipeline/demo_predict.py)** | ابزار تعاملی پایتون | **دموی تک‌تصویر زنده در ترمینال:** ابزار سبک CLI جهت اسکن بلادرنگ تصویر هر برگ دلخواه، نمایش تاخیر به میلی‌ثانیه، تصمیم گیت شانون و رسم نمودار میله‌ای ASCII توزیع احتمال ۱۱ بیماری. |
+| **[`pipeline/generate_saliency_and_calibration.py`](file:///e:/work/research-few-shot/pipeline/generate_saliency_and_calibration.py)** | اسکریپت ویژوالایزیشن | **استخراج سلف‌اتنشن و کالیبراسیون ECE:** اسکریپت هوک زدن به بلوک پایانی DINOv2 جهت استخراج هیت‌مپ‌های لزیون و تولید همزمان شکل‌های `fig_saliency` و `fig_calibration` (در دو فرمت برداری PDF و تصویری PNG برای مقاله و مستندات). |
+| **[`pipeline/generate_error_gallery.py`](file:///e:/work/research-few-shot/pipeline/generate_error_gallery.py)** | اسکریپت ویژوالایزیشن | **استخراج و رندر گالری خطاها:** اسکریپت خودکار استخراج خطاهای باقیمانده و تولید تصویر باکیفیت ماتریس ۳×۴ نمونه‌های چالش‌برانگیز در `docs/assets/error_analysis_gallery.png`. |
 | **[`biodino_edge_results.json`](file:///e:/work/research-few-shot/biodino_edge_results.json)** | داده ساختاریافته | **سند عددی رسمی بنچمارک:** شامل ارقام دقیق دقت تک‌سید، میانگین ۳۰ اپیزودی (اوج ۹۸.۶۷٪)، فواصل اطمینان ۹۵٪، ماتریس درهم‌ریختگی عددی و تاخیرهای دقیق سخت‌افزاری پردازنده لبه به میلی‌ثانیه. |
 | **[`CHANGELOG.md`](file:///e:/work/research-few-shot/CHANGELOG.md)** | مستندات فنی | **گاه‌شمار پیشرفت پژوهش:** تشریح گام‌به‌گام ارتقای مدل از نسخه پایه ۲۳.۴٪ تا ۸۱.۶٪، سپس ۸۸.۰٪، ۹۴.۷٪ و در نهایت رکورد تاریخی ۹۷.۳۴٪ با ذکر دقیق تغییرات اعمال‌شده در هر فاز. |
 | **[`paper/main.tex`](file:///e:/work/research-few-shot/paper/main.tex)** | سورس لاتک | **متن مقاله علمی:** مقاله کامل ۳ صفحه‌ای مطابق فرمت رسمی IEEE با فرمولاسیون ریاضی انقباض کوواریانس فیشر، گیت عدم قطعیت شانون، جداول مقایسه روش‌ها و تفکیک سنجه‌های پاتولوژی هر کلاس. |

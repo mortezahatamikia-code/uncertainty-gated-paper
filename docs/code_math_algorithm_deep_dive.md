@@ -3,7 +3,7 @@
 
 > **هدف این سند:**  
 > این سند تخصصی دقیقاً بر اساس ساختار چهارگانه تدوین شده است تا برای هر خط و قطعه کد کلیدی پایپلاین، ارتباط چهارگانه زیر برقرار شود:
-> 1. **کد (Code):** قطعه کد پایتورچ/پایتون استخراج‌شده مستقیم از فایل‌های واقعی پایپلاین ([`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py)، [`taxonomic_prompts.py`](file:///d:/Research/uncertainty-gated-paper/taxonomic_prompts.py) و [`export_edge_models.py`](file:///d:/Research/uncertainty-gated-paper/export_edge_models.py)).
+> 1. **کد (Code):** قطعه کد پایتورچ/پایتون استخراج‌شده مستقیم از فایل‌های واقعی پایپلاین ([`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py)، [`taxonomic_prompts.py`](../pipeline/taxonomic_prompts.py) و [`export_edge_models.py`](../pipeline/export_edge_models.py)).
 > 2. **سینتکس و نحوه استفاده - دلیل استفاده:** ورودی‌ها، خروجی‌ها، نحوه فراخوانی و چرایی انتخاب این پیاده‌سازی مهندسی.
 > 3. **تیکه‌ای از الگوریتم مربوط به این قسمت:** جایگاه عملیاتی کد در چرخه پایپلاین BioDINO-Edge.
 > 4. **مفهوم ریاضی استفاده شده:** فرمول‌ها، فضاهای برداری هیلبرت، هندسه منیفولد و اثبات‌های تئوریک پشت کد.
@@ -31,7 +31,7 @@
 ### ۱. بازتولیدپذیری قطعی و هایپرپارامترها (`BioDINOConfig` & Deterministic PRNG)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۴۰ الی ۶۷ فایل [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L40-L67):
+ برگرفته از سطرهای ۴۰ الی ۶۷ فایل [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L40-L67):
 ```python
 # -----------------------------------------------------------------------------
 # 0. Global Setup & Config
@@ -86,7 +86,7 @@ class BioDINOConfig:
 ### ۲. پرامپت‌های مثبت تکسونومیک (`PLANTVILLAGE_TAXONOMIC_PROMPTS`)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۱۰ الی ۶۶ فایل [`taxonomic_prompts.py`](file:///d:/Research/uncertainty-gated-paper/taxonomic_prompts.py#L10-L66):
+ برگرفته از سطرهای ۱۰ الی ۶۶ فایل [`taxonomic_prompts.py`](../pipeline/taxonomic_prompts.py#L10-L66):
 ```python
 PLANTVILLAGE_TAXONOMIC_PROMPTS = {
     "Apple___Apple_scab": [
@@ -132,7 +132,7 @@ PLANTVILLAGE_TAXONOMIC_PROMPTS = {
 ### ۳. دیتاست ترانسفورم دوگانه و صرفه‌جویی دیسک (`DualTransformDataset`)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۹۳ الی ۱۰۴ فایل [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L93-L104):
+ برگرفته از سطرهای ۹۳ الی ۱۰۴ فایل [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L93-L104):
 ```python
 class DualTransformDataset(Dataset):
     def __init__(self, samples: List[Tuple[str, int]], transform_bio, transform_dino):
@@ -168,7 +168,7 @@ class DualTransformDataset(Dataset):
 ### ۴. تفکیک لایه‌بندی‌شده چندنمونه‌ای و کشف دایرکتوری (`load_plantvillage_data`)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۷۲ الی ۱۲۸ فایل [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L72-L128):
+ برگرفته از سطرهای ۷۲ الی ۱۲۸ فایل [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L72-L128):
 ```python
 def resolve_plantvillage_dir(root: Path) -> Optional[Path]:
     root = Path(root)
@@ -226,7 +226,7 @@ def load_plantvillage_data(root: Path, k_shot: int = 5, seed: int = 42):
 ### ۵. بارگذاری و تنظیم ترنسفورم مدل‌های پایه ویژن (`timm` DINOv2 & `open_clip` BioCLIP)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۴۸۵ الی ۴۹۳ فایل [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L485-L493):
+ برگرفته از سطرهای ۴۸۵ الی ۴۹۳ فایل [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L485-L493):
 ```python
 # 1. DINOv2 Small Feature Extractor
 dino_model = timm.create_model('vit_small_patch14_dinov2', pretrained=True, dynamic_img_size=True).to(DEVICE).eval()
@@ -262,7 +262,7 @@ bioclip_model = bioclip_model.to(DEVICE).eval()
 ### ۶. مدار تبدیلات فرشه چنددیدگاهی (`get_aug_pipeline` & `extract_support_features`)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۱۹۶ الی ۲۱۸ فایل [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L196-L218):
+ برگرفته از سطرهای ۱۹۶ الی ۲۱۸ فایل [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L196-L218):
 ```python
 def get_aug_pipeline(mean, std):
     return T.Compose([
@@ -308,7 +308,7 @@ def extract_support_features(support_samples: List[Tuple[str, int]], dino_model:
 ### ۷. سنتز و تصویر پروتوتایپ متنی بر ابرکره (`synthesize_text_prototypes`)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۲۲۱ الی ۲۳۰ فایل [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L221-L230):
+ برگرفته از سطرهای ۲۲۱ الی ۲۳۰ فایل [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L221-L230):
 ```python
 def synthesize_text_prototypes(class_names: List[str], prompts_map: Dict[str, List[str]],
                                bioclip_model: nn.Module, tokenizer, device=DEVICE) -> torch.Tensor:
@@ -340,7 +340,7 @@ def synthesize_text_prototypes(class_names: List[str], prompts_map: Dict[str, Li
 ### ۸. الحاق و جمع مستقیم زیرفضاهای منیفولد (`Direct Sum Hilbert Manifold Fusion`)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۳۷۹ الی ۴۰۴ فایل [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L379-L404) و سطرهای ۹۵ الی ۱۰۰ فایل [`export_edge_models.py`](file:///d:/Research/uncertainty-gated-paper/export_edge_models.py#L95-L100):
+ برگرفته از سطرهای ۳۷۹ الی ۴۰۴ فایل [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L379-L404) و سطرهای ۹۵ الی ۱۰۰ فایل [`export_edge_models.py`](../pipeline/export_edge_models.py#L95-L100):
 ```python
 # 1. ترکیب محدب دیداری-متنی در فضای BioCLIP
 proto_dino = torch.stack([F.normalize(s_f_dino[s_labels == c].mean(dim=0), dim=-1) for c in range(n_classes)])
@@ -373,7 +373,7 @@ q_concat = torch.cat([f_b.float(), f_d.float()], dim=-1)  # (B, 512 + 384 = 896)
 ### ۹. تحلیل تفکیک فیشر با انقباض لدویت-ولف (`fit_fisher_lda`)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۱۵۱ الی ۱۵۵ و ۴۰۵ فایل [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L151-L155):
+ برگرفته از سطرهای ۱۵۱ الی ۱۵۵ و ۴۰۵ فایل [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L151-L155):
 ```python
 def fit_fisher_lda(x: np.ndarray, y: np.ndarray, device=DEVICE) -> Tuple[torch.Tensor, torch.Tensor, LinearDiscriminantAnalysis]:
     clf = LinearDiscriminantAnalysis(solver='lsqr', shrinkage='auto').fit(x, y)
@@ -407,7 +407,7 @@ prob_fe = cfg.lda_ensemble_weight * F.softmax(q_concat @ W_fisher.t() + b_fisher
 ### ۱۰. شاخص ترکیبی اطمینان و گیت عدم قطعیت شانون (`compute_shannon_confidence`)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۱۵۸ الی ۱۶۲ فایل [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L158-L162) و سطرهای ۷۴ الی ۸۳ فایل [`export_edge_models.py`](file:///d:/Research/uncertainty-gated-paper/export_edge_models.py#L74-L83):
+ برگرفته از سطرهای ۱۵۸ الی ۱۶۲ فایل [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L158-L162) و سطرهای ۷۴ الی ۸۳ فایل [`export_edge_models.py`](../pipeline/export_edge_models.py#L74-L83):
 ```python
 def compute_shannon_confidence(probs: torch.Tensor, n_classes: int) -> torch.Tensor:
     top_p, _ = torch.topk(probs, k=min(2, n_classes), dim=-1)
@@ -415,7 +415,7 @@ def compute_shannon_confidence(probs: torch.Tensor, n_classes: int) -> torch.Ten
     entropy = -torch.sum(probs * torch.log(probs + 1e-8), dim=-1) / max(np.log(n_classes), 1e-6)
     return margin * (1.0 - entropy).clamp(min=0.0)
 ```
-و در پیاده‌سازی گراف ONNX لبه در [`export_edge_models.py`](file:///d:/Research/uncertainty-gated-paper/export_edge_models.py#L74-L83):
+و در پیاده‌سازی گراف ONNX لبه در [`export_edge_models.py`](../pipeline/export_edge_models.py#L74-L83):
 ```python
 top2_vals, _ = torch.topk(probabilities, k=2, dim=-1)
 margin = top2_vals[:, 0:1] - top2_vals[:, 1:2]
@@ -446,7 +446,7 @@ confidence = raw_confidence * foliage_gate  # مهار ورودی‌های غی�
 ### ۱۱. خودکالیبراسیون فراالقایی بسته با انکورهای بااطمینان (`transductive_refine`)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۱۶۵ الی ۱۹۱ فایل [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L165-L191):
+ برگرفته از سطرهای ۱۶۵ الی ۱۹۱ فایل [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L165-L191):
 ```python
 def transductive_refine(s_concat: np.ndarray, s_y: np.ndarray, q_concat_all: torch.Tensor, preds_init: np.ndarray,
                         top_confs: torch.Tensor, p_text_all: torch.Tensor, n_classes: int, support_weight: int = 3,
@@ -498,7 +498,7 @@ def transductive_refine(s_concat: np.ndarray, s_y: np.ndarray, q_concat_all: tor
 ### ۱۲. مسیریابی تطبیقی و آبشاری لبه (`BioDINO-Edge Cascaded Routing`)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۴۰۸ الی ۴۲۵ فایل [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L408-L425):
+ برگرفته از سطرهای ۴۰۸ الی ۴۲۵ فایل [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L408-L425):
 ```python
 # 1. استنتاج مسیر سریع (DINOv2 Small Fast-Path)
 conf = compute_shannon_confidence(F.softmax(lgt_d, dim=-1), n_classes)
@@ -534,7 +534,7 @@ total_queries += len(lbls)
 ### ۱۳. کوانتیزاسیون پویای INT8 و گراف یکپارچه ONNX (`Quantization & Export`)
 
 #### ۱. کد (Code)
- برگرفته از سطرهای ۱۸۶ الی ۲۰۰ فایل [`export_edge_models.py`](file:///d:/Research/uncertainty-gated-paper/export_edge_models.py#L186-L200) و سطرهای ۳۴۱ الی ۳۵۵ فایل [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L341-L355):
+ برگرفته از سطرهای ۱۸۶ الی ۲۰۰ فایل [`export_edge_models.py`](../pipeline/export_edge_models.py#L186-L200) و سطرهای ۳۴۱ الی ۳۵۵ فایل [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L341-L355):
 ```python
 # 1. اکسپورت گراف یکپارچه PyTorch به ONNX با بافرهای فیشر و گیتینگ شانون
 torch.onnx.export(
@@ -560,7 +560,7 @@ quantize_dynamic(
     extra_options={"EnableSubgraph": True}
 )
 ```
-و بنچمارک پایتورچی تاخیر روی پردازنده در [`biodino_edge_pipeline.py`](file:///d:/Research/uncertainty-gated-paper/biodino_edge_pipeline.py#L341-L355):
+و بنچمارک پایتورچی تاخیر روی پردازنده در [`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py#L341-L355):
 ```python
 torch.set_num_threads(4)
 q_dino = torch.quantization.quantize_dynamic(copy.deepcopy(dino_model).cpu().eval(), {nn.Linear}, dtype=torch.qint8)

@@ -1,0 +1,16 @@
+# Robots.txt for Reyhane Javidi Alsaadi Academic Portfolio
+User-agent: *
+Allow: /
+
+# Dedicated academic & research crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Scholar
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://reyhane-alsaadi.github.io/sitemap.xml
+

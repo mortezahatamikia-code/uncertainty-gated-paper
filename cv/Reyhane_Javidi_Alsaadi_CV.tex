@@ -1,0 +1,90 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.7in]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{xcolor}
+
+\definecolor{primary}{RGB}{16, 140, 100}
+\definecolor{dark}{RGB}{20, 25, 35}
+\definecolor{gray}{RGB}{90, 100, 115}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primary,
+    filecolor=primary,      
+    urlcolor=primary,
+}
+
+\titleformat{\section}{\large\bfseries\color{dark}\uppercase}{}{0em}{}[\titlerule]
+\titlespacing*{\section}{0pt}{10pt}{6pt}
+
+\setlist[itemize]{leftmargin=1.5em, itemsep=2pt, parsep=0pt}
+
+\begin{document}
+\pagestyle{empty}
+
+% HEADER
+\begin{center}
+    {\huge\bfseries \textcolor{dark}{Reyhane Javidi Alsaadi}}\\[4pt]
+    \textcolor{gray}{Computer Engineering Scholar $\cdot$ Edge AI \& Vision Foundation Models Researcher}\\[3pt]
+    Department of Computer Engineering, Dr. Shariaty Technical University, Tehran, Iran\\[3pt]
+    \href{mailto:reyhane.code@gmail.com}{\texttt{reyhane.code@gmail.com}} $\;\cdot\;$ 
+    \href{https://github.com}{\texttt{GitHub Profile}} $\;\cdot\;$
+    \textbf{Portfolio:} \href{https://reyhane-javidi.github.io}{\texttt{reyhane-javidi.github.io}}
+\end{center}
+
+\vspace{-4pt}
+
+% EDUCATION
+\section{Education \& Scholastic Standing}
+\textbf{Dr. Shariaty Technical University} \hfill Tehran, Iran\\
+\textit{Bachelor of Science in Computer Engineering} \hfill \textbf{Cumulative GPA: 19.00 / 20.00} ($\approx$\textbf{3.95 / 4.00})\\
+$\bullet$ \textbf{Academic Standing:} \textbf{Rank 1} in Department / Dean's Honor Roll (Summa Cum Laude equivalent).\\
+$\bullet$ \textbf{Selected High-Distinction Coursework (All Top Grades):}
+Linear Algebra \& Vector Calculus (\textbf{20.00/20}), Advanced Algorithms \& Data Structures (\textbf{20.00/20}), Machine Learning \& Neural Networks (\textbf{20.00/20}), Probability \& Engineering Statistics (\textbf{19.50/20}), Software Architecture (\textbf{20.00/20}), Operating Systems (\textbf{19.50/20}).
+
+% PUBLICATIONS
+\section{Publications \& Scientific Preprints}
+\textbf{BioDINO-Edge: Biologically-Grounded Multi-Scale Vision Foundation Models for Trustworthy Few-Shot Plant Pathology on Resource-Constrained Hardware}\\
+\textit{\textbf{Reyhane Javidi Alsaadi} (Lead Author), Mohammad Reza Samad Zadeh} \hfill \textit{Target: IEEE T-PAMI / CVPR (2026)}\\
+$\bullet$ Formulated an analytical closed-form Fisher-LDA alignment via \textbf{Ledoit-Wolf covariance shrinkage} on a joint 896-d manifold fusing \textbf{DINOv2 Small} (spatial patch tokens) and \textbf{BioCLIP ViT-B} (taxonomic hierarchies), resolving high-dimensional singularity in $<0.003$\,ms.\\
+$\bullet$ Introduced \textbf{Purified Botanical Prompts} and \textbf{Soft-Anchored Transductive Calibration}, reaching \textbf{98.72\% peak accuracy} on PlantVillage (11 novel classes) and \textbf{83.61\%} on in-the-wild PlantDoc (\textbf{+13.00\%} over recent 2026 multimodal SOTA).\\
+$\bullet$ Packaged as a Dual-Tier Edge architecture: 22.05\,MB standalone INT8 model ($>$45 FPS on CPU, ECE calibrated to 0.81\%).
+
+% HONORS & AWARDS
+\section{Honors, Awards \& Commendations}
+$\bullet$ \textbf{University Official Letter of Commendation:} Awarded a formal letter of honor by university department leadership in recognition of sustained academic distinction, leadership in engineering initiatives, and research dedication.\\
+$\bullet$ \textbf{First-Rank Scholar Distinction:} Recognized as the top-ranking undergraduate student across the Faculty of Computer Engineering throughout undergraduate tenure.
+
+% TEACHING & ACADEMIC SERVICE
+\section{Teaching Experience \& Academic Mentorship}
+\textbf{Department of Computer Engineering, Dr. Shariaty Technical University} \hfill Tehran, Iran\\
+\textit{Teaching Assistant (TA) --- Game Development \& Interactive Graphics Programming} \hfill \textit{1 Academic Term}\\
+$\bullet$ Mentored over 40 undergraduate engineering students in algorithmic game architecture, state management, graphics rendering, and physics simulations.\\
+$\bullet$ Conducted weekly problem-solving and code review sessions; designed laboratory grading rubrics.\\
+$\bullet$ \textbf{Verification:} Supported by an \textbf{Official University Verification Letter} attesting to instructional excellence and student mentorship.
+
+% SELECTED ENGINEERING PROJECTS
+\section{Selected Engineering \& Systems Projects}
+\textbf{BioDINO-Edge Mobile (100\% Offline Android AI Scanner)} \hfill \textit{Kotlin 2.0, Compose, ONNX Mobile NNAPI}\\
+$\bullet$ Native Android edge application executing foundation model inference at \textbf{$>$55 FPS} on ARM Cortex processors.\\
+$\bullet$ Engineered a \textbf{Zero-GC direct memory pipeline} (\texttt{PreallocatedTensor}) eliminating Garbage Collector stutter; integrated a 3-layer security gate (Luminance, Foliage Manifold score $\ge 0.40$, Shannon Margin-Entropy confidence) to prevent false positives on dark or non-leaf frames.
+
+\vspace{3pt}
+\textbf{Scalable AI Backend \& Microservices Architecture} \hfill \textit{NestJS, PostgreSQL, Redis, Next.js 16}\\
+$\bullet$ Designed modular backend ingestion microservices in \textbf{NestJS} (TypeScript) with strict dependency injection principles.\\
+$\bullet$ Modeled relational time-series foliar diagnostics in \textbf{PostgreSQL}; implemented high-throughput in-memory caching and queuing in \textbf{Redis}.\\
+$\bullet$ Developed reactive frontend dashboards using \textbf{React} and \textbf{Next.js 16} under strict Git workflow discipline.
+
+% TECHNICAL SKILLS
+\section{Technical \& Research Competencies}
+$\bullet$ \textbf{AI \& Computer Vision:} PyTorch, TorchVision, Timm, OpenCLIP, Vision Transformers (ViT), DINOv2, BioCLIP, Few-Shot Learning (Fisher-LDA, MAML), Covariance Shrinkage (Ledoit-Wolf), Self-Attention Rollout, Scikit-Learn, NumPy, SciPy.\\
+$\bullet$ \textbf{Backend \& Databases:} NestJS, Node.js, TypeScript, PostgreSQL (SQL, Relational Modeling), Redis (Caching \& Queues), REST APIs.\\
+$\bullet$ \textbf{Frontend \& Web:} React, Next.js 16 (App Router, Static Export), JavaScript (ES6+), Tailwind CSS, Responsive Web Design.\\
+$\bullet$ \textbf{Edge \& Mobile:} Kotlin 2.0, Jetpack Compose, ONNX Runtime Mobile, Android NNAPI, INT8 Dynamic Quantization, Android NDK.\\
+$\bullet$ \textbf{Developer Tools:} Git, GitHub Actions (CI/CD), Linux/Bash, \LaTeX{} (IEEEtran, Article), Technical Research Writing.
+
+\end{document}
+

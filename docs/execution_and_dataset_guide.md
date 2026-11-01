@@ -91,38 +91,38 @@ pip install -r requirements.txt
 
 پروژه به صورت کاملاً ماژولار و مبتنی بر آرگومان‌های خط فرمان (`argparse`) توسعه یافته است:
 
-### ۱. اجرای پایپلاین اصلی ([`biodino_edge_pipeline.py`](../biodino_edge_pipeline.py))
+### ۱. اجرای پایپلاین اصلی ([`biodino_edge_pipeline.py`](../pipeline/biodino_edge_pipeline.py))
 
-#### الف) اجرای بنچمارک استاندارد PlantVillage (۱۱ کلاس):
+#### الف) اجرای بنچمارک استاندارد PlantVillage (۱۱ کلاس: سیب، انگور و سیب‌زمینی):
 ```bash
-python biodino_edge_pipeline.py --dataset plantvillage
+python pipeline/biodino_edge_pipeline.py --dataset plantvillage
 ```
 * **خروجی:** ارزیابی دقت تک‌سید، آزمون ۳۰ اپیزودی مونت‌کارلو با فواصل اطمینان ۹۵٪، محاسبه نرخ منفی کاذب بالینی FNR و صدور گزارش طبقه‌بندی کامل.
 
 #### ب) اجرای بنچمارک در شرایط واقعی مزرعه PlantDoc (۲۷ کلاس):
 ```bash
-python biodino_edge_pipeline.py --dataset plantdoc --k_shot 5
+python pipeline/biodino_edge_pipeline.py --dataset plantdoc --k_shot 5
 ```
 * **خروجی:** ارزیابی ۲۷ کلاسه تنش، ارزیابی ۵۰ اپیزود ۵ کلاسه ۵ شات، مقایسه با مدل VSF و ذخیره خروجی‌ها.
 
 #### ج) اجرای همزمان هر دو بنچمارک و چاپ جدول مقایسه‌ای:
 ```bash
-python biodino_edge_pipeline.py --dataset both
+python pipeline/biodino_edge_pipeline.py --dataset both
 ```
 * **خروجی:** اجرای خودکار روی هر دو دیتاست و چاپ جدول مقایسه‌ای درون‌ترمینالی و ذخیره در [`biodino_edge_results.json`](../biodino_edge_results.json).
 
 #### د) سنجش تاخیر کوانتیزاسیون INT8 روی CPU:
 ```bash
-python biodino_edge_pipeline.py --dataset plantvillage --profile_latency
+python pipeline/biodino_edge_pipeline.py --dataset plantvillage --profile_latency
 ```
 
 ---
 
-### ۲. اکسپورت مدل‌ها به فرمت ONNX و کوانتیزاسیون لبه ([`export_edge_models.py`](../export_edge_models.py))
+### ۲. اکسپورت مدل‌ها به فرمت ONNX و کوانتیزاسیون لبه ([`export_edge_models.py`](../pipeline/export_edge_models.py))
 
 این اسکریپت مدل دو سطحی لبه را به فایل‌های کم‌حجم ONNX INT8 تبدیل و اعتبارسنجی می‌کند:
 ```bash
-python export_edge_models.py
+python pipeline/export_edge_models.py
 ```
 * **خروجی‌ها:**
   - `biodino_mobile_int8.onnx` (مدل ۲۱ مگابایتی برای موبایل و رزبری‌پای)
@@ -131,56 +131,43 @@ python export_edge_models.py
 
 ---
 
-### ۳. اجرای آزمون‌های فرضیه و سناریوهای تنش محیطی ([`run_ideas_experiment.py`](../run_ideas_experiment.py))
-
-برای بررسی عملکرد مدل در مواجهه با لرزش دست، تاری، نور مستقیم آفتاب و برش هوشمند:
-```bash
-python run_ideas_experiment.py
-```
-* **خروجی‌ها:**
-  - نتایج برش اتنشن سلف‌اتنشن روی دیتای ۲۷ کلاسه مزرعه.
-  - جدول کاهش خطاهای خاموش با گیت شانون در ۵ رژیم تنش محیطی.
-  - ذخیره خروجی در `ideas_benchmark_results.json`.
-
----
-
-### ۴. تست و استنتاج روی یک تک‌تصویر دلخواه ([`demo_predict.py`](../demo_predict.py))
+### ۳. تست و استنتاج روی یک تک‌تصویر دلخواه ([`demo_predict.py`](../pipeline/demo_predict.py))
 برای تست بلادرنگ و سریع یک تصویر بدون اجرای کل بنچمارک:
 ```bash
 # تست روی یک فایل تصویر دلخواه
-python demo_predict.py --image "plantvillage/plantvillage dataset/color/Apple___Apple_scab/00075aa8-d81a-4184-8541-b692b78d398a___FREC_Scab 3335.JPG"
+python pipeline/demo_predict.py --image "plantvillage/plantvillage dataset/color/Apple___Apple_scab/00075aa8-d81a-4184-8541-b692b78d398a___FREC_Scab 3335.JPG"
 
 # تست خودکار روی یک نمونه تصادفی
-python demo_predict.py
+python pipeline/demo_predict.py
 ```
-* **خروجی:** نمایش زمان تاخیر استنتاج بر حسب میلی‌ثانیه، ضریب اطمینان گیت شانون، چارت میله‌ای اسکی درصدهای احتمال کلاس‌ها، و وضعیت نهایی سلامت یا بیماری برگ.
+* **خروجی:** نمایش زمان تاخیر استنتاج بر حسب میلی‌ثانیه، ضریب اطمینان گیت شانون، چارت میله‌ای اسکی درصدهای احتمال ۱۱ کلاس، و وضعیت نهایی سلامت یا بیماری برگ.
 
 ---
 
-### ۵. تولید نقشه‌های توضیح‌پذیری اتنشن و کالیبراسیون ECE ([`generate_saliency_and_calibration.py`](../generate_saliency_and_calibration.py))
+### ۴. تولید شکل‌های ۲ و ۳ مقاله: نقشه‌های سلف‌اتنشن و کالیبراسیون ECE ([`generate_saliency_and_calibration.py`](../pipeline/generate_saliency_and_calibration.py))
 تولید شکل‌های آماده چاپ مقاله (PDF برداری و PNG با کیفیت ۳۰۰ DPI):
 ```bash
-python generate_saliency_and_calibration.py
+python pipeline/generate_saliency_and_calibration.py
 ```
 * **خروجی‌ها:**
   - `paper/fig_saliency.pdf` و `paper/fig_saliency.png`
   - `paper/fig_calibration.pdf` و `paper/fig_calibration.png`
-  - کپی فایل‌ها در `docs/assets/` و به‌روزرسانی بخش ECE در `biodino_edge_results.json`.
 
 ---
 
-### ۶. تولید ماتریس کالبدشکافی خطاهای باقیمانده ([`generate_error_gallery.py`](../generate_error_gallery.py))
-تولید گالری تصویری خطاهای مدل برای بازنگری داوران ژورنال:
+### ۵. تولید شکل ۱ مقاله: دیاگرام معماری ([`generate_architecture_diagram.py`](../pipeline/generate_architecture_diagram.py))
+تولید دیاگرام برداری معماری BioDINO-Edge برای مقاله:
 ```bash
-python generate_error_gallery.py
+python pipeline/generate_architecture_diagram.py
 ```
-* **خروجی:** تصویر بزرگ ۳۲۰۰×۲۴۰۰ پیکسلی در `docs/assets/error_analysis_gallery.png`.
+* **خروجی‌ها:**
+  - `paper/fig_architecture.pdf` و `paper/fig_architecture.png`
 
 ---
 
-### ۷. اجرای نوت‌بوک تعاملی ژوپیتر (`biodino_edge_pipeline.ipynb`)
-برای مشاهده نمودارهای بصری و ماتریس درهم‌ریختگی رنگی:
-1. در محیط VS Code یا Jupyter Lab، فایل `biodino_edge_pipeline.ipynb` را باز کنید.
+### ۶. اجرای نوت‌بوک تعاملی یکپارچه ژوپیتر (`pipeline/biodino_unified_pipeline.ipynb`)
+برای مشاهده نمودارهای بصری، مراحل گام‌به‌گام و ماتریس درهم‌ریختگی رنگی ۱۱ کلاسه:
+1. در محیط VS Code یا Jupyter Lab، فایل `pipeline/biodino_unified_pipeline.ipynb` را باز کنید.
 2. سلول‌ها را به ترتیب اجرا نمایید تا هیت‌مپ‌های ماتریس سردرگمی رسم گردند.
 
 ---
