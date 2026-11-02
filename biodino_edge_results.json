@@ -823,18 +823,18 @@
     "n_classes": 11,
     "k_shot": 5,
     "metrics": {
-      "accuracy_fast_dino": 85.42336548767418,
-      "f1_fast_dino": 82.09902606696745,
-      "accuracy_deep_bio": 92.27224008574491,
-      "f1_deep_bio": 89.69663781929978,
-      "accuracy_base_fused": 92.58306538049304,
-      "f1_base_fused": 90.05761107824331,
-      "accuracy_peak_fisher": 96.7631296891747,
-      "f1_peak_fisher": 95.08006629306522,
-      "accuracy_cascaded_edge": 96.74169346195069,
-      "f1_cascaded_edge": 95.03296619758702,
-      "accuracy_refined_transductive": 98.31725616291533,
-      "f1_refined_transductive": 97.64421777052128,
+      "accuracy_fast_dino": 87.25616291532691,
+      "f1_fast_dino": 85.36339143075281,
+      "accuracy_deep_bio": 92.60450160771704,
+      "f1_deep_bio": 89.88082513989568,
+      "accuracy_base_fused": 93.92282958199357,
+      "f1_base_fused": 91.59647861369696,
+      "accuracy_peak_fisher": 96.03429796355842,
+      "f1_peak_fisher": 94.80753722250822,
+      "accuracy_cascaded_edge": 96.03429796355842,
+      "f1_cascaded_edge": 94.80753722250822,
+      "accuracy_refined_transductive": 98.03858520900322,
+      "f1_refined_transductive": 97.39646744246998,
       "multi_episode_30": {
         "inductive": {
           "mean_accuracy": 95.08074312254377,
@@ -849,58 +849,32 @@
       }
     },
     "edge_profiling": {
-      "fast_ratio_pct": 9.839228295819936,
-      "deep_ratio_pct": 90.16077170418006,
-      "dino_latency_ms": 346.8895439998596,
-      "bioclip_latency_ms": 527.5490666652331,
-      "effective_latency_ms": 822.5318536234331,
-      "effective_fps": 1.2157583874652158
+      "fast_ratio_pct": 10.032154340836009,
+      "deep_ratio_pct": 89.967845659164,
+      "dino_latency_ms": 319.85384799947497,
+      "bioclip_latency_ms": 477.9238666659997,
+      "effective_latency_ms": 749.8316547298502,
+      "effective_fps": 1.3336326810052859
     },
     "confusion_matrix": [
       [
-        593,
-        17,
-        8,
-        7,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      [
-        0,
-        615,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      [
-        0,
-        0,
-        270,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      [
-        3,
+        591,
+        22,
+        6,
         4,
-        1,
-        1632,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      [
+        0,
+        600,
+        0,
+        16,
         0,
         0,
         0,
@@ -911,11 +885,24 @@
       ],
       [
         0,
+        2,
+        268,
         0,
         0,
         0,
-        1151,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
         24,
+        7,
+        2,
+        1607,
+        0,
+        0,
         0,
         0,
         0,
@@ -927,8 +914,21 @@
         0,
         0,
         0,
-        33,
-        1345,
+        1152,
+        23,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        34,
+        1344,
         0,
         0,
         0,
@@ -942,9 +942,9 @@
         0,
         0,
         0,
-        1067,
+        1068,
         3,
-        1,
+        0,
         0,
         0
       ],
@@ -970,9 +970,9 @@
         0,
         0,
         0,
-        971,
-        22,
-        2
+        987,
+        5,
+        3
       ],
       [
         0,
@@ -983,126 +983,24 @@
         0,
         0,
         0,
-        0,
-        965,
-        30
+        3,
+        966,
+        26
       ],
       [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
         0,
         1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
         146
       ]
-    ],
-    "calibration": {
-      "uncalibrated_baseline": {
-        "ece_pct": 37.97,
-        "mce_pct": 56.01
-      },
-      "biodino_edge_calibrated": {
-        "ece_pct": 0.81,
-        "mce_pct": 50.45,
-        "bin_data": [
-          {
-            "bin_idx": 0,
-            "bin_lower": 0.0,
-            "bin_upper": 0.1,
-            "count": 0,
-            "accuracy": 0.0,
-            "confidence": 0.05,
-            "gap": 0.0
-          },
-          {
-            "bin_idx": 1,
-            "bin_lower": 0.1,
-            "bin_upper": 0.2,
-            "count": 0,
-            "accuracy": 0.0,
-            "confidence": 0.15000000000000002,
-            "gap": 0.0
-          },
-          {
-            "bin_idx": 2,
-            "bin_lower": 0.2,
-            "bin_upper": 0.30000000000000004,
-            "count": 0,
-            "accuracy": 0.0,
-            "confidence": 0.25,
-            "gap": 0.0
-          },
-          {
-            "bin_idx": 3,
-            "bin_lower": 0.30000000000000004,
-            "bin_upper": 0.4,
-            "count": 0,
-            "accuracy": 0.0,
-            "confidence": 0.35000000000000003,
-            "gap": 0.0
-          },
-          {
-            "bin_idx": 4,
-            "bin_lower": 0.4,
-            "bin_upper": 0.5,
-            "count": 1,
-            "accuracy": 1.0,
-            "confidence": 0.4955052137374878,
-            "gap": 0.5044947862625122
-          },
-          {
-            "bin_idx": 5,
-            "bin_lower": 0.5,
-            "bin_upper": 0.6000000000000001,
-            "count": 3,
-            "accuracy": 0.3333333333333333,
-            "confidence": 0.5739226937294006,
-            "gap": 0.24058936039606732
-          },
-          {
-            "bin_idx": 6,
-            "bin_lower": 0.6000000000000001,
-            "bin_upper": 0.7000000000000001,
-            "count": 5,
-            "accuracy": 0.6,
-            "confidence": 0.6609460711479187,
-            "gap": 0.06094607114791872
-          },
-          {
-            "bin_idx": 7,
-            "bin_lower": 0.7000000000000001,
-            "bin_upper": 0.8,
-            "count": 0,
-            "accuracy": 0.0,
-            "confidence": 0.75,
-            "gap": 0.0
-          },
-          {
-            "bin_idx": 8,
-            "bin_lower": 0.8,
-            "bin_upper": 0.9,
-            "count": 2,
-            "accuracy": 0.5,
-            "confidence": 0.851921558380127,
-            "gap": 0.35192155838012695
-          },
-          {
-            "bin_idx": 9,
-            "bin_lower": 0.9,
-            "bin_upper": 1.0,
-            "count": 9319,
-            "accuracy": 0.9777873162356476,
-            "confidence": 0.9856306314468384,
-            "gap": 0.007843315211190749
-          }
-        ]
-      }
-    }
+    ]
   },
   "unified_pipeline_results": {
     "acc_fast_dino": 86.55948553054662,

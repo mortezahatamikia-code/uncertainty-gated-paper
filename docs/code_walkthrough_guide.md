@@ -9,7 +9,7 @@
 ## فهرست فصول آموزشی کدها
 
 1. [فصل اول: کالبدشکافی عمیق کد اصلی پایپلاین (`pipeline/biodino_edge_pipeline.py`)](#فصل-اول-کالبدشکافی-عمیق-کد-اصلی-پایپلاین-biodino_edge_pipelinepy)
-   - [۱.۱. پیکربندی سراسری و ساختار داده تنظیمات (`BioDINOConfig`)](#۱۱-پیکربندی-سراسری-و-ساختار-داده-تنظیمات-biodinoconfig)
+   - [۱.۱. پیکربندی سراسری و ساختار داده تنظیمات (`EdgeConfig`)](#۱۱-پیکربندی-سراسری-و-ساختار-داده-تنظیمات-biodinoconfig)
    - [۱.۲. سیستم هوشمند مکان‌یابی و لودرهای چندمنظوره داده](#۱۲-سیستم-هوشمند-مکان‌یابی-و-لودرهای-چندمنظوره-داده)
    - [۱.۳. بلوک‌های الگوریتمی پایه‌ای (فیشر، آنتروپی شانون، خودکالیبراسیون فراالقایی)](#۱۳-بلوک‌های-الگوریتمی-پایه‌ای-فیشر-آنتروپی-شانون-خودکالیبراسیون-فراالقایی)
    - [۱.۴. پایپلاین آگمنتاسیون چنددیدگاهی و استخراج بردارها](#۱۴-پایپلاین-آگمنتاسیون-چنددیدگاهی-و-استخراج-بردارها)
@@ -49,7 +49,7 @@
 
 این فایل، قلب تپنده پروژه است. کد در قالب معماری تمیز (Clean Architecture) در ۵۲۵ خط نوشته شده است و عاری از هرگونه افزونگی یا کدهای تکراری (DRY) است.
 
-### ۱.۱. پیکربندی سراسری و ساختار داده تنظیمات (`BioDINOConfig`)
+### ۱.۱. پیکربندی سراسری و ساختار داده تنظیمات (`EdgeConfig`)
 
 در خطوط ۱۱ تا ۶۸، پس از وارد کردن کتابخانه‌های استاندارد (`torch`، `timm`، `open_clip`، `sklearn`)، اولین گام حیاتی **تثبیت بذر تصادفی (Deterministic Seeding)** است:
 
@@ -71,16 +71,16 @@ torch.backends.cudnn.benchmark = True
 
 ```python
 @dataclass
-class BioDINOConfig:
+class EdgeConfig:
     seed: int = 42
     k_shot: int = 5
     batch_size: int = 128
-    logit_scale: float = 20.0
-    text_fusion_weight: float = 0.20   # proto_bio_fused = 0.80 * vis + 0.20 * text
-    lda_ensemble_weight: float = 0.75  # 0.75 * prob_lda + 0.25 * prob_text
-    base_ensemble_weight: float = 0.65 # 0.65 * logit_bio + 0.35 * logit_dino
-    tau_conf: float = 0.35             # Shannon uncertainty margin-entropy threshold
-    support_views: int = 8             # 1 original + 7 multi-view augmentations
+    scale: float = 20.0
+    w_text: float = 0.20   # proto_bio_fused = 0.80 * vis + 0.20 * text
+    w_lda: float = 0.75  # 0.75 * prob_lda + 0.25 * prob_text
+    w_base: float = 0.65 # 0.65 * logit_bio + 0.35 * logit_dino
+    tau: float = 0.35             # Shannon uncertainty margin-entropy threshold
+    n_views: int = 8             # 1 original + 7 multi-view augmentations
 ```
 
 #### تشریح نقش تک‌تک پارامترها:
@@ -100,9 +100,9 @@ class BioDINOConfig:
 
 در خطوط ۷۰ تا ۱۴۷، توابعی پیاده شده‌اند که مسیر دیتاست را به صورت خودکار شناسایی می‌کنند:
 
-#### الف) تابع `resolve_plantvillage_dir` و `resolve_plantdoc_dirs`:
+#### الف) تابع `resolve_pv_path` و `resolve_pd_paths`:
 ```python
-def resolve_plantvillage_dir(root: Path) -> Optional[Path]:
+def resolve_pv_path(root: Path) -> Optional[Path]:
     root = Path(root)
     for c in [root / "plantvillage dataset" / "color", root / "color", root]:
         if c.is_dir() and any("Apple" in d.name or "Grape" in d.name for d in c.iterdir() if d.is_dir()):
@@ -130,7 +130,7 @@ class DualTransformDataset(Dataset):
 ```
 * **چرا این کلاس ضروری است؟** مدل DINOv2 و مدل BioCLIP با میانگین‌ها و انحراف معیارهای رنگی متفاوتی نرمال‌سازی شده‌اند. این کلاس یک‌بار تصویر برگ را از دیسک باز می‌کند و همزمان دو نسخه تنسوری بهینه‌شده تحویل می‌دهد (یک تنسور آماده برای BioCLIP و یک تنسور آماده برای DINOv2). این کار بار دیسک (Disk I/O) را دقیقاً ۵۰٪ کاهش می‌دهد.
 
-#### ج) تابع `load_plantvillage_data`:
+#### ج) تابع `load_plantvillage`:
 این تابع ۱۱ کلاس دیده‌نشده را جدا می‌کند (`Apple`، `Grape` و `Potato`)، به ازای هر کلاس دقیقاً $K=5$ تصویر را به عنوان مجموعه ساپورت (Support) و بقیه (۹,۳۳۰ تصویر) را به عنوان کوئری (Query) دسته‌بندی می‌نماید.
 
 ---
@@ -150,9 +150,9 @@ def fit_fisher_lda(x: np.ndarray, y: np.ndarray, device=DEVICE) -> Tuple[torch.T
 - از حل‌کننده کمترین مربعات (`lsqr`) همراه با محاسبه خودکار انقباض لدویت-ولف (`shrinkage='auto'`) استفاده می‌شود.
 - ماتریس وزن فیشر ($\mathbf{W}$) و بایاس ($\mathbf{b}$) مستقیماً استخراج شده و به تنسورهای PyTorch روی دستگاه پردازشگر (GPU یا CPU) منتقل می‌شوند. در زمان استنتاج، پیش‌بینی یک دسته ۱۲۸ تایی صرفاً یک ضرب ماتریسی فوق‌سریع است: $\mathbf{X} \mathbf{W}^T + \mathbf{b}$ در کمتر از ۲ میکروثانیه!
 
-#### ۲. گیت عدم‌قطعیت مارجین-آنتروپی شانون (`compute_shannon_confidence`):
+#### ۲. گیت عدم‌قطعیت مارجین-آنتروپی شانون (`calc_confidence`):
 ```python
-def compute_shannon_confidence(probs: torch.Tensor, n_classes: int) -> torch.Tensor:
+def calc_confidence(probs: torch.Tensor, n_classes: int) -> torch.Tensor:
     top_p, _ = torch.topk(probs, k=min(2, n_classes), dim=-1)
     margin = top_p[:, 0] - top_p[:, 1] if n_classes > 1 else top_p[:, 0]
     entropy = -torch.sum(probs * torch.log(probs + 1e-8), dim=-1) / max(np.log(n_classes), 1e-6)
@@ -164,9 +164,9 @@ def compute_shannon_confidence(probs: torch.Tensor, n_classes: int) -> torch.Ten
 - `entropy`: محاسبه آنتروپی شانون و تقسیم بر $\ln(C)$ تا عدد دقیقاً در بازه $[0, 1]$ نرمالایز شود.
 - `margin * (1.0 - entropy)`: فرمول امتیاز اطمینان نهایی. اگر آنتروپی ۱ باشد (سردرگمی کامل)، اطمینان صفر می‌شود.
 
-#### ۳. خودکالیبراسیون فراالقایی فرم‌بسته (`transductive_refine`):
+#### ۳. خودکالیبراسیون فراالقایی فرم‌بسته (`refine_transductive`):
 ```python
-def transductive_refine(s_concat: np.ndarray, s_y: np.ndarray, q_concat_all: torch.Tensor, preds_init: np.ndarray,
+def refine_transductive(s_concat: np.ndarray, s_y: np.ndarray, q_concat_all: torch.Tensor, preds_init: np.ndarray,
                         top_confs: torch.Tensor, p_text_all: torch.Tensor, n_classes: int, support_weight: int = 3,
                         max_k_anchors: int = 20, conf_threshold: Optional[float] = None, device=DEVICE):
     ref_x, ref_y = [s_concat] * support_weight, [s_y] * support_weight
@@ -606,15 +606,15 @@ DEVICE: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cp
 
 ```python
 @dataclass
-class BioDINOConfig:
+class EdgeConfig:
     seed: int = 42
     k_shot: int = 5
-    support_views: int = 8
+    n_views: int = 8
     batch_size: int = 128
-    tau_conf: float = 0.35
-    lda_ensemble_weight: float = 0.75
-    text_fusion_weight: float = 0.20
-    logit_scale: float = 20.0
+    tau: float = 0.35
+    w_lda: float = 0.75
+    w_text: float = 0.20
+    scale: float = 20.0
     transductive_gamma: float = 3.0
     transductive_tau: float = 0.40
 ```

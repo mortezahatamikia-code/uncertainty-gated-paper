@@ -25,6 +25,7 @@
 | **[`edge_hardware_deployment_guide.md`](edge_hardware_deployment_guide.md)** | **راهنمای استقرار سخت‌افزار لبه** | مهندسان سخت‌افزار و IoT | ~ ۲۵۰ خط | استقرار روی رزبری‌پای، انویدیا جتسون، اکسپورت ONNX INT8، مدیریت گرما و باتری پهپاد. |
 | **[`android_mobile_app_guide.md`](android_mobile_app_guide.md)** | **راهنمای اپلیکیشن اندروید نیتیو** | توسعه‌دهندگان اندروید و موبایل | ~ ۲۰۰ خط | معماری کاتلین و Jetpack Compose، پایپلاین بافر مستقیم بدون GC، استنتاج ONNX NNAPI و دوربین CameraX. |
 | **[`paper_guide.md`](paper_guide.md)** | **راهنمای محیط لاتک و کامپایل** | نویسندگان مقاله | ~ ۶۰ خط | راهنمای گام‌به‌گام ستاپ ادیتور، اکستنشن LaTeX Workshop و کامپایلر MiKTeX. |
+| **[challenges_methods_alternatives_and_flowchart.md](challenges_methods_alternatives_and_flowchart.md)** | **چالش‌ها، روش‌های جایگزین، ارکان یادگیری ماشین و فلوچارت تفصیلی** | داوران و مهندسان هوش مصنوعی | **~ ۲۵۰ خط** | تبیین تابع زیان، بهینه‌ساز، توابع فعال‌ساز، روش‌های رد شده (کراس‌آنتروپی، Adam، کسینوسی) و فلوچارت تفصیلی سرتاسری. |
 
 
 ---
