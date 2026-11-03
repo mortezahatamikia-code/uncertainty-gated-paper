@@ -851,10 +851,10 @@
     "edge_profiling": {
       "fast_ratio_pct": 10.032154340836009,
       "deep_ratio_pct": 89.967845659164,
-      "dino_latency_ms": 319.85384799947497,
-      "bioclip_latency_ms": 477.9238666659997,
-      "effective_latency_ms": 749.8316547298502,
-      "effective_fps": 1.3336326810052859
+      "dino_latency_ms": 321.8489999999656,
+      "bioclip_latency_ms": 471.8578399999994,
+      "effective_latency_ms": 746.3693332218302,
+      "effective_fps": 1.3398192496512817
     },
     "confusion_matrix": [
       [

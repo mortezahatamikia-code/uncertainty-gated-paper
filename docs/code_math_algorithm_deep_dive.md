@@ -257,9 +257,10 @@ def get_aug_pipeline(mean, std):
     ])
 
 
-def extract_support_features(support_samples: List[Tuple[str, int]], dino_model: nn.Module, bioclip_model: nn.Module,
+def extract_support_features(support_samples: List[Tuple[str, int]], dino_model: Any, bioclip_model: Any,
                              prep_dino, prep_bio, dino_cfg: dict, device=DEVICE):
-    aug_bio = get_aug_pipeline([0.48145466, 0.4578275, 0.40821073], [0.26862954, 0.26130258, 0.27577711])
+    bio_mean, bio_std = extract_norm_stats(prep_bio)
+    aug_bio = get_aug_pipeline(bio_mean, bio_std)
     aug_dino = get_aug_pipeline(dino_cfg['mean'], dino_cfg['std'])
     print(f"[*] Extracting multi-view augmented support vectors ({len(support_samples) * 8} views)...")
 
