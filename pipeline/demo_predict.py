@@ -46,14 +46,14 @@ import open_clip
 try:
     from pipeline.core_math import (
         fit_fisher_lda,
-        compute_confidence_breakdown,
+        calculate_shannon_confidence,
         compute_class_prototypes,
     )
     from pipeline.data_engine import resolve_plantvillage_path
 except (ModuleNotFoundError, ImportError):
     from core_math import (  # type: ignore[no-redef]
         fit_fisher_lda,
-        compute_confidence_breakdown,
+        calculate_shannon_confidence,
         compute_class_prototypes,
     )
     from data_engine import resolve_plantvillage_path  # type: ignore[no-redef]
@@ -240,7 +240,8 @@ def main():
         fast_prob = F.softmax(dino_logits, dim=-1)
 
         # Step 3: Shannon Uncertainty Gate
-        confidence, margin, norm_entropy = compute_confidence_breakdown(fast_prob.unsqueeze(0), n_classes)
+        conf_t, margin_t, entropy_t = calculate_shannon_confidence(fast_prob.unsqueeze(0), n_classes, return_details=True)
+        confidence, margin, norm_entropy = float(conf_t.item()), float(margin_t.item()), float(entropy_t.item())
 
         # Step 4: Gating Routing Decision
         if confidence >= cfg.tau:

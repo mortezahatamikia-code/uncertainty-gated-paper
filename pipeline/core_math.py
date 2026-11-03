@@ -18,7 +18,25 @@ import torch.nn.functional as F
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 
-def calculate_shannon_confidence(prob: torch.Tensor, n_classes: int) -> torch.Tensor:
+    
+    # Shannon margin-entropy heuristic confidence gating metric.
+    # Computes:
+    #     Confidence C(x) = M(x) * (1 - H_norm(x))
+    # where:
+    #     M(x) is the margin between top-1 and top-2 class probabilities,
+    #     H_norm(x) is the Shannon entropy normalized by ln(K) into [0, 1].
+    
+    # Args:
+    #     prob: Class probability tensor of shape (N, n_classes).
+    #     n_classes: Total number of active novel classes.
+        
+    # Returns:
+    #     torch.Tensor of shape (N,) with non-negative confidence scores in [0, 1].
+def calculate_shannon_confidence(
+    prob: torch.Tensor,
+    n_classes: int,
+    return_details: bool = False,
+) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
     """
     Shannon margin-entropy heuristic confidence gating metric.
     
@@ -29,57 +47,44 @@ def calculate_shannon_confidence(prob: torch.Tensor, n_classes: int) -> torch.Te
         H_norm(x) is the Shannon entropy normalized by ln(K) into [0, 1].
     
     Args:
-        prob: Class probability tensor of shape (N, n_classes).
+        prob: Class probability tensor of shape (N, n_classes) or (n_classes,).
         n_classes: Total number of active novel classes.
+        return_details: If True, returns (confidence, margin, normalized_entropy).
         
     Returns:
-        torch.Tensor of shape (N,) with non-negative confidence scores in [0, 1].
+        torch.Tensor of shape (N,) with non-negative confidence scores in [0, 1],
+        or tuple of (confidence, margin, normalized_entropy) if return_details is True.
     """
     top_p, _ = torch.topk(prob, k=min(2, n_classes), dim=-1)
-    margin = top_p[:, 0] - top_p[:, 1] if n_classes > 1 else top_p[:, 0]
+    margin = top_p[..., 0] - top_p[..., 1] if n_classes > 1 else top_p[..., 0]
     norm_factor = max(float(np.log(n_classes)), 1e-6)
     entropy = -torch.sum(prob * torch.log(prob + 1e-8), dim=-1) / norm_factor
-    return margin * (1.0 - entropy).clamp(min=0.0)
+    confidence = (margin * (1.0 - entropy)).clamp(min=0.0)
+    if return_details:
+        return confidence, margin, entropy
+    return confidence
 
 
-def compute_confidence_breakdown(prob: torch.Tensor, n_classes: int) -> Tuple[float, float, float]:
-    """
-    Computes scalar Shannon margin-entropy confidence and returns detailed components:
-    (confidence, margin, normalized_entropy).
-    """
-    top2 = torch.topk(prob, k=min(2, n_classes), dim=-1).values.squeeze(0)
-    margin = float((top2[0] - top2[1]).item()) if n_classes > 1 else float(top2[0].item())
-    norm_factor = max(float(np.log(n_classes)), 1e-6)
-    entropy = -float(torch.sum(prob * torch.log(prob + 1e-12)).item())
-    norm_entropy = float(entropy / norm_factor)
-    confidence = float(margin * max(0.0, 1.0 - norm_entropy))
-    return confidence, margin, norm_entropy
-
-
-# Backward-compatible alias
-calc_confidence = calculate_shannon_confidence
-
+    # Fits Linear Discriminant Analysis with analytical Ledoit-Wolf shrinkage regularization.
+    
+    # Weights (W) and intercept (b) are tensorized to target device for microsecond inference.
+    
+    # Args:
+    #     features: Feature matrix array of shape (N_samples, feature_dim).
+    #     labels: Class label array of shape (N_samples,).
+    #     device: Device to transfer resulting weight tensors to.
+        
+    # Returns:
+    #     fisher_weights: Projection weight tensor of shape (n_classes, feature_dim).
+    #     fisher_biases: Bias vector tensor of shape (n_classes,).
+    #     classifier: Fitted scikit-learn LinearDiscriminantAnalysis instance.
 
 def fit_fisher_lda(
     features: np.ndarray,
     labels: np.ndarray,
     device: Union[torch.device, str] = "cpu",
 ) -> Tuple[torch.Tensor, torch.Tensor, LinearDiscriminantAnalysis]:
-    """
-    Fits Linear Discriminant Analysis with analytical Ledoit-Wolf shrinkage regularization.
     
-    Weights (W) and intercept (b) are tensorized to target device for microsecond inference.
-    
-    Args:
-        features: Feature matrix array of shape (N_samples, feature_dim).
-        labels: Class label array of shape (N_samples,).
-        device: Device to transfer resulting weight tensors to.
-        
-    Returns:
-        fisher_weights: Projection weight tensor of shape (n_classes, feature_dim).
-        fisher_biases: Bias vector tensor of shape (n_classes,).
-        classifier: Fitted scikit-learn LinearDiscriminantAnalysis instance.
-    """
     dev = torch.device(device)
     classifier = LinearDiscriminantAnalysis(solver="lsqr", shrinkage="auto").fit(features, labels)
     fisher_weights = torch.tensor(classifier.coef_, dtype=torch.float32, device=dev)
@@ -92,30 +97,26 @@ def compute_class_prototypes(
     labels: torch.Tensor,
     n_classes: int,
 ) -> torch.Tensor:
-    """
-    Computes L2-normalized class prototypes by averaging support embeddings.
+    """Computes L2-normalized class prototypes by averaging support embeddings per class."""
+    return torch.stack([
+        F.normalize(features[labels == c].mean(dim=0), dim=-1)
+        for c in range(n_classes)
+    ])
+
+
+    # Centralized Fisher-LDA + BioCLIP Taxonomic Text ensemble probability predictor.
+    # Eliminates redundant matrix multiplication, softmax scaling, and convex combination.
     
-    Args:
-        features: Tensor of shape (N_support, feature_dim).
-        labels: 1D class label tensor of shape (N_support,).
-        n_classes: Total number of classes.
+    # Computes:
+    #     1. joint_features = [bioclip_features, dino_features] (if not directly supplied)
+    #     2. lda_prob = Softmax(joint_features @ fisher_weights.T + fisher_biases)
+    #     3. text_prob = Softmax(scale * (bioclip_features @ text_prototypes.T))
+    #     4. ensemble_prob = w_lda * lda_prob + (1.0 - w_lda) * text_prob
         
-    Returns:
-        Tensor of shape (n_classes, feature_dim) of L2-normalized prototypes.
-    """
-    prototypes = []
-    for c in range(n_classes):
-        class_mask = (labels == c)
-        if class_mask.any():
-            class_mean = features[class_mask].mean(dim=0)
-            prototypes.append(F.normalize(class_mean, dim=-1))
-        else:
-            # Fallback for empty classes: zero vector with unit norm dummy
-            dim = features.shape[-1]
-            prototypes.append(torch.zeros(dim, device=features.device, dtype=features.dtype))
-    return torch.stack(prototypes)
-
-
+    # Returns:
+    #     ensemble_prob: Ensemble class probability distribution tensor (N, n_classes).
+    #     lda_prob: Pure visual Fisher-LDA class probability distribution tensor (N, n_classes).
+    #     text_prob: Pure textual taxonomic class probability distribution tensor (N, n_classes).
 def compute_fisher_ensemble_probs(
     fisher_weights: torch.Tensor,
     fisher_biases: torch.Tensor,
@@ -128,21 +129,7 @@ def compute_fisher_ensemble_probs(
     w_lda: float = 0.75,
     device: Optional[Union[torch.device, str]] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """
-    Centralized Fisher-LDA + BioCLIP Taxonomic Text ensemble probability predictor.
-    Eliminates redundant matrix multiplication, softmax scaling, and convex combination.
-    
-    Computes:
-        1. joint_features = [bioclip_features, dino_features] (if not directly supplied)
-        2. lda_prob = Softmax(joint_features @ fisher_weights.T + fisher_biases)
-        3. text_prob = Softmax(scale * (bioclip_features @ text_prototypes.T))
-        4. ensemble_prob = w_lda * lda_prob + (1.0 - w_lda) * text_prob
-        
-    Returns:
-        ensemble_prob: Ensemble class probability distribution tensor (N, n_classes).
-        lda_prob: Pure visual Fisher-LDA class probability distribution tensor (N, n_classes).
-        text_prob: Pure textual taxonomic class probability distribution tensor (N, n_classes).
-    """
+
     dev = torch.device(device) if device is not None else fisher_weights.device
 
     # 1. Prepare joint representation on target device
