@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Rounded Obsidian Background -->
+  <rect width="512" height="512" rx="120" fill="#09090b" />
+  <rect x="4" y="4" width="504" height="504" rx="116" stroke="#27272a" stroke-width="6" opacity="0.6" />
+  
+  <!-- Academic Mortarboard Cap -->
+  <!-- Skullcap Base -->
+  <path d="M145 232v53c0 42 50 75 111 75s111-33 111-75v-53l-111 48-111-48z" fill="#e4e4e7" />
+  
+  <!-- 3D Bevel Underside -->
+  <path d="M72 200l184 80 184-80v12l-184 80-184-80v-12z" fill="#d4d4d8" />
+
+  <!-- Top Diamond Plate -->
+  <path d="M256 120L72 200l184 80 184-80L256 120z" fill="#ffffff" />
+
+  <!-- Center Button -->
+  <circle cx="256" cy="200" r="12" fill="#e30613" />
+
+  <!-- Tassel Ribbon & Fringe (Swiss Red) -->
+  <path d="M256 200c84 18 152 55 156 130" stroke="#e30613" stroke-width="9" stroke-linecap="round" fill="none" />
+  <circle cx="412" cy="334" r="8" fill="#b91c1c" />
+  <rect x="403" y="338" width="18" height="57" rx="5" fill="#e30613" />
+</svg>

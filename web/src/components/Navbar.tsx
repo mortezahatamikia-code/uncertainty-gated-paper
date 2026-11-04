@@ -84,8 +84,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-14 border-b border-zinc-200/70">
           {/* Brand Logo & Name */}
           <Link href="/" className="flex items-center space-x-2.5 group whitespace-nowrap">
-            <div className="w-7 h-7 rounded bg-zinc-950 text-white flex items-center justify-center font-bold text-xs font-mono tracking-tighter">
-              R
+            <div className="w-7 h-7 rounded bg-zinc-950 text-white flex items-center justify-center shadow-xs group-hover:bg-zinc-800 transition-colors">
+              <IconGraduation className="w-4 h-4 text-white" />
             </div>
             <div className="flex items-baseline space-x-2">
               <span className="font-bold text-zinc-950 group-hover:text-zinc-700 transition-colors text-sm tracking-tight">

@@ -6,14 +6,14 @@ import { IconPaper, IconDownload, IconChevronRight, IconArrowLeft } from "@/comp
 export const metadata: Metadata = {
   title: "Scientific Publications & Research Monographs | Reyhane Javidi Alsaadi",
   description:
-    "Peer-reviewed scientific manuscripts and preprints by Reyhane Javidi Alsaadi in Computer Vision, Vision Foundation Models, and Few-Shot Edge AI.",
+    "Peer-reviewed scientific publications and preprints in Vision Foundation Models, Few-Shot Learning, and Edge AI by Reyhane Javidi Alsaadi.",
   alternates: {
     canonical: "https://reyhane-code.github.io/research/",
   },
   openGraph: {
     title: "Scientific Publications & Research Monographs | Reyhane Javidi Alsaadi",
     description:
-      "Peer-reviewed scientific manuscripts and preprints in Vision Foundation Models, Few-Shot Learning, and Edge AI.",
+      "Peer-reviewed scientific publications and preprints in Vision Foundation Models, Few-Shot Learning, and Edge AI by Reyhane Javidi Alsaadi.",
     url: "https://reyhane-code.github.io/research/",
     type: "website",
     images: [
@@ -28,7 +28,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Scientific Publications & Preprints | Reyhane Javidi Alsaadi",
-    description: "Vision Foundation Models and Few-Shot Learning for Edge Systems.",
+    description:
+      "Peer-reviewed scientific publications and preprints in Vision Foundation Models, Few-Shot Learning, and Edge AI by Reyhane Javidi Alsaadi.",
     images: ["https://reyhane-code.github.io/figures/fig_architecture.png"],
   },
 };

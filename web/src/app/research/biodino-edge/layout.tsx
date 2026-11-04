@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "BioDINO-Edge: Vision Foundation Models for Few-Shot Plant Pathology | Paper",
   description:
-    "BioDINO-Edge unites DINOv2 and BioCLIP with analytical Ledoit-Wolf covariance shrinkage for trustworthy few-shot plant disease diagnosis on edge processors (98.72% peak accuracy, <22 ms latency).",
+    "BioDINO-Edge unites DINOv2 and BioCLIP with Ledoit-Wolf shrinkage for few-shot edge plant pathology (98.72% peak accuracy, <22ms latency).",
   alternates: {
     canonical: "https://reyhane-code.github.io/research/biodino-edge/",
   },
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "BioDINO-Edge: Vision Foundation Models for Few-Shot Plant Pathology",
     description:
-      "Dual-foundation vision framework combining spatial patch modeling with biological phylogenetic priors on resource-constrained hardware (98.72% accuracy).",
+      "Dual-foundation vision framework combining DINOv2 and BioCLIP with Ledoit-Wolf shrinkage on edge hardware (98.72% peak accuracy).",
     url: "https://reyhane-code.github.io/research/biodino-edge/",
     type: "article",
     images: [
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "BioDINO-Edge: Few-Shot Edge Plant Pathology (98.72% Peak Acc)",
     description:
-      "Analytical zero-gradient covariance shrinkage on DINOv2 + BioCLIP for microprocessors.",
+      "Dual-foundation vision framework combining DINOv2 and BioCLIP with Ledoit-Wolf shrinkage on edge hardware (98.72% peak accuracy).",
     images: ["https://reyhane-code.github.io/figures/fig_architecture.png"],
   },
   other: {
