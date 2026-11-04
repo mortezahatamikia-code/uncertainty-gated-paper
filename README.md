@@ -122,7 +122,7 @@ resources:
 
 ---
 
-## ⚡ راهنمای سریع راه‌اندازی (Quickstart in 2 Steps)
+## ⚡ راهنمای سریع راه‌اندازی (Quickstart)
 
 ### ۱. نصب وابستگی‌ها
 ```powershell
@@ -143,6 +143,27 @@ resources:
 ### ۴. اجرای تعاملی در نوت‌بوک ژوپیتر
 برای مصورسازی ماتریس درهم‌ریختگی، تحلیل لزیون‌ها و نمودارهای توزیع:
 فایل **`pipeline/biodino_unified_pipeline.ipynb`** را در VS Code یا Jupyter باز کرده و سلول‌ها را اجرا نمایید.
+
+### ۵. کامپایل مقاله لاتک به PDF (Compile LaTeX Paper)
+برای کامپایل کدهای لاتک مقاله علمی و تولید فایل خروجی PDF همراه با مراجع BibTeX، دستورات زیر را در ترمینال (PowerShell / Command Prompt) اجرا کنید:
+
+```powershell
+cd paper
+pdflatex -synctex=1 -interaction=nonstopmode main.tex
+bibtex main
+pdflatex -synctex=1 -interaction=nonstopmode main.tex
+pdflatex -synctex=1 -interaction=nonstopmode main.tex
+cd ..
+```
+
+> **نکات تکمیلی:**
+> * **کامپایل نسخه دوم:** در صورت استفاده از فایل ویرایش دوم، نام را به `main_v2` تغییر دهید (`pdflatex main_v2.tex` و `bibtex main_v2`).
+> * **کامپایل تک‌خطی (One-Liner):**
+>   ```powershell
+>   cd paper; pdflatex -interaction=nonstopmode main.tex; bibtex main; pdflatex -interaction=nonstopmode main.tex; pdflatex -interaction=nonstopmode main.tex; cd ..
+>   ```
+> * **کامپایل در Antigravity / VS Code:** با باز کردن فایل لاتک و فشردن کلیدهای `Ctrl + Alt + B` (یا ذخیره با `Ctrl + S`)، اکستنشن **LaTeX Workshop** سند را به‌صورت خودکار کامپایل کرده و با `Ctrl + Alt + V` پیش‌نمایش PDF را نمایش می‌دهد (راهنمای جامع در [`docs/paper_guide.md`](file:///d:/Research/uncertainty-gated-paper/docs/paper_guide.md)).
+
 
 ---
 

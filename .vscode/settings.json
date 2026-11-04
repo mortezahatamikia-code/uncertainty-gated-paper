@@ -35,17 +35,17 @@
     ],
     "latex-workshop.latex.recipes": [
         {
-            "name": "pdflatex",
-            "tools": [
-                "pdflatex"
-            ]
-        },
-        {
             "name": "pdflatex -> bibtex -> pdflatex*2",
             "tools": [
                 "pdflatex",
                 "bibtex",
                 "pdflatex",
+                "pdflatex"
+            ]
+        },
+        {
+            "name": "pdflatex",
+            "tools": [
                 "pdflatex"
             ]
         }
@@ -62,5 +62,6 @@
         "${workspaceFolder}/.venv/lib/python3.11/site-packages"
     ],
     "python-envs.defaultEnvManager": "ms-python.python:system",
-    "python-envs.defaultPackageManager": "ms-python.python:pip"
+    "python-envs.defaultPackageManager": "ms-python.python:pip",
+    "latex-workshop.latex.autoBuild.run": "onFileChange"
 }
