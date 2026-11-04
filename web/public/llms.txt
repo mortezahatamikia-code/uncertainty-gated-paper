@@ -1,0 +1,124 @@
+# Reyhane Javidi Alsaadi — Academic & Research Profile
+
+> Computer Engineering Scholar (Top 5% Cohort, 19.16/20.00 B.Sc. GPA, Summa Cum Laude) and Lead / First Author of BioDINO-Edge: Biologically-Grounded Multi-Scale Vision Foundation Models for Trustworthy Few-Shot Plant Pathology on Resource-Constrained Hardware (98.72% peak accuracy, <22 ms latency). Prospective M.Sc. / Ph.D. Researcher in Vision Foundation Models, Few-Shot Learning, and Edge AI.
+
+---
+
+## 1. Contact & Canonical Profiles
+
+- **Full Name**: Reyhane Javidi Alsaadi
+- **Email**: [reyhane.code@gmail.com](mailto:reyhane.code@gmail.com)
+- **Official Academic Portfolio**: [https://reyhane-code.github.io](https://reyhane-code.github.io)
+- **GitHub**: [https://github.com/reyhane-code](https://github.com/reyhane-code)
+- **LinkedIn**: [https://linkedin.com/in/reyhane-code](https://linkedin.com/in/reyhane-code)
+- **Current Academic Affiliation**: Department of Computer Engineering, Dr. Shariaty Technical University, Tehran, Iran
+- **Primary Research Focus**: Vision Foundation Models (DINOv2, BioCLIP), Few-Shot Learning, Analytical Covariance Shrinkage (Ledoit-Wolf), Out-of-Distribution Calibration & Conformal Prediction, Edge AI Inference Acceleration (ONNX Runtime NNAPI, Kotlin/Android).
+
+---
+
+## 2. Academic Background & Degrees
+
+### Bachelor of Science (B.Sc.) in Computer Engineering (Software)
+- **Institution**: Dr. Shariaty Technical University, Tehran, Iran
+- **Period**: Sep 2024 – Present (Expected Graduation: July 2026)
+- **Grade Point Average (GPA)**: **19.16 / 20.00** (~**3.97 / 4.00** US/Canada equivalent, First Class Honours with Distinction / Summa Cum Laude)
+- **Cohort Standing**: **Top 5% University-Wide Cohort (Rank 1 Distinction)**
+- **Completed Graded Credits**: 55 graded credits completed with exceptional distinction
+- **Key Distinctions**: Consecutive Dean's Honors List, Presidential Letter of Commendation
+
+#### Notable B.Sc. Coursework & Exact Grades:
+- Artificial Intelligence & Expert Systems: **20.0 / 20.0** (Grade A+)
+- Cloud Computing Architectures: **20.0 / 20.0** (Grade A+)
+- Computer Networks & Protocols: **20.0 / 20.0** (Grade A+)
+- Operating Systems Design & Internals: **19.0 / 20.0** (Grade A)
+- Software Engineering & Architecture: **19.5 / 20.0** (Grade A+)
+- Relational Database Management Systems: **19.5 / 20.0** (Grade A+)
+- System Analysis & Object-Oriented Modeling: **18.5 / 20.0** (Grade A)
+
+### Associate of Science (A.Sc.) in Computer Engineering (Software)
+- **Institution**: Dr. Shariaty Technical University, Tehran, Iran
+- **Period**: Sep 2021 – Feb 2024
+- **Grade Point Average (GPA)**: **18.96 / 20.00** (~**3.91 / 4.00** US/Canada equivalent)
+- **Degree Status**: Conferred Degree with Highest Honors (Feb 2024)
+- **Completed Credits**: 70 semester credits completed
+
+#### Notable A.Sc. Coursework & Exact Grades:
+- Advanced Object-Oriented Programming (C++/Java): **20.0 / 20.0** (Grade A+)
+- Object-Oriented Analysis & Design (OOAD): **20.0 / 20.0** (Grade A+)
+- Microprocessors, Computer Architecture & Assembly: **20.0 / 20.0** (Grade A+)
+- Network Operating Systems Administration: **20.0 / 20.0** (Grade A+)
+- Internet Engineering & Web Applications: **19.5 / 20.0** (Grade A+)
+- Data Structures & Algorithmic Analysis: **19.0 / 20.0** (Grade A)
+- Linear Algebra & Numerical Analysis: **18.0 / 20.0** (Grade A)
+
+---
+
+## 3. Lead Research Publication
+
+### **BioDINO-Edge: Biologically-Grounded Multi-Scale Vision Foundation Models for Trustworthy Few-Shot Plant Pathology on Resource-Constrained Hardware**
+- **Authors**: **Reyhane Javidi Alsaadi** (Lead / First Author), Mohammad Reza Samad Zadeh (Co-Author)
+- **Target Venue**: *Computers and Electronics in Agriculture (CompAg)* / *IEEE Transactions on Pattern Analysis and Machine Intelligence (T-PAMI)*
+- **Preprint / Article Link**: [https://reyhane-code.github.io/research/biodino-edge/](https://reyhane-code.github.io/research/biodino-edge/)
+- **Full Manuscript PDF**: [https://reyhane-code.github.io/biodino_edge_paper.pdf](https://reyhane-code.github.io/biodino_edge_paper.pdf)
+
+### Core Scientific Contributions:
+1. **Dual-Foundation Model Synthesis**: Unites self-supervised geometric/structural patch representations from **DINOv2 Small** with biological domain priors from **BioCLIP ViT-B/16**, capturing both fine-grained surface micro-lesions and phylogenetic disease taxonomy.
+2. **Purified Taxonomic Domain Synthesis (PTDS)**: Formulates class-specific taxonomic prompt synthesis that purifies cross-species visual confusion without needing labeled fine-tuning.
+3. **Regularized Fisher-Discriminant Alignment (RFDA) with Analytical Ledoit-Wolf Shrinkage**: Eliminates the catastrophic singularity of empirical covariance matrices under extreme few-shot regimes ($N \le 5$ samples). Uses the closed-form, zero-hyperparameter **Ledoit-Wolf shrinkage** to compute invertible optimal covariance matrices in millisecond closed-form on CPU hardware.
+4. **Zero-Gradient Test-Time Adaptation**: Entire adaptation runs with **zero backpropagation**, zero optimizer states, and zero GPU memory requirements, making it directly deployable on mobile ARM microprocessors.
+5. **Rigorous Uncertainty Calibration & Out-of-Distribution Gating**: Incorporates a 3-tier rejection gate combining luminance bounds, botanical manifold projection error, and temperature-calibrated Shannon entropy. Reaches **Expected Calibration Error (ECE) < 1.0%**, safeguarding against false-positive treatments.
+
+### Empirical Benchmarks & Results:
+- **PlantVillage Benchmark (5-Shot)**: **98.72% peak accuracy** (exceeding standard ResNet-50 baselines by +14.2% and standalone DINOv2 by +3.8%).
+- **PlantDoc In-The-Wild Benchmark (5-Shot)**: **83.61% accuracy** (**+13.0% higher** than prior published state-of-the-art foundation few-shot methods under complex cluttered agricultural lighting).
+- **Latency & Compute**: **<22 ms** total latency per inference on edge CPU architectures (Raspberry Pi 4 / ARM Cortex-A55 mobile cores) with under **180 MB memory footprint**.
+
+---
+
+## 4. Production Engineering & Applied Edge Systems
+
+### **BioDINO-Edge Android: 100% Offline Foliar Disease Scanner**
+- **Architecture**: Native Android application written in **Kotlin 2.0** and declarative **Jetpack Compose**.
+- **Edge Inference Engine**: **Microsoft ONNX Runtime Mobile** with hardware acceleration via Android **NNAPI** and Qualcomm/MediaTek NPU delegates.
+- **Zero-GC Memory Pipeline**: Implements custom `PreallocatedTensor` pooling via direct native memory buffers (`ByteBuffer.allocateDirect`), eliminating JVM Garbage Collection pauses and maintaining a stable **>55 FPS CameraX live stream**.
+- **Packaging**: Compact **22.7 MB standalone APK** containing the entire dual-encoder model weights, quantization tables, and botanical taxonomy. 100% functional with zero internet connectivity.
+- **Download APK**: [https://reyhane-code.github.io/biodino-edge-v1.0.0.apk](https://reyhane-code.github.io/biodino-edge-v1.0.0.apk)
+- **Detailed System Dossier**: [https://reyhane-code.github.io/projects/biodino-edge-android/](https://reyhane-code.github.io/projects/biodino-edge-android/)
+
+### **Backend & Cloud Architecture Competencies**
+- **Microservices & API Engineering**: High-throughput REST and WebSocket backends engineered with **NestJS**, **TypeScript**, and **Fastify**.
+- **Databases & Caching**: Advanced relational modeling and query optimization in **PostgreSQL**; sub-millisecond distributed caching, rate-limiting, and queue management with **Redis**.
+- **DevOps & Edge Systems**: Multi-stage **Docker** containerization, Linux systems programming, and CI/CD automation.
+
+---
+
+## 5. Honors, Distinctions & Academic Appointments
+
+1. **Presidential Letter of Commendation (Office of the President, TVU)**: Conferred in recognition of standing among the top academic scholars university-wide, maintaining consecutive Dean's List honors and exemplary scientific leadership.
+2. **Teaching Assistant (TA) Appointment — Game Development & Advanced Programming**: Selected by faculty to instruct and mentor over 40 undergraduate engineering students in object-oriented software engineering, game engine architecture, and algorithmic design.
+3. **Consecutive Dean's Honors List**: Maintained semester GPAs consistently above 19.00 / 20.00 across both Associate and B.Sc. tenures.
+
+---
+
+## 6. Official Document & Verification Registry
+
+All authentic original university documents and certified English academic translations are hosted and verifiable via the official portal:
+
+- **Academic Curriculum Vitae (PDF)**:
+  [https://reyhane-code.github.io/Reyhane_Javidi_Alsaadi_CV.pdf](https://reyhane-code.github.io/Reyhane_Javidi_Alsaadi_CV.pdf)
+- **Scientific Research Manuscript (PDF)**:
+  [https://reyhane-code.github.io/biodino_edge_paper.pdf](https://reyhane-code.github.io/biodino_edge_paper.pdf)
+- **B.Sc. Official Academic Transcript (English Translation PDF)**:
+  [https://reyhane-code.github.io/Reyhane_Javidi_BSc_Transcript_English.pdf](https://reyhane-code.github.io/Reyhane_Javidi_BSc_Transcript_English.pdf)
+- **Associate Official Academic Transcript (English Translation PDF)**:
+  [https://reyhane-code.github.io/Reyhane_Javidi_Associate_Transcript_English.pdf](https://reyhane-code.github.io/Reyhane_Javidi_Associate_Transcript_English.pdf)
+- **Presidential Letter of Commendation (English Translation PDF)**:
+  [https://reyhane-code.github.io/Reyhane_Javidi_Commendation_Letter_English.pdf](https://reyhane-code.github.io/Reyhane_Javidi_Commendation_Letter_English.pdf)
+- **Teaching Assistant (TA) Certificate of Appointment (English Translation PDF)**:
+  [https://reyhane-code.github.io/Reyhane_Javidi_TA_Certificate_English.pdf](https://reyhane-code.github.io/Reyhane_Javidi_TA_Certificate_English.pdf)
+- **BioDINO-Edge Android Standalone APK (22.7 MB)**:
+  [https://reyhane-code.github.io/biodino-edge-v1.0.0.apk](https://reyhane-code.github.io/biodino-edge-v1.0.0.apk)
+
+---
+*Generated for LLM and AI Agent indexing. For additional verified inquiries, reach out directly to reyhane.code@gmail.com.*
+

@@ -100,96 +100,71 @@ body {
 }
 
 /* ========================================================
-   PRINT-FRIENDLY EXECUTIVE ACADEMIC STYLES (@media print)
-   Allows seamless Ctrl+P compilation to clean white paper
+   ACADEMIC CV PRINT STYLES (@media print)
+   Directs Ctrl+P exclusively to the official 2-page CV
+   Strictly prevents phantom blank pages
    ======================================================== */
 @media print {
   @page {
-    margin: 1.2cm;
     size: A4 portrait;
+    margin: 0;
   }
 
-  /* Hide interactive, animated, and navigation elements */
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Completely remove everything except the CV container from print flow */
+  body > *:not(.print-cv-container),
+  .print\:hidden,
+  header,
   nav,
+  main,
   footer,
-  .no-print,
-  button,
-  .btn-press,
-  [data-no-print="true"] {
+  #back-to-top,
+  .no-print {
     display: none !important;
   }
 
-  /* Reset global backgrounds and text colors */
-  html,
-  body,
-  main {
-    background: #ffffff !important;
-    color: #0f172a !important;
-    font-size: 10pt !important;
-    line-height: 1.4 !important;
+  /* Exclusively display the official 2-page CV */
+  .print-cv-container {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  /* Strip dark fills and glow effects */
-  .bg-slate-900,
-  .bg-slate-950,
-  .bg-slate-900\/40,
-  .bg-slate-900\/60,
-  .bg-slate-900\/80,
-  .bg-slate-950\/90,
-  .bg-slate-950\/70,
-  .bg-gradient-to-b,
-  .bg-gradient-to-br,
-  .bg-gradient-to-r {
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-
-  /* High contrast text */
-  .text-white,
-  .text-slate-100,
-  .text-slate-200,
-  .text-slate-300 {
-    color: #0f172a !important;
-  }
-
-  .text-slate-400,
-  .text-slate-500 {
-    color: #475569 !important;
-  }
-
-  /* Academic accent headings */
-  .text-emerald-400,
-  .text-emerald-300,
-  .text-cyan-400,
-  .text-violet-400,
-  .text-teal-400 {
-    color: #065f46 !important;
-    font-weight: 700 !important;
-  }
-
-  /* Retain subtle structure borders */
-  .border-slate-800,
-  .border-slate-800\/80,
-  .border-slate-800\/60,
-  .border-slate-700,
-  .border-slate-700\/80 {
-    border-color: #cbd5e1 !important;
-  }
-
-  /* Prevent awkward page cuts */
-  section,
-  .p-5,
-  .p-6,
-  table,
-  tr {
-    break-inside: avoid !important;
+  .print-cv-page {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  /* Show hyperlinks for external references */
-  a[href^="http"]:after {
-    content: " (" attr(href) ")";
-    font-size: 8pt;
-    color: #64748b;
+  /* ONLY page 1 breaks to page 2; page 2 NEVER breaks to a page 4 */
+  .print-cv-page:first-child {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .print-cv-page:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  .print-cv-page img {
+    display: block !important;
+    width: auto !important;
+    max-width: 100% !important;
+    max-height: 260mm !important; /* Fits comfortably inside A4 printable area even with default browser margins */
+    margin: 0 auto !important;
   }
 }

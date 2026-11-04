@@ -1,6 +1,37 @@
 import React from "react";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { IconPaper, IconDownload, IconChevronRight, IconArrowLeft } from "@/components/Icons";
+
+export const metadata: Metadata = {
+  title: "Scientific Publications & Research Monographs | Reyhane Javidi Alsaadi",
+  description:
+    "Peer-reviewed scientific manuscripts and preprints by Reyhane Javidi Alsaadi in Computer Vision, Vision Foundation Models, and Few-Shot Edge AI.",
+  alternates: {
+    canonical: "https://reyhane-code.github.io/research/",
+  },
+  openGraph: {
+    title: "Scientific Publications & Research Monographs | Reyhane Javidi Alsaadi",
+    description:
+      "Peer-reviewed scientific manuscripts and preprints in Vision Foundation Models, Few-Shot Learning, and Edge AI.",
+    url: "https://reyhane-code.github.io/research/",
+    type: "website",
+    images: [
+      {
+        url: "https://reyhane-code.github.io/figures/fig_architecture.png",
+        width: 1200,
+        height: 630,
+        alt: "Scientific Publications - Reyhane Javidi Alsaadi",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Scientific Publications & Preprints | Reyhane Javidi Alsaadi",
+    description: "Vision Foundation Models and Few-Shot Learning for Edge Systems.",
+    images: ["https://reyhane-code.github.io/figures/fig_architecture.png"],
+  },
+};
 
 export default function ResearchCatalogPage() {
   return (

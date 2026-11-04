@@ -129,7 +129,7 @@ export default function Navbar() {
               href="/Reyhane_Javidi_Alsaadi_CV.pdf"
               target="_blank"
               className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded bg-zinc-950 text-white hover:bg-zinc-800 text-xs font-medium tracking-wide transition-colors"
-              title="Download 2-Page Official LaTeX CV (PDF)"
+              title="Download Academic CV (PDF) — or press Ctrl+P anytime to print"
             >
               <IconDownload className="w-3.5 h-3.5" />
               <span>Download CV (PDF)</span>

@@ -1,6 +1,37 @@
 import React from "react";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { IconApp, IconChevronRight, IconArrowLeft, IconGithub } from "@/components/Icons";
+
+export const metadata: Metadata = {
+  title: "Open-Source Software & Edge Systems | Reyhane Javidi Alsaadi",
+  description:
+    "Production-grade engineering software, mobile AI edge applications, and high-performance systems engineered by Reyhane Javidi Alsaadi.",
+  alternates: {
+    canonical: "https://reyhane-code.github.io/projects/",
+  },
+  openGraph: {
+    title: "Open-Source Software & Edge Systems | Reyhane Javidi Alsaadi",
+    description:
+      "Production-grade engineering software, mobile AI edge applications, and high-performance systems.",
+    url: "https://reyhane-code.github.io/projects/",
+    type: "website",
+    images: [
+      {
+        url: "https://reyhane-code.github.io/figures/fig_architecture.png",
+        width: 1200,
+        height: 630,
+        alt: "Open-Source Software & Systems - Reyhane Javidi Alsaadi",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Open-Source Software & Edge Systems | Reyhane Javidi Alsaadi",
+    description: "Production mobile AI edge applications and high-performance systems.",
+    images: ["https://reyhane-code.github.io/figures/fig_architecture.png"],
+  },
+};
 
 export default function ProjectsCatalogPage() {
   return (
