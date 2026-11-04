@@ -276,14 +276,14 @@ class CascadedEvaluator:
     ):
         self.dino_model = dino_model
         self.bioclip_model = bioclip_model
-        self.dino_prototypes = dino_prototypes          # (n_classes, 384)
-        self.bioclip_prototypes = bioclip_prototypes    # (n_classes, 512)
-        self.text_prototypes = text_prototypes          # (n_classes, 512)
-        self.fisher_weights = fisher_weights            # (n_classes, 896)
-        self.fisher_biases = fisher_biases              # (n_classes,)
-        self.cfg = cfg
         self.device = device
         self.autocast_ctx = get_autocast_ctx(device)
+        self.dino_prototypes = dino_prototypes.to(device)          # (n_classes, 384)
+        self.bioclip_prototypes = bioclip_prototypes.to(device)    # (n_classes, 512)
+        self.text_prototypes = text_prototypes.to(device)          # (n_classes, 512)
+        self.fisher_weights = fisher_weights.to(device)            # (n_classes, 896)
+        self.fisher_biases = fisher_biases.to(device)              # (n_classes,)
+        self.cfg = cfg
 
     def _infer_fast_path(
         self,
@@ -294,7 +294,8 @@ class CascadedEvaluator:
         Internal reusable helper: Computes DINOv2 fast-path logits, probabilities,
         confidence gating, and initial predictions.
         """
-        dino_logits = self.cfg.scale * (dino_features @ self.dino_prototypes.t())
+        prototypes = self.dino_prototypes.to(device=dino_features.device, dtype=dino_features.dtype)
+        dino_logits = self.cfg.scale * (dino_features @ prototypes.t())
         dino_prob = F.softmax(dino_logits, dim=-1)
         dino_conf = calculate_shannon_confidence(dino_prob, n_classes)
         dino_pred = dino_logits.argmax(dim=-1)
@@ -353,16 +354,16 @@ class CascadedEvaluator:
             bioclip_features = query_bioclip_features.to(self.device)
 
             # Fast Path: DINOv2 alone
-            _, _, dino_conf, dino_pred = self._infer_fast_path(dino_features, n_classes)
+            dino_logits, _, dino_conf, dino_pred = self._infer_fast_path(dino_features, n_classes)
             deep_mask = (dino_conf < self.cfg.tau)
             deep_trigger_count = deep_mask.sum().item()
 
             # Deep Path: BioCLIP alone
-            bioclip_logits = self.cfg.scale * (bioclip_features @ self.bioclip_prototypes.t())
+            bio_proto = self.bioclip_prototypes.to(device=bioclip_features.device, dtype=bioclip_features.dtype)
+            bioclip_logits = self.cfg.scale * (bioclip_features @ bio_proto.t())
             bioclip_pred = bioclip_logits.argmax(dim=-1)
 
             # Consensus baseline (Base visual fusion: 65% BioCLIP + 35% DINOv2, no LDA)
-            dino_logits = self.cfg.scale * (dino_features @ self.dino_prototypes.t())
             consensus_pred = (self.cfg.w_base * bioclip_logits + (1.0 - self.cfg.w_base) * dino_logits).argmax(dim=-1)
 
             # Joint 896-dim Fisher LDA + Text ensemble
@@ -425,7 +426,8 @@ class CascadedEvaluator:
 
                     # 2. Deep Path & Baselines
                     bioclip_features = F.normalize(self.bioclip_model.encode_image(bioclip_images), dim=-1)
-                    bioclip_logits = self.cfg.scale * (bioclip_features @ self.bioclip_prototypes.t())
+                    bio_proto = self.bioclip_prototypes.to(device=bioclip_features.device, dtype=bioclip_features.dtype)
+                    bioclip_logits = self.cfg.scale * (bioclip_features @ bio_proto.t())
                     bioclip_pred = bioclip_logits.argmax(dim=-1)
 
                     # Consensus baseline

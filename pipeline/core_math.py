@@ -11,27 +11,40 @@ Centralized mathematical foundations:
 ================================================================================
 """
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union, overload
 import numpy as np
 import torch
 import torch.nn.functional as F
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 
-    
-    # Shannon margin-entropy heuristic confidence gating metric.
-    # Computes:
-    #     Confidence C(x) = M(x) * (1 - H_norm(x))
-    # where:
-    #     M(x) is the margin between top-1 and top-2 class probabilities,
-    #     H_norm(x) is the Shannon entropy normalized by ln(K) into [0, 1].
-    
-    # Args:
-    #     prob: Class probability tensor of shape (N, n_classes).
-    #     n_classes: Total number of active novel classes.
-        
-    # Returns:
-    #     torch.Tensor of shape (N,) with non-negative confidence scores in [0, 1].
+@overload
+def calculate_shannon_confidence(
+    prob: torch.Tensor,
+    n_classes: int,
+    return_details: Literal[False] = False,
+) -> torch.Tensor:
+    ...
+
+
+@overload
+def calculate_shannon_confidence(
+    prob: torch.Tensor,
+    n_classes: int,
+    return_details: Literal[True],
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ...
+
+
+@overload
+def calculate_shannon_confidence(
+    prob: torch.Tensor,
+    n_classes: int,
+    return_details: bool = False,
+) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
+    ...
+
+
 def calculate_shannon_confidence(
     prob: torch.Tensor,
     n_classes: int,
@@ -65,19 +78,9 @@ def calculate_shannon_confidence(
     return confidence
 
 
-    # Fits Linear Discriminant Analysis with analytical Ledoit-Wolf shrinkage regularization.
-    
-    # Weights (W) and intercept (b) are tensorized to target device for microsecond inference.
-    
-    # Args:
-    #     features: Feature matrix array of shape (N_samples, feature_dim).
-    #     labels: Class label array of shape (N_samples,).
-    #     device: Device to transfer resulting weight tensors to.
-        
-    # Returns:
-    #     fisher_weights: Projection weight tensor of shape (n_classes, feature_dim).
-    #     fisher_biases: Bias vector tensor of shape (n_classes,).
-    #     classifier: Fitted scikit-learn LinearDiscriminantAnalysis instance.
+# Backwards-compatibility alias
+calc_confidence = calculate_shannon_confidence
+
 
 def fit_fisher_lda(
     features: np.ndarray,

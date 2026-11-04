@@ -25,7 +25,8 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 if sys.platform == "win32":
     try:
-        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        if hasattr(sys.stdout, "reconfigure"):
+            getattr(sys.stdout, "reconfigure")(encoding='utf-8', errors='replace')
     except Exception:
         pass
 
@@ -188,11 +189,12 @@ def main():
     dummy_leaf = torch.randn(1, 3, 224, 224)
 
     torch.onnx.export(
-        tier1_model, dummy_leaf, tier1_fp32,
+        tier1_model, (dummy_leaf,), tier1_fp32,
         export_params=True, opset_version=17, do_constant_folding=True,
         input_names=["input_leaf"],
         output_names=["probabilities", "confidence", "features", "foliage_score"],
-        dynamic_axes={"input_leaf": {0: "batch_size"}, "probabilities": {0: "batch_size"}, "confidence": {0: "batch_size"}, "features": {0: "batch_size"}, "foliage_score": {0: "batch_size"}}
+        dynamic_axes={"input_leaf": {0: "batch_size"}, "probabilities": {0: "batch_size"}, "confidence": {0: "batch_size"}, "features": {0: "batch_size"}, "foliage_score": {0: "batch_size"}},
+        dynamo=False
     )
     quantize_dynamic(
         model_input=tier1_fp32,
@@ -218,7 +220,7 @@ def main():
     print("  [TIER 2] Exporting 88-110 MB Companion Model (BioCLIP ViT-B INT8)")
     print("=" * 80)
     bioclip_full, _, _ = open_clip.create_model_and_transforms('hf-hub:imageomics/bioclip')
-    bioclip_visual = bioclip_full.visual
+    bioclip_visual = getattr(bioclip_full, "visual")
     bioclip_visual.eval()
 
     tier2_model = BioDINOCompanionMobile(bioclip_visual, w_joint, b_joint, text_protos)
@@ -233,7 +235,8 @@ def main():
         export_params=True, opset_version=17, do_constant_folding=True,
         input_names=["input_leaf", "dino_features"],
         output_names=["probabilities", "bioclip_features"],
-        dynamic_axes={"input_leaf": {0: "batch_size"}, "dino_features": {0: "batch_size"}, "probabilities": {0: "batch_size"}, "bioclip_features": {0: "batch_size"}}
+        dynamic_axes={"input_leaf": {0: "batch_size"}, "dino_features": {0: "batch_size"}, "probabilities": {0: "batch_size"}, "bioclip_features": {0: "batch_size"}},
+        dynamo=False
     )
     fp32_tier2_size = os.path.getsize(tier2_fp32) / (1024 * 1024)
     print(f"  • FP32 Companion Model Size: {fp32_tier2_size:.2f} MB. Applying INT8 quantization...")
@@ -267,13 +270,13 @@ def main():
     out1 = sess1.run(None, {"input_leaf": sample_x})
     lat1 = (time.perf_counter() - t0) * 1000.0
 
-    p1, conf1, f_dino_np = out1[0][0], out1[1][0][0], out1[2]
+    p1, conf1, f_dino_np = np.asarray(out1[0])[0], float(np.asarray(out1[1])[0][0]), np.asarray(out1[2])
 
     t0 = time.perf_counter()
     out2 = sess2.run(None, {"input_leaf": sample_x, "dino_features": f_dino_np})
     lat2 = (time.perf_counter() - t0) * 1000.0
 
-    p2 = out2[0][0]
+    p2 = np.asarray(out2[0])[0]
 
     print(f"  • Tier 1 (21 MB Fast)      : Latency = {lat1:.2f} ms | Conf = {conf1:.3f} | Top = {cached_classes[np.argmax(p1)]}")
     print(f"  • Tier 2 (88 MB Companion) : Latency = {lat2:.2f} ms | Top = {cached_classes[np.argmax(p2)]}")
