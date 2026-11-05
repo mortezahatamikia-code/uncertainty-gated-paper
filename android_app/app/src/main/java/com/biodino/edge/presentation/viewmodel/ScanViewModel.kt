@@ -5,12 +5,14 @@ import android.graphics.Bitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.biodino.edge.data.engine.BioDinoOnnxEngine
-import com.biodino.edge.data.engine.ImageQualityEvaluator
+import com.biodino.edge.data.image.ImageQualityEvaluator
+import com.biodino.edge.data.network.ModelDownloadManager
 import com.biodino.edge.data.locale.AppLanguage
+import com.biodino.edge.data.locale.I18n
 import com.biodino.edge.data.service.TtsManager
 import com.biodino.edge.domain.model.CustomEnrolledDisease
-import com.biodino.edge.domain.repository.CustomPrototypesRepository
-import com.biodino.edge.domain.repository.ScanHistoryRepository
+import com.biodino.edge.data.repository.CustomPrototypesRepository
+import com.biodino.edge.data.repository.ScanHistoryRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,10 +29,24 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     private val historyRepo by lazy { ScanHistoryRepository(application.applicationContext) }
     private val customPrototypesRepo by lazy { CustomPrototypesRepository(application.applicationContext) }
 
-    private val isAnalyzing = AtomicBoolean(false)
-    private var lastFrameTimestamp = 0L
-    private var lastRecordedHistoryKey: String? = null
-    private var lastRecordedTimestamp = 0L
+    private val frameCoordinator by lazy {
+        FrameAnalysisCoordinator(
+            engine = engine,
+            historyRepo = historyRepo,
+            ttsManager = ttsManager,
+            uiState = _uiState,
+            scope = viewModelScope
+        )
+    }
+
+    private val modelCoordinator by lazy {
+        ModelDownloadCoordinator(
+            context = application.applicationContext,
+            engine = engine,
+            uiState = _uiState,
+            scope = viewModelScope
+        )
+    }
 
     private val _uiState = MutableStateFlow(
         ScanUiState(
@@ -54,11 +70,19 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
-        // Initialize engine state asynchronously
+        // Initialize engine state and active model status asynchronously
         viewModelScope.launch(Dispatchers.Default) {
             try {
                 val nnapi = engine.isNnapiActive
-                _uiState.update { it.copy(isHardwareAccelerated = nnapi) }
+                val isCustom = engine.isUsingCustomModel
+                val customSize = ModelDownloadManager.getCustomModelSizeMb(application.applicationContext)
+                _uiState.update {
+                    it.copy(
+                        isHardwareAccelerated = nnapi,
+                        isUsingCustomModel = isCustom,
+                        customModelSizeMb = customSize
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "Engine init warning: ${e.message}") }
             }
@@ -77,7 +101,12 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
             }
             current.copy(
                 isCameraActive = next,
-                isTorchActive = if (!next) false else current.isTorchActive
+                isTorchActive = if (!next) false else current.isTorchActive,
+                isTooDark = if (!next) false else current.isTooDark,
+                isNonLeaf = if (!next) false else current.isNonLeaf,
+                latestDiagnosis = if (!next) null else current.latestDiagnosis,
+                smoothedConfidence = if (!next) 0f else current.smoothedConfidence,
+                averageLatencyMs = if (!next) 0f else current.averageLatencyMs
             )
         }
     }
@@ -157,6 +186,10 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(errorMessage = null) }
     }
 
+    fun clearSuccessMessage() {
+        _uiState.update { it.copy(successMessage = null) }
+    }
+
     fun deleteCustomDisease(id: String) {
         customPrototypesRepo.deleteCustomDisease(id)
     }
@@ -186,35 +219,14 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
         latin: String,
         isHealthy: Boolean,
         advice: String,
-        photos: List<Bitmap>
+        photos: List<Bitmap>,
+        healthyPhotos: List<Bitmap> = emptyList()
     ) {
         if (photos.isEmpty()) return
 
         viewModelScope.launch(Dispatchers.Default) {
             try {
-                val sumEmbedding = FloatArray(384)
-                for (bmp in photos) {
-                    val emb = engine.extractEmbedding(bmp)
-                    for (i in 0 until 384) {
-                        sumEmbedding[i] += emb[i]
-                    }
-                }
-
-                // Average & L2 Normalization
-                val count = photos.size.toFloat()
-                var sumSq = 0.0
-                for (i in 0 until 384) {
-                    val avg = sumEmbedding[i] / count
-                    sumEmbedding[i] = avg
-                    sumSq += (avg * avg)
-                }
-
-                val norm = sqrt(sumSq).toFloat()
-                val calibratedPrototype = FloatArray(384)
-                for (i in 0 until 384) {
-                    calibratedPrototype[i] = if (norm > 0f) sumEmbedding[i] / norm else 0f
-                }
-
+                val proto = computePrototype(photos)
                 customPrototypesRepo.enrollNewDisease(
                     commonName = name,
                     hostPlant = hostPlant,
@@ -222,162 +234,49 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
                     isHealthy = isHealthy,
                     symptom = "Calibrated on-device via ${photos.size} live foliar shots.",
                     advice = advice,
-                    calibratedPrototype = calibratedPrototype
+                    calibratedPrototype = proto
                 )
 
-                _uiState.update {
-                    it.copy(
-                        isEnrollmentOpen = false,
-                        errorMessage = "Enrolled \"$name\" ($photos.size-shot prototype) successfully!"
-                    )
+                if (healthyPhotos.isNotEmpty()) {
+                    val hProto = computePrototype(healthyPhotos)
+                    val hName = if (hostPlant.isNotBlank()) "$hostPlant (Healthy)" else "$name (Healthy)"
+                    customPrototypesRepo.enrollNewDisease(hName, hostPlant, latin, true, "Healthy baseline foliage.", "Plant is healthy. Continue balanced monitoring.", hProto)
                 }
+
+                val strings = I18n.getStrings(_uiState.value.currentLanguage)
+                _uiState.update { it.copy(isEnrollmentOpen = false, errorMessage = null, successMessage = strings.classEnrolledSuccess(name, photos.size)) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = "Enrollment error: ${e.message}") }
+                val errPrefix = I18n.getStrings(_uiState.value.currentLanguage).errEnrollmentFailed
+                _uiState.update { it.copy(errorMessage = "$errPrefix: ${e.message ?: ""}") }
             }
         }
     }
 
-    /**
-     * Ingests a camera frame for real-time inference with dynamic support for custom prototypes.
-     */
-    fun analyzeFrame(bitmap: Bitmap) {
-        val currentState = _uiState.value
-        if (currentState.isScanningPaused || !currentState.isCameraActive || currentState.galleryBitmap != null) return
-
-        val now = System.currentTimeMillis()
-        // Eco Mode: throttle to ~15 FPS (66ms) instead of 60 FPS
-        if (currentState.isEcoMode && (now - lastFrameTimestamp) < 66L) {
-            return
+    private fun computePrototype(bitmaps: List<Bitmap>): FloatArray {
+        val sum = FloatArray(384)
+        for (bmp in bitmaps) {
+            val emb = engine.extractEmbedding(bmp)
+            for (i in 0 until 384) sum[i] += emb[i]
         }
-
-        if (!isAnalyzing.compareAndSet(false, true)) {
-            return
+        val count = bitmaps.size.toFloat()
+        var sumSq = 0.0
+        for (i in 0 until 384) {
+            val avg = sum[i] / count
+            sum[i] = avg
+            sumSq += (avg * avg)
         }
-
-        lastFrameTimestamp = now
-
-        viewModelScope.launch(Dispatchers.Default) {
-            try {
-                // Blur and Darkness check
-                val blurred = ImageQualityEvaluator.isBlurred(bitmap)
-                val tooDark = ImageQualityEvaluator.isTooDark(bitmap)
-
-                // Classification taking into account any custom enrolled prototypes
-                val result = engine.classify(bitmap, currentState.customEnrolledDiseases)
-
-                val effectiveDark = result.isTooDark || tooDark
-                val isNonLeaf = !result.isFoliage && !effectiveDark
-
-                // Frame score: if pitch black or non-leaf, score is 0.0
-                val frameScore = if (result.isFoliage && !effectiveDark) result.confidence else 0f
-
-                // Exponential Moving Average
-                val prevConf = if (currentState.smoothedConfidence == 0f) frameScore else currentState.smoothedConfidence
-                val smoothedConf = (0.65f * prevConf) + (0.35f * frameScore)
-
-                val prevLat = if (currentState.averageLatencyMs == 0f) result.latencyMs else currentState.averageLatencyMs
-                val smoothedLat = (0.80f * prevLat) + (0.20f * result.latencyMs)
-
-                _uiState.update {
-                    it.copy(
-                        isBlurred = blurred,
-                        isTooDark = effectiveDark,
-                        isNonLeaf = isNonLeaf,
-                        latestDiagnosis = result,
-                        smoothedConfidence = smoothedConf,
-                        averageLatencyMs = smoothedLat,
-                        errorMessage = null
-                    )
-                }
-
-                // If confident lock is achieved on real foliage under good light, trigger TTS and record to history
-                if (smoothedConf >= 0.35f && result.isFoliage && !effectiveDark && !isNonLeaf) {
-                    val key = result.diseaseInfo.rawKey
-                    val timeSinceLastRecord = now - lastRecordedTimestamp
-
-                    if (key != lastRecordedHistoryKey || timeSinceLastRecord > 15000L) {
-                        lastRecordedHistoryKey = key
-                        lastRecordedTimestamp = now
-                        historyRepo.addFromDiagnosis(result)
-
-                        if (_uiState.value.isTtsEnabled) {
-                            val percent = (smoothedConf * 100).toInt()
-                            ttsManager.speakDiagnosis(
-                                result.diseaseInfo.commonName,
-                                percent,
-                                result.diseaseInfo.isHealthy
-                            )
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = "Inference failed: ${e.localizedMessage}") }
-            } finally {
-                isAnalyzing.set(false)
-            }
-        }
+        val norm = sqrt(sumSq).toFloat()
+        return FloatArray(384) { i -> if (norm > 0f) sum[i] / norm else 0f }
     }
 
-    fun onGalleryError(msg: String) {
-        _uiState.update { it.copy(errorMessage = msg) }
-    }
+    fun analyzeFrame(bitmap: Bitmap) = frameCoordinator.analyzeFrame(bitmap)
+    fun onGalleryError(msg: String) = frameCoordinator.onGalleryError(msg)
+    fun analyzeGalleryImage(bitmap: Bitmap) = frameCoordinator.analyzeGalleryImage(bitmap)
 
-    fun analyzeGalleryImage(bitmap: Bitmap) {
-        // 1. Immediately present the gallery photo to the user with a scanning state
-        _uiState.update {
-            it.copy(
-                galleryBitmap = bitmap,
-                latestDiagnosis = null,
-                smoothedConfidence = 0f,
-                isTooDark = false,
-                isNonLeaf = false,
-                errorMessage = null
-            )
-        }
-
-        viewModelScope.launch(Dispatchers.Default) {
-            try {
-                val blurred = ImageQualityEvaluator.isBlurred(bitmap)
-                val tooDark = ImageQualityEvaluator.isTooDark(bitmap)
-                val result = engine.classify(bitmap, _uiState.value.customEnrolledDiseases)
-
-                val effectiveDark = result.isTooDark || tooDark
-                val isNonLeaf = !result.isFoliage && !effectiveDark
-
-                // For static gallery images, true confidence is calibrated Shannon margin * foliage gate
-                val displayConfidence = if (result.isFoliage && !effectiveDark) result.confidence else 0f
-
-                _uiState.update {
-                    it.copy(
-                        isBlurred = blurred,
-                        isTooDark = effectiveDark,
-                        isNonLeaf = isNonLeaf,
-                        latestDiagnosis = result,
-                        smoothedConfidence = displayConfidence,
-                        averageLatencyMs = result.latencyMs,
-                        errorMessage = null
-                    )
-                }
-
-                // Only record to history and trigger TTS if valid foliage and not dark
-                if (result.isFoliage && !effectiveDark && !isNonLeaf && displayConfidence >= 0.35f) {
-                    historyRepo.addFromDiagnosis(result)
-
-                    if (_uiState.value.isTtsEnabled) {
-                        val percent = (displayConfidence * 100).toInt()
-                        ttsManager.speakDiagnosis(
-                            result.diseaseInfo.commonName,
-                            percent,
-                            result.diseaseInfo.isHealthy,
-                            force = true
-                        )
-                    }
-                }
-            } catch (e: Throwable) {
-                _uiState.update { it.copy(errorMessage = "خطا در تحلیل هوش مصنوعی تصویر: ${e.message}") }
-            }
-        }
-    }
+    fun openModelManager(open: Boolean) = modelCoordinator.openModelManager(open)
+    fun setModelDownloadUrl(url: String) = modelCoordinator.setModelDownloadUrl(url)
+    fun startModelDownload(customUrl: String? = null) = modelCoordinator.startModelDownload(customUrl)
+    fun revertToDefaultModel() = modelCoordinator.revertToDefaultModel()
 
     override fun onCleared() {
         super.onCleared()

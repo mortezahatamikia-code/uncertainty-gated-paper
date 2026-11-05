@@ -2,7 +2,8 @@ package com.biodino.edge.data.locale
 
 /**
  * Supported internationalization locales in BioDINO-Edge.
- * Extensible for English, Persian (RTL), German, and French.
+ * Extensible for English, French, German, and Persian (RTL).
+ * Ordered by global usage with Persian as the final entry.
  */
 enum class AppLanguage(
     val code: String,
@@ -12,9 +13,9 @@ enum class AppLanguage(
     val isRtl: Boolean
 ) {
     ENGLISH("en", "English", "English", "🌐", false),
-    PERSIAN("fa", "Persian", "فارسی", "🇮🇷", true),
+    FRENCH("fr", "French", "Français", "🇫🇷", false),
     GERMAN("de", "German", "Deutsch", "🇩🇪", false),
-    FRENCH("fr", "French", "Français", "🇫🇷", false);
+    PERSIAN("fa", "Persian", "فارسی", "🇮🇷", true);
 
     companion object {
         fun fromCode(code: String): AppLanguage =

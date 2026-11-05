@@ -2,6 +2,7 @@ package com.biodino.edge.presentation.viewmodel
 
 import android.graphics.Bitmap
 import com.biodino.edge.data.locale.AppLanguage
+import com.biodino.edge.data.network.ModelDownloadManager
 import com.biodino.edge.domain.model.CustomEnrolledDisease
 import com.biodino.edge.domain.model.DiagnosisResult
 import com.biodino.edge.domain.model.ScanHistoryItem
@@ -35,8 +36,18 @@ data class ScanUiState(
     val averageLatencyMs: Float = 0f,
     val isHardwareAccelerated: Boolean = true,
     val errorMessage: String? = null,
+    val successMessage: String? = null,
     val scanHistory: List<ScanHistoryItem> = emptyList(),
-    val customEnrolledDiseases: List<CustomEnrolledDisease> = emptyList()
+    val customEnrolledDiseases: List<CustomEnrolledDisease> = emptyList(),
+    val isModelManagerOpen: Boolean = false,
+    val isDownloadingModel: Boolean = false,
+    val modelDownloadProgress: Float = 0f,
+    val modelDownloadBytes: Long = 0L,
+    val modelTotalBytes: Long = 0L,
+    val modelDownloadError: String? = null,
+    val isUsingCustomModel: Boolean = false,
+    val customModelSizeMb: Float = 0f,
+    val modelDownloadUrl: String = ModelDownloadManager.DEFAULT_GITHUB_MODEL_URL
 ) {
     val isFarsi: Boolean get() = currentLanguage == AppLanguage.PERSIAN
     val isRtl: Boolean get() = currentLanguage.isRtl

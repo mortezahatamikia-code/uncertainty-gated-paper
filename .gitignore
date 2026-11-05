@@ -93,3 +93,7 @@ desktop.ini
 .ipynb_checkpoints/
 scratch/
 *.bak
+*.jks
+keystore.properties
+web/*
+android_app/*

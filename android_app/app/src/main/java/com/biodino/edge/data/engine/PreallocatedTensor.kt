@@ -6,8 +6,7 @@ import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
 /**
- * High-performance, zero-allocation pre-allocated tensor buffer.
- * Eliminates Garbage Collection (GC) pauses during 30-60 FPS camera frame analysis.
+ * Reusable direct ByteBuffer for feeding camera frames into ONNX Runtime without allocations.
  */
 class PreallocatedTensor(
     val batchSize: Int = 1,
