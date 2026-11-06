@@ -63,12 +63,13 @@ The key contributions of this work are as follows:
 \label{sec:pipeline_overview}
 BioDINO-Edge is designed as a gradient-free diagnostic pipeline that separates task adaptation from realtime on-device inference (Fig.~\ref{fig:architecture}):
 \begin{enumerate}
-    \item \textbf{Support Calibration (Weight Synthesis):} For each disease class, five labeled support leaves ($K=5$) are selected at random. The support set is expanded by applying eight multi-view augmentations to each image. Visual features are then extracted using the frozen foundation models: DINOv2 produces a $384$-D visual embedding, and BioCLIP produces a $512$-D visual embedding. In addition, BioCLIP provides text prototypes from predefined botanical prompt templates. The visual embeddings are concatenated into an $896$-D vector. Ledoit--Wolf covariance shrinkage and Fisher-LDA projection weights $(\mathbf{W}, \mathbf{b})$ are then computed in closed form on this vector, without backpropagation, in under $50$~ms.
-    \item \textbf{Tier-1 Edge Fast Path:} During live deployment, an incoming leaf query image is first processed by DINOv2 alone, requiring 21.1\,ms on an edge CPU. Using the resulting $384$-D visual embedding and the precomputed projection parameters, the pipeline estimates fast class posteriors. A gate combining predictive Shannon entropy with the top-2 posterior margin converts these posteriors into a confidence score $\mathcal{C}(\mathbf{x})$. If $\mathcal{C}(\mathbf{x}) \ge \tau_{\text{conf}}$, classification is finalized on-device at over 45 FPS; approximately 88.4\% of routine field queries are resolved at this tier.
-    \item \textbf{Tier-2 Deep Escalation:} Queries with $\mathcal{C}(\mathbf{x}) < \tau_{\text{conf}}$ escalate to Tier-2, where BioCLIP extracts a $512$-D visual embedding that is concatenated with the existing DINOv2 embedding into an $896$-D joint representation. Pre-calibrated Fisher-LDA projection weights are applied to this representation, and classification fuses the Fisher-LDA posterior with the cosine similarity against cached botanical text prototypes at a 0.75/0.25 consensus ratio.
-    \item \textbf{Soft-Anchored Recalibration:} Queries are classified immediately by Tier-1 or Tier-2, but confident predictions are also stored in an on-device buffer. Field conditions change over time, which can shift class centroids. To compensate, the edge CPU periodically recomputes the Fisher-LDA weights in closed form, giving the cached support embeddings more weight than the pseudo-labeled anchors to reduce label noise. The new projection is then used for subsequent frames and to update the session diagnostic log.
+    \setlength{\itemsep}{3pt}
+    \item[\textbf{1)}] \textbf{Support Calibration (Weight Synthesis):} For each disease class, five labeled support leaves ($K=5$) are selected at random. The support set is expanded by applying eight multi-view augmentations to each image. Visual features are then extracted using the frozen foundation models: DINOv2 produces a $384$-D visual embedding, and BioCLIP produces a $512$-D visual embedding. In addition, BioCLIP provides text prototypes from predefined botanical prompt templates. The visual embeddings are concatenated into an $896$-D vector. Ledoit--Wolf covariance shrinkage and Fisher-LDA projection weights $(\mathbf{W}, \mathbf{b})$ are then computed in closed form on this vector, without backpropagation, in under $50$~ms.
+    \item[\textbf{2)}] \textbf{Tier-1 Edge Fast Path:} During live deployment, an incoming leaf query image is first processed by DINOv2 alone, requiring 21.1\,ms on an edge CPU. Using the resulting $384$-D visual embedding and the precomputed visual class prototypes, the pipeline estimates fast class posteriors. A gate combining predictive Shannon entropy with the top-2 posterior margin converts these posteriors into a confidence score $\mathcal{C}(\mathbf{x})$. If $\mathcal{C}(\mathbf{x}) \ge \tau_{\text{conf}}$, classification is finalized on-device at over 45 FPS; approximately 88.4\% of routine field queries are resolved at this tier.
+    \item[\textbf{3)}] \textbf{Tier-2 Deep Escalation:} Queries with $\mathcal{C}(\mathbf{x}) < \tau_{\text{conf}}$ escalate to Tier-2, where BioCLIP extracts a $512$-D visual embedding that is concatenated with the existing DINOv2 embedding into an $896$-D joint representation. Pre-calibrated Fisher-LDA projection weights are applied to this representation, and classification fuses the Fisher-LDA posterior with the cosine similarity against cached botanical text prototypes at a 0.75/0.25 consensus ratio.
+    \item[\textbf{4)}] \textbf{Soft-Anchored Recalibration:} Queries are classified immediately by Tier-1 or Tier-2, but confident predictions are also stored in an on-device buffer. Field conditions change over time, which can shift class centroids. To compensate, the edge CPU periodically recomputes the Fisher-LDA weights in closed form, giving the cached support embeddings more weight than the pseudo-labeled anchors to reduce label noise. The new projection is then used for subsequent frames and to update the session diagnostic log.
 \end{enumerate}
-The two-tier design keeps latency and power draw low while staying within the storage budget.
+The two-tier design keeps latency and computational load low while staying within the storage budget.
 
 \begin{figure*}[!t]
 \centering
@@ -87,12 +88,12 @@ Reliable diagnosis in agricultural environments requires distinguishing vegetati
 
 DINOv2 (Small, $14 \times 14$ patches) \cite{oquab2023dinov2} provides self-supervised spatial embeddings that capture fine lesion structure:
 \begin{equation}
-    \mathbf{f}_{\text{dino}} = \frac{f_{\text{dino}}(\tilde{\mathbf{x}})}{\|f_{\text{dino}}(\tilde{\mathbf{x}})\|_2} \in \mathbb{R}^{384}
+    \mathbf{f}_{\text{dino}} = \frac{\phi_{\text{dino}}(\tilde{\mathbf{x}})}{\|\phi_{\text{dino}}(\tilde{\mathbf{x}})\|_2} \in \mathbb{R}^{384}
 \end{equation}
 
 BioCLIP (ViT-B/16, pretrained on TreeOfLife-10M) \cite{stevens2024bioclip} provides domain-specialized visual embeddings:
 \begin{equation}
-    \mathbf{f}_{\text{bio}} = \frac{f_{\text{bio}}(\tilde{\mathbf{x}})}{\|f_{\text{bio}}(\tilde{\mathbf{x}})\|_2} \in \mathbb{R}^{512}
+    \mathbf{f}_{\text{bio}} = \frac{\phi_{\text{bio,vis}}(\tilde{\mathbf{x}})}{\|\phi_{\text{bio,vis}}(\tilde{\mathbf{x}})\|_2} \in \mathbb{R}^{512}
 \end{equation}
 
 Model parameter counts are reported in Supplementary Table S1.
@@ -107,7 +108,7 @@ Stacking these descriptors over all support images yields $\mathbf{Z} \in \mathb
 \end{equation}
 yielding visual prototype matrices $\mathbf{P}_{\text{dino}} \in \mathbb{R}^{C \times 384}$ and $\mathbf{P}_{\text{bio, vis}} \in \mathbb{R}^{C \times 512}$.
 
-\textbf{Pre-Defined Botanical Prompts and Multimodal Prototype.} BioCLIP provides a shared vision--language space, but running a language transformer or generating per-image captions on edge scouting devices would exceed compute and battery limits; manual prompt entry during scouting is also impractical. We therefore predefine $M=3$ botanical prompt templates $\{T_c^{(m)}\}_{m=1}^M$ for each class $c \in \{1,\dots,C\}$ offline. Each template combines three attributes:
+\textbf{Pre-Defined Botanical Prompts and Multimodal Prototype.} BioCLIP provides a shared vision--language space, but running a language transformer or generating per-image captions on edge scouting devices would exceed on-device computational limits; manual prompt entry during scouting is also impractical. We therefore predefine $M=3$ botanical prompt templates $\{T_c^{(m)}\}_{m=1}^M$ for each class $c \in \{1,\dots,C\}$ offline. Each template combines three attributes:
 (1)~\textit{Binomial host taxonomy}: genus and species (e.g., \textit{Malus domestica}, \textit{Vitis vinifera}, \textit{Solanum tuberosum});
 (2)~\textit{Pathogen etiology}: the causal fungal, bacterial, or oomycete agent (e.g., \textit{Venturia inaequalis}, \textit{Botryosphaeria obtusa}, \textit{Gymnosporangium juniperi-virginianae}, \textit{Phytophthora infestans}); and
 (3)~\textit{Affirmative foliar morphology}: macroscopic lesion descriptions (e.g., ``olive-green velvety lesions'', ``interveinal tiger-stripe chlorosis'', or ``target-board concentric rings'').
@@ -385,7 +386,7 @@ Translating deep vision architectures from sanitized laboratory benchmarks into 
 
 \textbf{The Host-Context Loss Dilemma: Why Lesion Cropping Fails.} While cropping bounding boxes tightly around lesions is often assumed to reduce background clutter, doing so across all 27 PlantDoc categories via DINOv2 attention rollout degraded 27-way accuracy from 58.73\% to 57.14\% (macro F1: 57.95\% $\to$ 56.79\%). In-depth error analysis reveals that tight cropping strips away macro-morphological phyllotaxy (e.g., compound vs. simple leaflet layout, venation symmetry), inducing severe cross-species confusion between homologous necrotic spots on different crops (e.g., Early Blight on tomato vs. potato). Preserving macroscopic host context is as vital for taxonomic transfer as isolating localized lesions.
 
-\textbf{Closed-Form Adaptation as an Antidote to Edge Backpropagation.} While gradient-based meta-learning and fine-tuning pipelines require intensive GPU backpropagation, both Fisher alignment and transductive self-calibration in BioDINO-Edge are solved in closed form. Edge micro-controllers adapt to newly emerging pathogens in under 22\,ms without thermal throttling, memory fragmentation, or battery exhaustion.
+\textbf{Closed-Form Adaptation as an Antidote to Edge Backpropagation.} While gradient-based meta-learning and fine-tuning pipelines require intensive GPU backpropagation, both Fisher alignment and transductive self-calibration in BioDINO-Edge are solved in closed form. Edge micro-controllers adapt to newly emerging pathogens in under 22\,ms without thermal throttling, memory fragmentation, or excessive computational overhead.
 
 \textbf{Deployment in Connectivity-Constrained Rural Environments.} Intermittent rural connectivity is directly accommodated by our two-tier modularity. The 22.73\,MB standalone APK provides immediate offline diagnostic utility upon initial field deployment, while the 85.3\,MB companion downloads on demand when broadband connectivity becomes accessible.
 
