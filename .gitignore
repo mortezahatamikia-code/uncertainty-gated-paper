@@ -34,7 +34,7 @@ stage1_lora_adapter/
 *.pth
 *.bin
 *.onnx
-!biodino_mobile_int8.onnx
+!biodino_companion_int8.onnx
 *.safetensors
 *.ckpt
 edge_fp32.pt
