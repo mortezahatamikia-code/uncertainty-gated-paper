@@ -208,7 +208,7 @@ export default function BioDinoEdgePaperPage() {
             <div className="p-5 rounded-md bg-white border border-zinc-200 space-y-2 shadow-xs">
               <h3 className="font-bold text-zinc-950 text-sm font-mono">1. Dual-Foundation Latent Manifold (896-d)</h3>
               <p className="leading-relaxed">
-                Concatenates 384-d high-frequency spatial lesion visual embeddings from DINOv2 Small with 512-d phylogenetic vision-language priors from BioCLIP ViT-B/16 into a unified 896-dimensional manifold:
+                Concatenates 384-d high-frequency spatial lesion patch tokens from DINOv2 Small with 512-d phylogenetic vision-language priors from BioCLIP ViT-B/16 into a unified 896-dimensional manifold:
               </p>
               <code className="block p-2.5 rounded bg-zinc-100 border border-zinc-200 font-mono text-[11px] text-zinc-900">
                 z = [ f_bio || f_dino ] ∈ ℝ^896
