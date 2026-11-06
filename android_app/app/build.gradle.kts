@@ -85,6 +85,10 @@ android {
                     ?: keystoreProperties.getProperty("key.alias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
                     ?: keystoreProperties.getProperty("key.password")
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+                enableV4Signing = true
             }
         }
     }
