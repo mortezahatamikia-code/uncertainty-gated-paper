@@ -54,9 +54,9 @@ To overcome these challenges, we propose \textbf{BioDINO-Edge}, an adaptive dual
 
 The key contributions of this work are as follows:
 \begin{enumerate}
-    \item \textbf{Dual-Foundation Foliar Representation:} Uniting self-supervised visual embeddings from DINOv2 with purified botanical domain prompts from BioCLIP to resolve subtle necrotic lesions without foundation-model fine-tuning.
+    \item \textbf{Dual-Foundation Foliar Representation:} Uniting self-supervised visual embeddings from DINOv2 \cite{oquab2023dinov2} with BioCLIP's \cite{stevens2024bioclip} visual and textual botanical representations to resolve subtle necrotic lesions without foundation-model fine-tuning.
     \item \textbf{Closed-Form Analytical Adaptation:} Integrating Fisher-LDA with Ledoit--Wolf covariance shrinkage and soft-anchored transductive recalibration to overcome high-dimensionality issues and 5-shot centroid shifts within 25 milliseconds without backpropagation.
-    \item \textbf{Adaptive Two-Tier Edge Deployment:} Routing queries through a Shannon \cite{shannon1948mathematical} margin-entropy gate to execute an ultra-lightweight 22.73\,MB standalone APK alongside an 83.6\,MB on-demand module within a strict 110\,MB memory footprint.
+    \item \textbf{Adaptive Two-Tier Edge Deployment:} A joint margin and Shannon entropy \cite{shannon1948mathematical} gate dynamically routes queries between a standalone mobile app and an on-demand deep module, enabling efficient execution within a constrained storage budget.
     \item \textbf{Rigorous Cross-Domain Validation:} Achieving a mean accuracy of 97.37\% $\pm$ 0.73\% (98.72\% peak) across 9,330 queries on the 11-class 5-shot PlantVillage benchmark and 83.61\% $\pm$ 11.69\% on the in-the-wild PlantDoc benchmark under the standard 5-way 5-shot protocol, outperforming the multimodal VSF baseline \cite{zhou2026vsf} by 13.00 percentage points.
 \end{enumerate}
 
