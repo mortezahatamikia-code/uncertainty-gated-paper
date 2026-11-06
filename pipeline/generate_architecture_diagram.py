@@ -101,11 +101,24 @@ def create_architecture_diagram():
     def draw_arrow(x1, y1, x2, y2, color="#2563EB", lw=1.4, ls='-',
                    label="", label_pos=0.5,
                    label_color="#1D4ED8", label_bg="white", label_fs=6.2):
-        # 1. Line running underneath
-        ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
-                    arrowprops=dict(arrowstyle="->,head_width=0.25,head_length=0.36",
-                                    color=color, lw=lw, linestyle=ls, shrinkA=0, shrinkB=0), zorder=5)
-        # 2. Text badge sitting centered on the line
+        if ls == '-':
+            ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
+                        arrowprops=dict(arrowstyle="->,head_width=0.25,head_length=0.36",
+                                        color=color, lw=lw, linestyle='-', shrinkA=0, shrinkB=0), zorder=5)
+        else:
+            # 1. Draw dashed/dotted body line
+            ax.plot([x1, x2], [y1, y2], color=color, lw=lw, linestyle=ls, zorder=5)
+            # 2. Draw crisp solid arrowhead so dash/dot pattern never cuts off arrow wings
+            dx = x2 - x1
+            dy = y2 - y1
+            dist = (dx**2 + dy**2)**0.5
+            ux = dx / max(1e-6, dist)
+            uy = dy / max(1e-6, dist)
+            ax.annotate('', xy=(x2, y2), xytext=(x2 - ux * 0.05, y2 - uy * 0.05),
+                        arrowprops=dict(arrowstyle="->,head_width=0.25,head_length=0.36",
+                                        color=color, lw=lw, linestyle='-', shrinkA=0, shrinkB=0), zorder=6)
+
+        # Text badge sitting centered on the line
         if label:
             lx = x1 + (x2 - x1) * label_pos
             ly = y1 + (y2 - y1) * label_pos
@@ -117,14 +130,31 @@ def create_architecture_diagram():
     def draw_orthogonal_arrow(waypoints, color="#2563EB", lw=1.4, ls='-',
                               label="", label_seg=1, label_pos=0.5,
                               label_color="#1D4ED8", label_bg="white", label_fs=6.1):
-        for i in range(len(waypoints) - 2):
-            ax.plot([waypoints[i][0], waypoints[i+1][0]],
-                    [waypoints[i][1], waypoints[i+1][1]],
-                    color=color, lw=lw, linestyle=ls, zorder=5)
-
-        ax.annotate('', xy=waypoints[-1], xytext=waypoints[-2],
-                    arrowprops=dict(arrowstyle="->,head_width=0.25,head_length=0.36",
-                                    color=color, lw=lw, linestyle=ls, shrinkA=0, shrinkB=0), zorder=5)
+        if ls == '-':
+            for i in range(len(waypoints) - 2):
+                ax.plot([waypoints[i][0], waypoints[i+1][0]],
+                        [waypoints[i][1], waypoints[i+1][1]],
+                        color=color, lw=lw, linestyle='-', zorder=5)
+            ax.annotate('', xy=waypoints[-1], xytext=waypoints[-2],
+                        arrowprops=dict(arrowstyle="->,head_width=0.25,head_length=0.36",
+                                        color=color, lw=lw, linestyle='-', shrinkA=0, shrinkB=0), zorder=5)
+        else:
+            # 1. Draw all segments with dashed/dotted line style
+            for i in range(len(waypoints) - 1):
+                ax.plot([waypoints[i][0], waypoints[i+1][0]],
+                        [waypoints[i][1], waypoints[i+1][1]],
+                        color=color, lw=lw, linestyle=ls, zorder=5)
+            # 2. Draw crisp solid arrowhead so dash/dot pattern never cuts off arrow wings
+            p_prev = waypoints[-2]
+            p_end = waypoints[-1]
+            dx = p_end[0] - p_prev[0]
+            dy = p_end[1] - p_prev[1]
+            dist = (dx**2 + dy**2)**0.5
+            ux = dx / max(1e-6, dist)
+            uy = dy / max(1e-6, dist)
+            ax.annotate('', xy=p_end, xytext=(p_end[0] - ux * 0.05, p_end[1] - uy * 0.05),
+                        arrowprops=dict(arrowstyle="->,head_width=0.25,head_length=0.36",
+                                        color=color, lw=lw, linestyle='-', shrinkA=0, shrinkB=0), zorder=6)
 
         if label:
             p_prev = waypoints[label_seg]
@@ -295,13 +325,13 @@ def create_architecture_diagram():
     draw_arrow(56.8, 20.5, 58.0, 20.5, color="#0284C7", lw=1.4)
 
     # Wire 2: Ambiguous Fallback cleanly routes from Gate Card 3.3 to BioCLIP Card 4.1!
-    # Path: from Card 3.3 bottom (64.8, 32.2) -> down to y=29.2 (in open horizontal corridor)
-    #       -> left along y=29.2 to x=34.4 (to left of Tier-2 banner!) -> down to Card 4.1 top (34.4, 24.3)
-    draw_orthogonal_arrow([(64.8, 32.2), (64.8, 29.2), (34.4, 29.2), (34.4, 24.3)],
+    # Path: from Card 3.3 bottom (64.8, 32.2) -> down to y=29.25 (in open horizontal corridor)
+    #       -> left along y=29.25 to x=34.4 (to left of Tier-2 banner!) -> down to Card 4.1 top (34.4, 24.45)
+    draw_orthogonal_arrow([(64.8, 32.05), (64.8, 29.25), (34.4, 29.25), (34.4, 24.45)],
                           color="#7C3AED", lw=1.5, ls="--",
-                          label=r"Ambiguous (11.6%): $\mathcal{C}(\mathbf{x}) < 0.35 \to$ Triggers BioCLIP Escalation",
+                          label=r"Ambiguous (11.6%): $\mathcal{C}(\mathbf{x}) < 0.35$" + "\n" + r"$\to$ Triggers BioCLIP Escalation",
                           label_seg=1, label_pos=0.5,
-                          label_color="#6D28D9", label_bg="#FAF5FF", label_fs=6.0)
+                          label_color="#6D28D9", label_bg="#FAF5FF", label_fs=5.9)
 
     # Wire 3a: Cached Text Prototypes P_text from Card 2.1 (Offline Prompts) into Tier-2
     # Starts at Card 2.1 right edge (20.8, 25.15) -> gutter (24.1) -> into Tier-2 left edge (27.6, 22.5)
@@ -356,18 +386,19 @@ def create_architecture_diagram():
     draw_arrow(56.8, 5.6, 58.0, 5.6, color="#10B981", lw=1.4)
 
     # Wire 4: High-Confidence Anchors routed from Tier-2 Decision (Card 4.3) into FIFO Buffer (Card 5.1)
-    # Starts at Card 4.3 bottom-left (60.0, 16.8) -> down to y=14.0 -> left along corridor to x=34.4 -> down to Card 5.1 top (34.4, 9.0)
-    draw_orthogonal_arrow([(60.0, 16.8), (60.0, 14.0), (34.4, 14.0), (34.4, 9.0)],
+    # Starts at Card 4.3 bottom-left (59.2, 16.65) -> down to y=14.6 -> left along corridor to x=34.4 -> down to Card 5.1 top (34.4, 9.15)
+    draw_orthogonal_arrow([(59.2, 16.65), (59.2, 14.6), (34.4, 14.6), (34.4, 9.15)],
                           color="#0284C7", lw=1.4, ls="--",
                           label="Anchor Filter\n" + r"$p_{\max} \geq 0.70$",
                           label_seg=1, label_pos=0.5,
-                          label_color="#0369A1", label_bg="#F0F9FF", label_fs=6.0)
+                          label_color="#0369A1", label_bg="#F0F9FF", label_fs=5.9)
 
     # Wire 5: Updates Tier-2 Boundaries straight UP from Closed-Form Update into Fisher Projection
-    # Starts at Card 5.3 top (64.8, 9.0), ends at Card 4.3 bottom (64.8, 16.8).
-    draw_arrow(64.8, 9.0, 64.8, 16.8, color="#059669", lw=1.5, ls=":",
-               label=r"Updates Tier-2" + "\n" + r"Boundaries $\mathbf{W}^{\mathrm{trans}}$", label_pos=0.62,
-               label_color="#047857", label_bg="#ECFDF5", label_fs=6.0)
+    # Runs at x=66.8 with zero collision with Wire 4 (x=59.2) and clearly separated vertically from Wire 4's line
+    # Starts at Card 5.3 top (66.8, 9.15), ends at Card 4.3 bottom (66.8, 16.65).
+    draw_arrow(66.8, 9.15, 66.8, 16.65, color="#059669", lw=1.5, ls=":",
+               label=r"Updates Tier-2" + "\n" + r"Boundaries $\mathbf{W}^{\mathrm{trans}}$", label_pos=0.38,
+               label_color="#047857", label_bg="#ECFDF5", label_fs=5.9)
 
     # =========================================================================
     # 3. COLUMN 3 (RIGHT): Field Diagnostic Output
