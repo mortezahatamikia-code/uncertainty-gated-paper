@@ -29,13 +29,13 @@
 
 \maketitle
 
-\begin{abstract}
-Rapid and accurate foliar disease diagnosis is vital for global food security, yet existing deep learning paradigms fall short of practical agricultural deployment. Deep convolutional networks demand thousands of curated field images per pathology, while general-purpose vision foundation models suffer from severe domain gap on foliar histology. Furthermore, gradient-based meta-learning methods incur prohibitive computational and memory footprints, precluding autonomous edge execution. To overcome these limitations, we introduce \textbf{BioDINO-Edge}, an adaptive dual-foundation framework uniting self-supervised visual embeddings (DINOv2 Small) with organismal taxonomic vision-language supervision (BioCLIP ViT-B). By coupling high-dimensional Regularized Fisher Linear Discriminant Analysis (Fisher-LDA) with closed-form Soft-Anchored Transductive Self-Calibration, BioDINO-Edge establishes an optimal foliar manifold that suppresses shared vegetative background variance by over $31\times$ and eliminates small-sample covariance singularity ($N \ll d$) via analytical Ledoit--Wolf shrinkage without backpropagation. An integrated predictive Shannon margin-entropy gate dynamically arbitrates queries: routine foliar patterns exit via the lightweight fast path in 21.1\,ms ($>$45 FPS), while ambiguous queries trigger the multimodal consensus companion. Across the 11-class PlantVillage benchmark under strict 5-shot constraints, BioDINO-Edge establishes a new state of the art with \textbf{98.72\% peak accuracy}, \textbf{98.41\% peak F1-score}, and a 30-episode mean of \textbf{97.37\% $\pm$ 0.73\%}, outperforming CLIP+LoRA by 10.66 percentage points while reducing false-negative disease escape to 0.604\%. On the uncontrolled in-the-wild PlantDoc dataset, it attains 83.61\% 5-way 5-shot accuracy ($+$13.00\% over prior SOTA) and 56.35\% in 27-way field stress testing. Compiling into a standalone 22.73\,MB native Android APK operating at sub-22\,ms latency alongside an on-demand 85.3\,MB companion, BioDINO-Edge delivers a field-ready, mathematically rigorous diagnostic capability for autonomous agricultural scouting.
-\end{abstract}
+% \begin{abstract}
+% Rapid and accurate foliar disease diagnosis is vital for global food security, yet existing deep learning paradigms fall short of practical agricultural deployment. Deep convolutional networks demand thousands of curated field images per pathology, while general-purpose vision foundation models suffer from severe domain gap on foliar histology. Furthermore, gradient-based meta-learning methods incur prohibitive computational and memory footprints, precluding autonomous edge execution. To overcome these limitations, we introduce \textbf{BioDINO-Edge}, an adaptive dual-foundation framework uniting self-supervised visual embeddings (DINOv2 Small) with organismal taxonomic vision-language supervision (BioCLIP ViT-B). By coupling high-dimensional Regularized Fisher Linear Discriminant Analysis (Fisher-LDA) with closed-form Soft-Anchored Transductive Self-Calibration, BioDINO-Edge establishes an optimal foliar manifold that suppresses shared vegetative background variance by over $31\times$ and eliminates small-sample covariance singularity ($N \ll d$) via analytical Ledoit--Wolf shrinkage without backpropagation. An integrated predictive Shannon margin-entropy gate dynamically arbitrates queries: routine foliar patterns exit via the lightweight fast path in 21.1\,ms ($>$45 FPS), while ambiguous queries trigger the multimodal consensus companion. Across the 11-class PlantVillage benchmark under strict 5-shot constraints, BioDINO-Edge establishes a new state of the art with \textbf{98.72\% peak accuracy}, \textbf{98.41\% peak F1-score}, and a 30-episode mean of \textbf{97.37\% $\pm$ 0.73\%}, outperforming CLIP+LoRA by 10.66 percentage points while reducing false-negative disease escape to 0.604\%. On the uncontrolled in-the-wild PlantDoc dataset, it attains 83.61\% 5-way 5-shot accuracy ($+$13.00\% over prior SOTA) and 56.35\% in 27-way field stress testing. Compiling into a standalone 22.73\,MB native Android APK operating at sub-22\,ms latency alongside an on-demand 85.3\,MB companion, BioDINO-Edge delivers a field-ready, mathematically rigorous diagnostic capability for autonomous agricultural scouting.
+% \end{abstract}
 
-\begin{IEEEkeywords}
-Few-Shot Learning, Precision Agriculture, Plant Pathology, Multimodal Foundation Models, Fisher Discriminant Analysis, Edge AI, Transductive Inference.
-\end{IEEEkeywords}
+% \begin{IEEEkeywords}
+% Few-Shot Learning, Precision Agriculture, Plant Pathology, Multimodal Foundation Models, Fisher Discriminant Analysis, Edge AI, Transductive Inference.
+% \end{IEEEkeywords}
 
 \section{Introduction}
 Plant pests and diseases destroy an estimated 20\%--40\% of crops annually \cite{richard2022control}. Traditional plant-pathogen diagnosis depends largely on visual inspection of leaf symptoms, most commonly discoloration, abnormal shape, and lesions \cite{khakimov2022traditional}. In field practice, visual inspection is slow, depends on trained scorers, and becomes ambiguous when different pathogens produce similar lesions \cite{shoaib2023advanced}; faster and more reliable identification is therefore needed.
@@ -137,8 +137,8 @@ For each class $c \in \{1, \dots, C\}$, we compute the mean support feature in $
 Assuming equal class priors ($\pi_c = 1/C$), the projection weights $\mathbf{W} \in \mathbb{R}^{C \times d}$ and bias vector $\mathbf{b} \in \mathbb{R}^C$ are given by:
 \begin{equation}
     \label{eq:fisher_weights}
-    \mathbf{W} = \mathbf{\Sigma}^{-1} [\boldsymbol{\mu}_1, \dots, \boldsymbol{\mu}_C]^T, \quad
-    b_c = -\frac{1}{2} \boldsymbol{\mu}_c^T \mathbf{\Sigma}^{-1} \boldsymbol{\mu}_c - \log C
+    \mathbf{W} = \hat{\mathbf{\Sigma}}^{-1} [\boldsymbol{\mu}_1, \dots, \boldsymbol{\mu}_C]^T, \quad
+    b_c = -\frac{1}{2} \boldsymbol{\mu}_c^T \hat{\mathbf{\Sigma}}^{-1} \boldsymbol{\mu}_c - \log C
 \end{equation}
 A query descriptor $\mathbf{z}$ is then classified via $\mathbf{l}_{\text{fisher}} = \mathbf{z} \mathbf{W}^T + \mathbf{b}$.
 
@@ -156,7 +156,7 @@ The optimal shrinkage intensity $\rho^* \in (0, 1)$ is determined in closed form
 \begin{equation}
     \rho^* = \min\left(1, \frac{\sum_{i=1}^N \|(\mathbf{z}_i - \boldsymbol{\mu}_{c_i})(\mathbf{z}_i - \boldsymbol{\mu}_{c_i})^T - \mathbf{S}_W\|_F^2}{N^2 \left[\|\mathbf{S}_W\|_F^2 - \frac{1}{d}\text{Tr}^2(\mathbf{S}_W)\right]}\right)
 \end{equation}
-Because $\hat{\mathbf{\Sigma}}$ is strictly positive-definite and well-conditioned, its exact inverse $\hat{\mathbf{\Sigma}}^{-1}$ is guaranteed to exist. Substituting $\hat{\mathbf{\Sigma}}$ into \eqref{eq:fisher_weights} resolves few-shot adaptation in closed form, eliminating gradient descent entirely. During subsequent inference, classifying a query descriptor $\mathbf{z}$ simplifies to evaluating $\mathbf{l}_{\text{fisher}} = \mathbf{z} \mathbf{W}^T + \mathbf{b}$. This matrix-vector projection requires only $9{,}856$ multiply-accumulate operations (about $19.7$\,kFLOPs), executing in under $0.003$\,ms ($>10{,}000$ FPS) on an embedded 4-thread CPU.
+Because $\hat{\mathbf{\Sigma}}$ is strictly positive-definite and well-conditioned, its exact inverse $\hat{\mathbf{\Sigma}}^{-1}$ is guaranteed to exist. Evaluating \eqref{eq:fisher_weights} with $\hat{\mathbf{\Sigma}}^{-1}$ resolves few-shot adaptation in closed form, eliminating gradient descent entirely. During subsequent inference, classifying a query descriptor $\mathbf{z}$ simplifies to evaluating $\mathbf{l}_{\text{fisher}} = \mathbf{z} \mathbf{W}^T + \mathbf{b}$. This matrix-vector projection requires only $9{,}856$ multiply-accumulate operations (about $19.7$\,kFLOPs), executing in under $0.003$\,ms ($>10{,}000$ FPS) on an embedded 4-thread CPU.
 
 \subsection{Adaptive Two-Tier Classification and Edge Deployment}
 \label{sec:edge_deployment}
