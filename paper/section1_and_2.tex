@@ -24,7 +24,8 @@
     \IEEEauthorblockN{Mohammad Reza Samad Zadeh}
     \IEEEauthorblockA{\textit{Department of Computer Engineering} \\
     \textit{Dr. Shariaty Technical University} \\
-    Tehran, Iran}
+    Tehran, Iran \\
+    samadzadeh@ut.ac.ir}
 }
 
 \maketitle
@@ -51,9 +52,9 @@ We introduce BioDINO-Edge, a gradient-free dual-foundation pipeline tailored for
 The key contributions of this work are as follows:
 \begin{enumerate}
     \item \textbf{Dual-Foundation Foliar Representation:} Combining self-supervised visual embeddings from DINOv2 with BioCLIP's visual and textual botanical representations to discriminate subtle necrotic lesions without foundation-model fine-tuning.
-    \item \textbf{Closed-Form Analytical Adaptation:} Integrating Fisher-LDA \cite{fisher1936use} with Ledoit--Wolf covariance shrinkage \cite{ledoit2004well} and soft-anchored transductive recalibration to overcome high-dimensionality issues and 5-shot centroid shifts via a closed-form update that runs in under 22\,ms on an edge CPU without backpropagation.
-    \item \textbf{Adaptive Two-Tier Edge Deployment:} A joint margin and Shannon-entropy \cite{shannon1948mathematical} gate dynamically routes queries between a compact standalone app and an on-demand deep module, keeping the default installation within a $\sim$30\,MB storage budget and the full two-tier footprint under 110\,MB.
-    \item \textbf{Cross-Domain Empirical Validation:} Under few-shot evaluation, BioDINO-Edge outperforms the multimodal VSF \cite{zhou2026vsf} baseline by 13.00 percentage points in 5-way 5-shot evaluation on PlantDoc and by 6.86 percentage points on the 11-class PlantVillage benchmark, while remaining within the target edge storage budget.
+    \item \textbf{Closed-Form Analytical Adaptation:} Integrating Fisher-LDA \cite{fisher1936use} with Ledoit--Wolf covariance shrinkage \cite{ledoit2004well} and soft-anchored transductive recalibration to overcome high-dimensionality issues and 5-shot centroid shifts via an instantaneous closed-form update that executes in sub-second latency on edge CPUs without backpropagation or iterative optimization.
+    \item \textbf{Adaptive Two-Tier Edge Deployment:} A joint margin and Shannon-entropy \cite{shannon1948mathematical} gate dynamically routes queries between a compact standalone app and an on-demand deep module, keeping the standalone Android app under 30\,MB\footnote{The complete open-source mobile implementation is available at \url{https://github.com/reyhane-code/BioDINO-Edge-android}.} and the full two-tier footprint under 110\,MB.
+    \item \textbf{Cross-Domain Empirical Validation:} Under rigorous few-shot evaluation, BioDINO-Edge outperforms the multimodal VSF \cite{zhou2026vsf} baseline by 6.86 percentage points on the 11-class PlantVillage benchmark \cite{hughes2012plantvillage} and by 13.00 percentage points in 5-way 5-shot evaluation on the in-the-wild PlantDoc dataset \cite{singh2020plantdoc}, while remaining within the target edge storage budget.
 \end{enumerate}
 
 \section{Methodology}
@@ -82,8 +83,10 @@ This two-tier design reduces latency on routine foliage while enforcing a $<30$\
 \label{sec:feature_extraction}
 Reliable diagnosis in agricultural environments requires distinguishing variation in the vegetative background from leaf and lesion signals \cite{singh2020plantdoc, yang2024laboratory}. Vision encoders often fail to capture fine fungal structures \cite{yang2024laboratory}, while species-level taxonomic supervision biases models toward overall host identity rather than localized lesion pathology \cite{stevens2024bioclip}. To address this challenge, BioDINO-Edge builds a foliar representation from two foundation models, using support samples expanded through multi-view augmentation.
 
+\medskip
 \textbf{Few-Shot Multi-View Augmentation.} For each disease class $c \in \{1, \dots, C\}$, with $C=11$, calibration uses a support set $\mathcal{S}_c = \{(\mathbf{x}_i, c)\}_{i=1}^K$ of $K=5$ images randomly selected from PlantVillage \cite{hughes2012plantvillage}. Because PlantVillage images are captured under controlled conditions, each support image is resized to $224 \times 224$ and normalized, then passed eight times independently through a stochastic augmentation pipeline to approximate the variation seen in field imagery. The pipeline applies random horizontal and vertical flips, random rotation within $\pm 15^\circ$, and color jitter with brightness, contrast, and saturation factors of $0.2$. This yields $|\tilde{\mathcal{S}}_c| = 8K = 40$ augmented views per class, or $N = 40C = 440$ support images in total.
 
+\medskip
 \textbf{Dual-Foundation Visual Extraction.} Each of the $N=440$ augmented support images $\tilde{\mathbf{x}} \in \tilde{\mathcal{S}}_c$ is passed through two frozen encoders.
 
 DINOv2 (Small, $14 \times 14$ patches) \cite{oquab2023dinov2} provides self-supervised spatial embeddings that capture fine lesion structure:
@@ -108,6 +111,7 @@ Stacking these descriptors over all support images yields $\mathbf{Z} \in \mathb
 \end{equation}
 yielding visual prototype matrices $\mathbf{P}_{\text{dino}} \in \mathbb{R}^{C \times 384}$ and $\mathbf{P}_{\text{bio, vis}} \in \mathbb{R}^{C \times 512}$.
 
+\medskip
 \textbf{Predefined Botanical Prompts and Multimodal Prototype.} BioCLIP provides a shared vision--language space, but running a language transformer or generating per-image captions on edge scouting devices would exceed on-device computational limits; manual prompt entry during scouting is also impractical. We therefore predefine $M=3$ botanical prompt templates $\{T_c^{(m)}\}_{m=1}^M$ for each class $c \in \{1,\dots,C\}$ offline. Each template combines three attributes:
 (1)~\textit{Host binomial nomenclature}: genus and species (e.g., \textit{Malus domestica}, \textit{Vitis vinifera}, \textit{Solanum tuberosum});
 (2)~\textit{Pathogen identity}: the causal fungal, bacterial, or oomycete agent (e.g., \textit{Venturia inaequalis}, \textit{Botryosphaeria obtusa}, \textit{Gymnosporangium juniperi-virginianae}, \textit{Phytophthora infestans}); and
@@ -142,12 +146,14 @@ Assuming equal class priors ($\pi_c = 1/C$), the projection weights $\mathbf{W} 
 \end{equation}
 A query descriptor $\mathbf{z}$ is then classified via $\mathbf{l}_{\text{fisher}} = \mathbf{z} \mathbf{W}^T + \mathbf{b}$.
 
+\medskip
 \textbf{The Small-Sample Singularity Problem ($N \ll d$).} Computing the optimal projection $\mathbf{W}$ requires inverting the pooled within-class scatter matrix over all $C=11$ classes:
 \begin{equation}
     \mathbf{S}_W = \frac{1}{N - C}\sum_{c=1}^C \sum_{\mathbf{z} \in \tilde{\mathcal{S}}_c} (\mathbf{z} - \boldsymbol{\mu}_c)(\mathbf{z} - \boldsymbol{\mu}_c)^T \in \mathbb{R}^{d \times d}
 \end{equation}
 In the few-shot setting, however, the number of samples is far smaller than the feature dimension ($d = 896$ vs. $N = 440$). Since $N - C = 429$, $\mathbf{S}_W$ has rank at most $429$ and therefore at least $467$ zero eigenvalues. It is thus singular; direct inversion is ill-defined, and standard Fisher-LDA cannot be applied directly.
 
+\medskip
 \textbf{Analytical Ledoit--Wolf Covariance Shrinkage.} To restore invertibility while avoiding heuristic hyperparameter selection (such as tuning $\mathbf{S}_W + \epsilon \mathbf{I}$), we regularize $\mathbf{S}_W$ via analytical Ledoit--Wolf shrinkage \cite{ledoit2004well}:
 \begin{equation}
     \hat{\mathbf{\Sigma}} = (1 - \rho^*)\mathbf{S}_W + \rho^* \nu \mathbf{I}_{d}, \quad \nu = \frac{1}{d}\text{Tr}(\mathbf{S}_W)
@@ -162,6 +168,7 @@ Because $\hat{\mathbf{\Sigma}}$ is strictly positive-definite and well-condition
 \label{sec:edge_deployment}
 To avoid unnecessary model execution on routine samples while maintaining accuracy on complex pathologies, BioDINO-Edge uses a two-tier pipeline controlled by an uncertainty gate.
 
+\medskip
 \textbf{Tier-1 Fast Classification and Predictive Shannon Gating.} For an incoming query image $\mathbf{x}$, Tier~1 extracts the normalized DINOv2 embedding $\mathbf{f}_{\text{dino}} \in \mathbb{R}^{384}$. Fast prototype logits are evaluated via cosine similarity against the visual prototype matrix $\mathbf{P}_{\text{dino}} \in \mathbb{R}^{C \times 384}$, scaled by inverse temperature $\gamma = 20.0$:
 \begin{equation}
     \label{eq:tier1_logits}
@@ -183,6 +190,7 @@ where $p_{\text{dino}, (1)}$ and $p_{\text{dino}, (2)}$ denote top-1 and top-2 p
 \end{equation}
 with numerical stability constant $\epsilon = 10^{-12}$. If $\mathcal{C}(\mathbf{x}) \ge \tau_{\text{conf}}$ (calibrated threshold $\tau_{\text{conf}} = 0.35$), the Tier-1 prediction is considered reliable. The system returns $\hat{y} = \hat{y}_{\text{tier1}}$ and skips Tier-2 inference.
 
+\medskip
 \textbf{Tier-2 Deep Escalation.} When Tier-1 indicates high uncertainty ($\mathcal{C}(\mathbf{x}) < \tau_{\text{conf}}$), the query is escalated. BioCLIP computes the 512-D visual embedding $\mathbf{f}_{\text{bio}}$, which is concatenated with $\mathbf{f}_{\text{dino}}$ to form the joint descriptor $\mathbf{z} = [\mathbf{f}_{\text{bio}} \,\|\, \mathbf{f}_{\text{dino}}] \in \mathbb{R}^{896}$. The visual posterior $\mathbf{p}_{\text{fish}} = \text{softmax}\left(\mathbf{z} \mathbf{W}^T + \mathbf{b}\right)$ is computed using the regularized Fisher-LDA hyperplane \eqref{eq:fisher_weights}, which separates the 896-D representations. The text posterior is obtained via:
 \begin{equation}
     \mathbf{p}_{\text{text}} = \text{softmax}\left(\gamma \cdot \mathbf{f}_{\text{bio}} \mathbf{P}_{\text{text}}^T\right)
@@ -194,15 +202,17 @@ where $\mathbf{P}_{\text{text}}$ represents the cached botanical text prototypes
 \end{equation}
 yielding the consensus diagnosis $\hat{y} = \arg\max_c p_{\text{blend}, c}$.
 
+\medskip
 \textbf{Soft-Anchored Transductive Recalibration.} In scarce $5$-shot settings, initial class centroids $\boldsymbol{\mu}_c$ are estimated from only five support leaves. Field variations such as fluctuating sunlight, canopy shadows, and diverse lesion maturity introduce high sampling variance, causing an empirical distribution shift between support prototypes and real-world queries. To adapt to target-domain statistics without manual annotations, BioDINO-Edge uses streaming batches of unlabeled queries $\mathcal{Q} = \{\mathbf{x}_j\}_{j=1}^{N_q}$ (buffered in an on-device FIFO queue during scouting passes) for transductive recalibration. High-confidence queries satisfying $\max_c p_{\text{blend}, c}(\mathbf{x}_j) \ge 0.70$ from \eqref{eq:multimodal_blend} are selected as pseudo-labeled reference samples $\mathcal{Q}_{\text{anchor}}^{(c)}$, capped at up to twenty anchors per class ($0 \le |\mathcal{Q}_{\text{anchor}}^{(c)}| \le 20$). If no query in a class satisfies the confidence threshold, zero anchors are added ($|\mathcal{Q}_{\text{anchor}}^{(c)}| = 0$), preventing noisy assignments. To mitigate the effect of pseudo-label noise on the feature manifold, canonical ground-truth support samples are assigned a $3\times$ weight factor in the covariance and centroid estimation:
 \begin{equation}
     \tilde{\mathcal{S}}_c^{\text{trans}} = \tilde{\mathcal{S}}_c^{(3\times)} \cup \mathcal{Q}_{\text{anchor}}^{(c)}
 \end{equation}
-Recalibration re-estimates the updated centroids $\boldsymbol{\mu}_c^{\text{trans}}$ and re-evaluates the pooled $896 \times 896$ scatter matrix $\mathbf{S}_W^{\text{trans}}$ with analytical shrinkage parameter $\rho^*$. Because $\hat{\mathbf{\Sigma}}^{\text{trans}}$ is strictly positive-definite (with all eigenvalues bounded below by $\rho^* \nu > 0$), the updated projection parameters $(\mathbf{W}^{\text{trans}}, \mathbf{b}^{\text{trans}})$ are solved stably via Cholesky factorization ($\hat{\mathbf{\Sigma}}^{\text{trans}} = \mathbf{L}\mathbf{L}^T$) and triangular substitution. This batch recalibration runs asynchronously in under $22$\,ms on a four-thread mobile CPU, updating edge projection parameters for subsequent query batches without backpropagation or optimizer-state overhead.
+Recalibration re-estimates the updated centroids $\boldsymbol{\mu}_c^{\text{trans}}$ and re-evaluates the pooled $896 \times 896$ scatter matrix $\mathbf{S}_W^{\text{trans}}$ with analytical shrinkage parameter $\rho^*$. Because $\hat{\mathbf{\Sigma}}^{\text{trans}}$ is strictly positive-definite (with all eigenvalues bounded below by $\rho^* \nu > 0$), the updated projection parameters $(\mathbf{W}^{\text{trans}}, \mathbf{b}^{\text{trans}})$ are solved stably via Cholesky factorization ($\hat{\mathbf{\Sigma}}^{\text{trans}} = \mathbf{L}\mathbf{L}^T$) and triangular substitution. This batch recalibration runs asynchronously in the background on edge CPUs, updating edge projection parameters for subsequent query batches without backpropagation or optimizer-state overhead.
 
+\medskip
 \textbf{Two-Tier Modular Edge Packaging.} As outlined in Section~\ref{sec:pipeline_overview}, this cascaded gating resolves approximately 88.4\% of routine queries at Tier~1 (21.12\,ms, $>$45\,FPS), leaving Tier~2 (67.61\,ms end-to-end) exclusively for ambiguous field queries. Agricultural edge platforms---ranging from mobile scouting devices to ground rovers and crop-monitoring UAVs---share onboard storage with telemetry and sensor buffers, while limited rural connectivity restricts over-the-air (OTA) updates. To keep the base Android APK and embedded runtime within a 30\,MB standalone storage footprint, BioDINO-Edge is partitioned into two INT8 ONNX binaries:
 \begin{itemize}
-    \item \textbf{Tier 1} (\texttt{biodino\_\allowbreak mobile\_\allowbreak int8.onnx}): The model is 15.13\,MB and is packaged with the ONNX Runtime C++ engine into the base Android APK (22.73\,MB total) for immediate offline inference.
+    \item \textbf{Tier 1} (\texttt{biodino\_\allowbreak mobile\_\allowbreak int8.onnx}): The model is 15.13\,MB and is packaged with the ONNX Runtime C++ engine into the base Android APK (22.73\,MB total, open-sourced at \url{https://github.com/reyhane-code/BioDINO-Edge-android}) for immediate offline inference.
     \item \textbf{Tier 2} (\texttt{biodino\_\allowbreak comp\allowbreak anion\_\allowbreak int8.onnx}): An 85.3\,MB companion model that is downloaded on demand.
 \end{itemize}
 This results in a total edge storage footprint of 108.03\,MB.

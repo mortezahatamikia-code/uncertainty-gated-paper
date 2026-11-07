@@ -24,7 +24,8 @@
     \IEEEauthorblockN{Mohammad Reza Samad Zadeh}
     \IEEEauthorblockA{\textit{Department of Computer Engineering} \\
     \textit{Dr. Shariaty Technical University} \\
-    Tehran, Iran}
+    Tehran, Iran \\
+    samadzadeh@ut.ac.ir}
 }
 
 \maketitle
@@ -51,9 +52,9 @@ We introduce BioDINO-Edge, a gradient-free dual-foundation pipeline tailored for
 The key contributions of this work are as follows:
 \begin{enumerate}
     \item \textbf{Dual-Foundation Foliar Representation:} Combining self-supervised visual embeddings from DINOv2 with BioCLIP's visual and textual botanical representations to discriminate subtle necrotic lesions without foundation-model fine-tuning.
-    \item \textbf{Closed-Form Analytical Adaptation:} Integrating Fisher-LDA \cite{fisher1936use} with Ledoit--Wolf covariance shrinkage \cite{ledoit2004well} and soft-anchored transductive recalibration to overcome high-dimensionality issues and 5-shot centroid shifts via a closed-form update that runs in under 22\,ms on an edge CPU without backpropagation.
-    \item \textbf{Adaptive Two-Tier Edge Deployment:} A joint margin and Shannon-entropy \cite{shannon1948mathematical} gate dynamically routes queries between a compact standalone app and an on-demand deep module, keeping the default installation within a $\sim$30\,MB storage budget and the full two-tier footprint under 110\,MB.
-    \item \textbf{Cross-Domain Empirical Validation:} Under few-shot evaluation, BioDINO-Edge outperforms the multimodal VSF \cite{zhou2026vsf} baseline by 13.00 percentage points in 5-way 5-shot evaluation on PlantDoc and by 6.86 percentage points on the 11-class PlantVillage benchmark, while remaining within the target edge storage budget.
+    \item \textbf{Closed-Form Analytical Adaptation:} Integrating Fisher-LDA \cite{fisher1936use} with Ledoit--Wolf covariance shrinkage \cite{ledoit2004well} and soft-anchored transductive recalibration to overcome high-dimensionality issues and 5-shot centroid shifts via an instantaneous closed-form update that executes in sub-second latency on edge CPUs without backpropagation or iterative optimization.
+    \item \textbf{Adaptive Two-Tier Edge Deployment:} A joint margin and Shannon-entropy \cite{shannon1948mathematical} gate dynamically routes queries between a compact standalone app and an on-demand deep module, keeping the standalone Android app under 30\,MB\footnote{The complete open-source mobile implementation is available at \url{https://github.com/reyhane-code/BioDINO-Edge-android}.} and the full two-tier footprint under 110\,MB.
+    \item \textbf{Cross-Domain Empirical Validation:} Under rigorous few-shot evaluation, BioDINO-Edge outperforms the multimodal VSF \cite{zhou2026vsf} baseline by 6.86 percentage points on the 11-class PlantVillage benchmark \cite{hughes2012plantvillage} and by 13.00 percentage points in 5-way 5-shot evaluation on the in-the-wild PlantDoc dataset \cite{singh2020plantdoc}, while remaining within the target edge storage budget.
 \end{enumerate}
 
 \section{Methodology}
@@ -82,8 +83,10 @@ This two-tier design reduces latency on routine foliage while enforcing a $<30$\
 \label{sec:feature_extraction}
 Reliable diagnosis in agricultural environments requires distinguishing variation in the vegetative background from leaf and lesion signals \cite{singh2020plantdoc, yang2024laboratory}. Vision encoders often fail to capture fine fungal structures \cite{yang2024laboratory}, while species-level taxonomic supervision biases models toward overall host identity rather than localized lesion pathology \cite{stevens2024bioclip}. To address this challenge, BioDINO-Edge builds a foliar representation from two foundation models, using support samples expanded through multi-view augmentation.
 
+\medskip
 \textbf{Few-Shot Multi-View Augmentation.} For each disease class $c \in \{1, \dots, C\}$, with $C=11$, calibration uses a support set $\mathcal{S}_c = \{(\mathbf{x}_i, c)\}_{i=1}^K$ of $K=5$ images randomly selected from PlantVillage \cite{hughes2012plantvillage}. Because PlantVillage images are captured under controlled conditions, each support image is resized to $224 \times 224$ and normalized, then passed eight times independently through a stochastic augmentation pipeline to approximate the variation seen in field imagery. The pipeline applies random horizontal and vertical flips, random rotation within $\pm 15^\circ$, and color jitter with brightness, contrast, and saturation factors of $0.2$. This yields $|\tilde{\mathcal{S}}_c| = 8K = 40$ augmented views per class, or $N = 40C = 440$ support images in total.
 
+\medskip
 \textbf{Dual-Foundation Visual Extraction.} Each of the $N=440$ augmented support images $\tilde{\mathbf{x}} \in \tilde{\mathcal{S}}_c$ is passed through two frozen encoders.
 
 DINOv2 (Small, $14 \times 14$ patches) \cite{oquab2023dinov2} provides self-supervised spatial embeddings that capture fine lesion structure:
@@ -108,6 +111,7 @@ Stacking these descriptors over all support images yields $\mathbf{Z} \in \mathb
 \end{equation}
 yielding visual prototype matrices $\mathbf{P}_{\text{dino}} \in \mathbb{R}^{C \times 384}$ and $\mathbf{P}_{\text{bio, vis}} \in \mathbb{R}^{C \times 512}$.
 
+\medskip
 \textbf{Predefined Botanical Prompts and Multimodal Prototype.} BioCLIP provides a shared vision--language space, but running a language transformer or generating per-image captions on edge scouting devices would exceed on-device computational limits; manual prompt entry during scouting is also impractical. We therefore predefine $M=3$ botanical prompt templates $\{T_c^{(m)}\}_{m=1}^M$ for each class $c \in \{1,\dots,C\}$ offline. Each template combines three attributes:
 (1)~\textit{Host binomial nomenclature}: genus and species (e.g., \textit{Malus domestica}, \textit{Vitis vinifera}, \textit{Solanum tuberosum});
 (2)~\textit{Pathogen identity}: the causal fungal, bacterial, or oomycete agent (e.g., \textit{Venturia inaequalis}, \textit{Botryosphaeria obtusa}, \textit{Gymnosporangium juniperi-virginianae}, \textit{Phytophthora infestans}); and
@@ -142,12 +146,14 @@ Assuming equal class priors ($\pi_c = 1/C$), the projection weights $\mathbf{W} 
 \end{equation}
 A query descriptor $\mathbf{z}$ is then classified via $\mathbf{l}_{\text{fisher}} = \mathbf{z} \mathbf{W}^T + \mathbf{b}$.
 
+\medskip
 \textbf{The Small-Sample Singularity Problem ($N \ll d$).} Computing the optimal projection $\mathbf{W}$ requires inverting the pooled within-class scatter matrix over all $C=11$ classes:
 \begin{equation}
     \mathbf{S}_W = \frac{1}{N - C}\sum_{c=1}^C \sum_{\mathbf{z} \in \tilde{\mathcal{S}}_c} (\mathbf{z} - \boldsymbol{\mu}_c)(\mathbf{z} - \boldsymbol{\mu}_c)^T \in \mathbb{R}^{d \times d}
 \end{equation}
 In the few-shot setting, however, the number of samples is far smaller than the feature dimension ($d = 896$ vs. $N = 440$). Since $N - C = 429$, $\mathbf{S}_W$ has rank at most $429$ and therefore at least $467$ zero eigenvalues. It is thus singular; direct inversion is ill-defined, and standard Fisher-LDA cannot be applied directly.
 
+\medskip
 \textbf{Analytical Ledoit--Wolf Covariance Shrinkage.} To restore invertibility while avoiding heuristic hyperparameter selection (such as tuning $\mathbf{S}_W + \epsilon \mathbf{I}$), we regularize $\mathbf{S}_W$ via analytical Ledoit--Wolf shrinkage \cite{ledoit2004well}:
 \begin{equation}
     \hat{\mathbf{\Sigma}} = (1 - \rho^*)\mathbf{S}_W + \rho^* \nu \mathbf{I}_{d}, \quad \nu = \frac{1}{d}\text{Tr}(\mathbf{S}_W)
@@ -162,6 +168,7 @@ Because $\hat{\mathbf{\Sigma}}$ is strictly positive-definite and well-condition
 \label{sec:edge_deployment}
 To avoid unnecessary model execution on routine samples while maintaining accuracy on complex pathologies, BioDINO-Edge uses a two-tier pipeline controlled by an uncertainty gate.
 
+\medskip
 \textbf{Tier-1 Fast Classification and Predictive Shannon Gating.} For an incoming query image $\mathbf{x}$, Tier~1 extracts the normalized DINOv2 embedding $\mathbf{f}_{\text{dino}} \in \mathbb{R}^{384}$. Fast prototype logits are evaluated via cosine similarity against the visual prototype matrix $\mathbf{P}_{\text{dino}} \in \mathbb{R}^{C \times 384}$, scaled by inverse temperature $\gamma = 20.0$:
 \begin{equation}
     \label{eq:tier1_logits}
@@ -183,6 +190,7 @@ where $p_{\text{dino}, (1)}$ and $p_{\text{dino}, (2)}$ denote top-1 and top-2 p
 \end{equation}
 with numerical stability constant $\epsilon = 10^{-12}$. If $\mathcal{C}(\mathbf{x}) \ge \tau_{\text{conf}}$ (calibrated threshold $\tau_{\text{conf}} = 0.35$), the Tier-1 prediction is considered reliable. The system returns $\hat{y} = \hat{y}_{\text{tier1}}$ and skips Tier-2 inference.
 
+\medskip
 \textbf{Tier-2 Deep Escalation.} When Tier-1 indicates high uncertainty ($\mathcal{C}(\mathbf{x}) < \tau_{\text{conf}}$), the query is escalated. BioCLIP computes the 512-D visual embedding $\mathbf{f}_{\text{bio}}$, which is concatenated with $\mathbf{f}_{\text{dino}}$ to form the joint descriptor $\mathbf{z} = [\mathbf{f}_{\text{bio}} \,\|\, \mathbf{f}_{\text{dino}}] \in \mathbb{R}^{896}$. The visual posterior $\mathbf{p}_{\text{fish}} = \text{softmax}\left(\mathbf{z} \mathbf{W}^T + \mathbf{b}\right)$ is computed using the regularized Fisher-LDA hyperplane \eqref{eq:fisher_weights}, which separates the 896-D representations. The text posterior is obtained via:
 \begin{equation}
     \mathbf{p}_{\text{text}} = \text{softmax}\left(\gamma \cdot \mathbf{f}_{\text{bio}} \mathbf{P}_{\text{text}}^T\right)
@@ -194,27 +202,56 @@ where $\mathbf{P}_{\text{text}}$ represents the cached botanical text prototypes
 \end{equation}
 yielding the consensus diagnosis $\hat{y} = \arg\max_c p_{\text{blend}, c}$.
 
+\medskip
 \textbf{Soft-Anchored Transductive Recalibration.} In scarce $5$-shot settings, initial class centroids $\boldsymbol{\mu}_c$ are estimated from only five support leaves. Field variations such as fluctuating sunlight, canopy shadows, and diverse lesion maturity introduce high sampling variance, causing an empirical distribution shift between support prototypes and real-world queries. To adapt to target-domain statistics without manual annotations, BioDINO-Edge uses streaming batches of unlabeled queries $\mathcal{Q} = \{\mathbf{x}_j\}_{j=1}^{N_q}$ (buffered in an on-device FIFO queue during scouting passes) for transductive recalibration. High-confidence queries satisfying $\max_c p_{\text{blend}, c}(\mathbf{x}_j) \ge 0.70$ from \eqref{eq:multimodal_blend} are selected as pseudo-labeled reference samples $\mathcal{Q}_{\text{anchor}}^{(c)}$, capped at up to twenty anchors per class ($0 \le |\mathcal{Q}_{\text{anchor}}^{(c)}| \le 20$). If no query in a class satisfies the confidence threshold, zero anchors are added ($|\mathcal{Q}_{\text{anchor}}^{(c)}| = 0$), preventing noisy assignments. To mitigate the effect of pseudo-label noise on the feature manifold, canonical ground-truth support samples are assigned a $3\times$ weight factor in the covariance and centroid estimation:
 \begin{equation}
     \tilde{\mathcal{S}}_c^{\text{trans}} = \tilde{\mathcal{S}}_c^{(3\times)} \cup \mathcal{Q}_{\text{anchor}}^{(c)}
 \end{equation}
-Recalibration re-estimates the updated centroids $\boldsymbol{\mu}_c^{\text{trans}}$ and re-evaluates the pooled $896 \times 896$ scatter matrix $\mathbf{S}_W^{\text{trans}}$ with analytical shrinkage parameter $\rho^*$. Because $\hat{\mathbf{\Sigma}}^{\text{trans}}$ is strictly positive-definite (with all eigenvalues bounded below by $\rho^* \nu > 0$), the updated projection parameters $(\mathbf{W}^{\text{trans}}, \mathbf{b}^{\text{trans}})$ are solved stably via Cholesky factorization ($\hat{\mathbf{\Sigma}}^{\text{trans}} = \mathbf{L}\mathbf{L}^T$) and triangular substitution. This batch recalibration runs asynchronously in under $22$\,ms on a four-thread mobile CPU, updating edge projection parameters for subsequent query batches without backpropagation or optimizer-state overhead.
+Recalibration re-estimates the updated centroids $\boldsymbol{\mu}_c^{\text{trans}}$ and re-evaluates the pooled $896 \times 896$ scatter matrix $\mathbf{S}_W^{\text{trans}}$ with analytical shrinkage parameter $\rho^*$. Because $\hat{\mathbf{\Sigma}}^{\text{trans}}$ is strictly positive-definite (with all eigenvalues bounded below by $\rho^* \nu > 0$), the updated projection parameters $(\mathbf{W}^{\text{trans}}, \mathbf{b}^{\text{trans}})$ are solved stably via Cholesky factorization ($\hat{\mathbf{\Sigma}}^{\text{trans}} = \mathbf{L}\mathbf{L}^T$) and triangular substitution. This batch recalibration runs asynchronously in the background on edge CPUs, updating edge projection parameters for subsequent query batches without backpropagation or optimizer-state overhead.
 
+\medskip
 \textbf{Two-Tier Modular Edge Packaging.} As outlined in Section~\ref{sec:pipeline_overview}, this cascaded gating resolves approximately 88.4\% of routine queries at Tier~1 (21.12\,ms, $>$45\,FPS), leaving Tier~2 (67.61\,ms end-to-end) exclusively for ambiguous field queries. Agricultural edge platforms---ranging from mobile scouting devices to ground rovers and crop-monitoring UAVs---share onboard storage with telemetry and sensor buffers, while limited rural connectivity restricts over-the-air (OTA) updates. To keep the base Android APK and embedded runtime within a 30\,MB standalone storage footprint, BioDINO-Edge is partitioned into two INT8 ONNX binaries:
 \begin{itemize}
-    \item \textbf{Tier 1} (\texttt{biodino\_\allowbreak mobile\_\allowbreak int8.onnx}): The model is 15.13\,MB and is packaged with the ONNX Runtime C++ engine into the base Android APK (22.73\,MB total) for immediate offline inference.
+    \item \textbf{Tier 1} (\texttt{biodino\_\allowbreak mobile\_\allowbreak int8.onnx}): The model is 15.13\,MB and is packaged with the ONNX Runtime C++ engine into the base Android APK (22.73\,MB total, open-sourced at \url{https://github.com/reyhane-code/BioDINO-Edge-android}) for immediate offline inference.
     \item \textbf{Tier 2} (\texttt{biodino\_\allowbreak comp\allowbreak anion\_\allowbreak int8.onnx}): An 85.3\,MB companion model that is downloaded on demand.
 \end{itemize}
 This results in a total edge storage footprint of 108.03\,MB.
 
-\section{Experimental Evaluation}
+\section{Experiments}
 \label{sec:experiments}
 
-\subsection{Experimental Setup and Benchmark Protocol}
-We evaluate BioDINO-Edge on the PlantVillage benchmark \cite{hughes2012plantvillage}, defining an 11-class intra-species challenge across three major crop families: Apple (\textit{Malus domestica}: Scab, Black Rot, Cedar Rust, and Healthy), Grape (\textit{Vitis vinifera}: Black Rot, Esca, Leaf Blight, and Healthy), and Potato (\textit{Solanum tuberosum}: Early Blight, Late Blight, and Healthy). Under the 5-shot protocol, exactly $K=5$ support leaves are sampled per class (55 total support images), and the remaining 9,330 images form the unseen query set. To avoid seed bias, all experiments report both single-episode benchmarks and 30-episode Monte Carlo evaluations with 95\% confidence intervals ($95\%\,\text{CI} = \bar{x} \pm 1.96 \cdot \frac{\sigma}{\sqrt{30}}$). Hardware latency is measured on a standard four-thread CPU via Microsoft ONNX Runtime C++ engine with dynamic INT8 MatMul quantization, matching the mobile APK.
+\subsection{Datasets and Setup}
+\label{sec:datasets_setup}
+We evaluate BioDINO-Edge on both controlled (PlantVillage) and in-the-wild (PlantDoc) datasets to assess cross-domain generalization and operational feasibility.
 
-\subsection{Comparative Benchmark Results}
-Table~\ref{tab:comparative} compares BioDINO-Edge with standard and state-of-the-art few-shot methods on laboratory foliage (PlantVillage) and real agricultural fields (PlantDoc).
+\medskip
+\textbf{PlantVillage Benchmark:} We use PlantVillage \cite{hughes2012plantvillage} for standardized evaluation under uniform illumination. We select an 11-class subset across Apple, Grape, and Potato (including Healthy foliage). The dataset contains 9,385 images. Under a 5-shot regime, $K=5$ support images per class are randomly sampled (55 total) for calibration, while the remaining 9,330 images serve exclusively as unseen queries.
+
+\medskip
+\textbf{PlantDoc In-The-Wild Benchmark:} We use PlantDoc \cite{singh2020plantdoc} to evaluate cross-domain generalization on field-acquired imagery with complex backgrounds and variable illumination. It spans 27 classes across 13 plant species. We evaluate two protocols:
+\begin{enumerate}
+    \item \textit{5-Way 5-Shot Episodic}: In each episode, 5 classes are sampled, with $K=5$ support images per class (25 total) and the remaining instances as queries. Results are averaged over 50 Monte Carlo trials.
+    \item \textit{27-Way All-Class}: All 27 categories are evaluated simultaneously (chance accuracy $\approx 3.70\%$). Exactly 5 support images per class (135 total) are drawn, and all 252 field test queries are classified without domain-specific fine-tuning.
+\end{enumerate}
+
+\medskip
+\textbf{Edge Hardware Setup:} To evaluate on-device latency and adaptation, we benchmark performance in a simulated environment configured to match a Raspberry Pi 5 (quad-core ARM Cortex-A76 at 2.4\,GHz). Runtime profiling uses the ONNX Runtime C++ engine with dynamic INT8 quantization, restricted to 4 threads without GPU acceleration. This setup matches the execution environment of our native Android APK.
+
+\subsection{Evaluation Protocol}
+\label{sec:eval_protocol}
+\textbf{Few-Shot Task and Evaluation Regimes.} Under the 5-shot constraint ($K=5$), the support set is expanded via the multi-view augmentation described in Section~\ref{sec:feature_extraction}. To ensure statistical robustness, PlantVillage experiments are evaluated over 30 independent Monte Carlo episodes with randomly sampled support sets. We report the mean $\bar{x}$, standard deviation $\sigma$, and 95\% confidence intervals ($95\%\,\text{CI} = \bar{x} \pm 1.96 \cdot \frac{\sigma}{\sqrt{30}}$), alongside peak single-episode accuracy. For PlantDoc, we report 50-episode averages for the 5-way 5-shot regime, and all-class metrics for the 27-way evaluation.
+
+\medskip
+\textbf{Diagnostic and Epidemiological Metrics.} We use standard classification metrics and safety-critical epidemiological indicators:
+\begin{itemize}
+    \item \textit{Top-1 Accuracy}: Proportion of correctly classified queries.
+    \item \textit{Macro F1-Score}: Unweighted average of per-class F1-scores. This prevents dominant classes (e.g., Potato Early Blight with 995 queries) from masking degradation on minority or healthy classes (e.g., Potato Healthy with 147 queries).
+    \item \textit{Epidemiological Safety Metrics}: Given the asymmetric cost of misclassification in agriculture, we quantify the False-Negative Disease Escape Rate (fraction of infected queries misdiagnosed as healthy) and the Cross-Species Confusion Rate (misattributing a pathology across distinct botanical families).
+\end{itemize}
+
+\subsection{Main Results}
+\label{sec:main_results}
+Table~\ref{tab:comparative} compares BioDINO-Edge against established and state-of-the-art few-shot learning baselines across both controlled laboratory foliage (PlantVillage) and real agricultural fields (PlantDoc). Overall, BioDINO-Edge achieves state-of-the-art performance on both benchmarks, outperforming existing approaches across all evaluation metrics.
 
 \begin{table}[htbp]
 \caption{Cross-Domain 5-Shot Benchmark on PlantVillage (11-Cls) \& PlantDoc}
@@ -239,44 +276,21 @@ Static Prototype Consensus & 92.58 & 90.06 & 82.28 $\pm$ 13.12 & 55.56 \\
 BioDINO-Edge (Cascaded Routing) & 96.74 & 95.03 & 83.15 $\pm$ 11.80 & 54.37 \\
 \midrule
 \textbf{BioDINO + Fisher-LDA (Inductive)} & \textbf{96.76} & \textbf{95.08} & 81.79 $\pm$ 11.16 & 55.16 \\
-\textbf{BioDINO Transductive (SOTA Mean)} & \textbf{97.37 $\pm$ 0.73} & \textbf{97.09 $\pm$ 0.66} & \textbf{83.61 $\pm$ 11.69} & \textbf{56.35} \\
+\textbf{BioDINO Transductive (Mean)} & \textbf{97.37 $\pm$ 0.73} & \textbf{97.09 $\pm$ 0.66} & \textbf{83.61 $\pm$ 11.69} & \textbf{56.35} \\
 \textit{-- Peak Accuracy (Single-Episode)} & \textit{98.72} & \textit{98.41} & \textit{100.00} & \textit{58.73} \\
 \bottomrule
 \end{tabular}%
 }
 \end{table}
 
-As reported in Table~\ref{tab:comparative}, zero-shot OpenAI CLIP collapses to 21.20\% accuracy, demonstrating that unspecialized internet-scale pre-training fails to capture histological foliar distinctions. While parameter-efficient adaptation via LoRA improves performance to 86.10\%, it remains hindered by gradient instability in the 5-shot regime. In contrast, BioDINO-Edge with closed-form Fisher-LDA achieves 96.76\% in inductive single-split evaluation (30-episode mean: 95.08\%), outperforming LoRA by 10.66 percentage points without updating model weights. Incorporating soft-anchored transductive recalibration elevates the 30-episode mean to \textbf{97.37\% $\pm$ 0.73\%} (peaking at \textbf{98.72\%}), while tightening the standard deviation from 1.27 to 0.73 points—confirming that closed-form covariance adaptation provides superior statistical consistency across random support draws.
+\medskip
+\textbf{Comparative Baseline Performance.} Table~\ref{tab:comparative} compares BioDINO-Edge with established few-shot baselines on PlantVillage and PlantDoc. Zero-shot CLIP \cite{radford2021clip} performs poorly (21.20\% on PlantVillage and 31.20\% on PlantDoc), showing that general pre-training fails to capture fine foliar lesions. While LoRA fine-tuning \cite{hu2022lora} improves accuracy to 86.10\%, it requires GPU backpropagation and remains unstable in the 5-shot regime. In contrast, BioDINO with closed-form Fisher-LDA achieves 96.76\% on PlantVillage (30-episode mean: 95.08\%), outperforming CLIP+LoRA by 10.66 percentage points without updating backbone weights. Furthermore, BioDINO-Edge outperforms recent state-of-the-art methods, surpassing the multimodal VSF model \cite{zhou2026vsf} (90.51\%) by 6.86 points on PlantVillage and 13.00 points on PlantDoc (70.61\%), and exceeding Zhao \textit{et al.} \cite{zhao2026lightweight} (54.24\%) by 29.37 points.
 
-\subsection{Component Ablation Analysis}
-To isolate component contributions, we perform an ablation on identical 5-shot splits with 9,330 queries (Table~\ref{tab:ablation}).
+\medskip
+\textbf{Transductive vs. Inductive Adaptation.} The proposed soft-anchored transductive recalibration sets a new state of the art on PlantVillage (97.37\%), improving the 30-episode mean from 95.08\% $\pm$ 1.27\% (inductive) to \textbf{97.37\% $\pm$ 0.73\%} (peak: \textbf{98.72\%}, Macro F1: \textbf{98.41\%}), while tightening the standard deviation. This improvement addresses the finite-sample prototype shift inherent in 5-shot learning. Initial class centroids are estimated from only five leaves, making them sensitive to natural field variations (sunlight, shadows, lesion maturity). Transductive recalibration resolves this by accumulating high-confidence queries ($\max_c p_{\text{blend}, c} \ge 0.70$) as reference anchors. Ground-truth support samples are given a $3\times$ weight to prevent pseudo-label drift. Re-evaluating the within-class scatter matrix with Ledoit--Wolf shrinkage adapts the projection to the target query distribution in under 22\,ms, realigning decision boundaries with field conditions.
 
-\begin{table}[htbp]
-\caption{Systematic Component Ablation Study (5-Shot, 9,330 Queries)}
-\label{tab:ablation}
-\centering
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{lcc}
-\toprule
-\textbf{Configuration / Component} & \textbf{Accuracy (\%)} & \textbf{Macro F1 (\%)} \\
-\midrule
-(1) Fast-Path DINOv2 Small alone & 85.42 & 82.10 \\
-(2) Deep-Path BioCLIP ViT-B alone & 92.27 & 89.70 \\
-(3) Naive Multi-Prompt Text Prototypes & 75.12 & 72.80 \\
-(4) Static Prototype Cosine Blending & 92.58 & 90.06 \\
-(5) Multi-View Augmentation (8 views, 440 vectors) & 94.15 & 93.60 \\
-(6) + Regularized Fisher-LDA Manifold Alignment & 96.76 & 95.08 \\
-(7) + Soft-Anchored Transductive Calibration (Single-Run) & 98.32 & 97.64 \\
-(8) + Peak Statistical Episode & \textbf{98.72} & \textbf{98.41} \\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
-
-The ablation trajectory (Table~\ref{tab:ablation}) reveals distinct, complementary roles across backbones. Operating alone, DINOv2 achieves 85.42\%: while it excels at segmenting local lesions, it lacks phylogenetic taxonomic context to separate homologous diseases across plant families. Conversely, BioCLIP alone attains 92.27\%, possessing rich botanical priors but missing localized patch-level lesion granularity. While simple prototype blending establishes a 92.58\% baseline, the introduction of Regularized Fisher-LDA delivers the single largest leap (+4.18 points to 96.76\%), corroborating our theoretical premise that whitening shared vegetative background variance is critical for fine-grained separability. Finally, soft-anchored transductive recalibration contributes a further 1.56\% boost (98.32\%, peak 98.72\%), demonstrating the efficacy of query manifold alignment in mitigating finite-sample prototype shift.
-
-\subsection{Class-Wise Breakdown and Error Diagnostics}
-Table~\ref{tab:class_report} details per-class performance across all 9,330 test query images for the single-run transductive BioDINO configuration.
+\medskip
+\textbf{PlantDoc Generalization.} Under the 5-way 5-shot protocol, BioDINO-Edge achieves \textbf{83.61\% $\pm$ 11.69\%} on PlantDoc, with a 95\% confidence ceiling of 86.85\%. In the 27-way all-class test (chance: 3.70\%), the model reaches \textbf{56.35\%} accuracy (peak: \textbf{58.73\%}) and a \textbf{55.93\%} macro F1. It surpasses the 5-way accuracy of Zhao \textit{et al.} (54.24\%) despite evaluating over five times as many classes, confirming effective cross-domain transfer without target-domain backpropagation.
 
 \begin{table}[htbp]
 \caption{BioDINO-Edge Per-Class Pathology Diagnostic Metrics (11 Classes)}
@@ -308,15 +322,11 @@ Potato Healthy Foliage & 0.820 & 0.993 & 0.898 & 147 \\
 }
 \end{table}
 
-\textbf{Confusable Intra-Species Classes.} Baseline models struggle to distinguish \textit{Grape Esca} from \textit{Grape Black rot} (overlapping necrotic spots) and \textit{Potato Early blight} from \textit{Late blight} (similar brown concentric blights). Regularized Fisher-LDA aligns the 896-dimensional manifold so that pathogen-specific morphological signatures dominate, yielding robust F1-scores of 0.976 (Grape Black Rot), 0.979 (Grape Esca), 0.987 (Potato Early Blight), and 0.974 (Potato Late Blight).
+\medskip
+\textbf{Per-Class Error Diagnostics.} Table~\ref{tab:class_report} details per-class performance across 9,330 queries. Baselines frequently confuse visually similar classes (e.g., Grape Esca vs. Grape Black Rot, or Early vs. Late Potato Blight). Regularized Fisher-LDA effectively separates these by prioritizing pathogen-specific signatures, yielding high F1-scores (0.974--0.987) for these challenging classes.
 
-\textbf{Epidemiological Safety and False-Negative Minimization.} In real-world agricultural epidemiology, the cost of misclassification is heavily asymmetric: false positives (inspecting a healthy leaf) incur minor scouting delays, whereas false negatives (misclassifying an active infection as healthy) risk catastrophic, unmonitored epidemic outbreaks. BioDINO-Edge suppresses the false-negative disease escape rate to \textbf{0.604\%} (43 of 7,125 diseased test queries), representing a 58.6\% risk reduction compared with standard baselines (1.46\%). Furthermore, cross-species confusion across the three botanical families (Apple, Grape, Potato) is restricted to \textbf{0.011\%} (only a single potato image was misattributed to apple). The minority healthy potato class exhibits high recall (0.993) but moderate precision (0.820), reflecting our risk-averse operational objective: under severe class imbalance (147 healthy vs. $\approx$2,000 infected queries), ambiguous border cases are conservatively triaged rather than dismissed as healthy.
-
-\subsection{Cross-Dataset In-The-Wild Generalization on PlantDoc}
-To assess generalization beyond lab conditions, we evaluate on \textbf{PlantDoc} \cite{singh2020plantdoc} (27 categories captured under uncontrolled field clutter, variable lighting, and shadows). Under the standard 5-way 5-shot protocol (50 Monte Carlo trials), BioDINO-Edge sets a new state of the art with an episodic mean accuracy of \textbf{83.61\% $\pm$ 11.69\%} (Table~\ref{tab:comparative}), exceeding multimodal VSF \cite{zhou2026vsf} (70.61\%) by \textbf{13.00} points and Zhao \textit{et al.} \cite{zhao2026lightweight} (54.24\%) by \textbf{29.37} points (peak: \textbf{100.00\%}, 95\% ceiling: \textbf{86.85\%}). In the 27-way all-class stress test (all 27 classes evaluated simultaneously on 252 real-world field queries; chance: 3.70\%), BioDINO-Edge reaches \textbf{56.35\% accuracy} (\textbf{58.73\%} peak) and a \textbf{55.93\% macro F1} ($15.2\times$ random guessing), confirming that combining biological taxonomic embeddings with regularized analytical covariance alignment transfers effectively across domains without target-domain backpropagation.
-
-\subsection{Explainability and Predictive Uncertainty Calibration}
-In safety-critical agricultural robotics, model deployment hinges not only on top-1 accuracy, but on spatial interpretability—verifying that predictions stem from genuine phytopathological lesions rather than spurious background artifacts—and statistical calibration.
+\medskip
+\textbf{Epidemiological Safety.} In agriculture, false negatives (misclassifying infection as healthy) are highly costly. BioDINO-Edge reduces the false-negative disease escape rate to \textbf{0.604\%} (43 of 7,125 diseased queries), a 58.6\% reduction compared to standard baselines (1.46\%). Cross-species confusion is limited to \textbf{0.011\%} (one potato leaf misattributed to apple). Potato Healthy shows high recall (0.993) but moderate precision (0.820), reflecting a conservative triage approach under severe class imbalance (147 healthy vs. $\approx$2,000 infected).
 
 \begin{figure}[!t]
 \centering
@@ -325,13 +335,63 @@ In safety-critical agricultural robotics, model deployment hinges not only on to
 \label{fig:calibration}
 \end{figure}
 
-\textbf{Dual-Regime Visual Saliency and Attention Sink Suppression.} Supplementary Fig.~S1 illuminates spatial reasoning across tiers. For routine field queries (Columns~1--2), self-supervised visual embeddings from DINOv2 delineate active fungal pustules and frog-eye rings without task tuning ($\mathcal{C}(\mathbf{x}) \ge 0.35$, enabling 21.1\,ms fast-exit). However, Columns~3--4 expose a known vulnerability of un-fine-tuned ViTs: ``attention sinks'' \cite{darcet2024vision}, wherein self-attention heads pool energy onto structural landmarks (petiole junctions, primary veins) rather than chlorosis. Because structural pooling lowers margin confidence below $\tau_{\text{conf}} = 0.35$, the Shannon gate reliably prevents premature misclassification and escalates queries to Tier 2. In Tier 2, Regularized Fisher-LDA evaluates patch embeddings through inverse covariance $\hat{\mathbf{\Sigma}}^{-1}$. Because petiole directions exhibit high intra-class variance ($\sigma_{\text{petiole}}^2 = 12.8$), Fisher projection dampens them by $>31\times$ while amplifying lesion variance ($\sigma_{\text{lesion}}^2 = 0.4$) by $2.44\times$, successfully refocusing spatial saliency onto expanding necrotic margins ($\mathcal{C}(\mathbf{x}) \ge 0.97$).
+\medskip
+\textbf{Predictive Uncertainty Calibration.} We compute Expected Calibration Error (ECE) and Maximum Calibration Error (MCE) over $M=10$ bins. The raw ensemble is under-confident ($\text{ECE} = 37.97\%$) because diffuse zero-shot BioCLIP posteriors dilute Fisher logits. Applying post-hoc temperature scaling ($T=0.50$) restores alignment: BioDINO-Edge achieves an ECE of \textbf{0.81\%} and MCE of 50.45\% (Fig.~\ref{fig:calibration}), allowing safe confidence-based thresholding.
 
-\textbf{Predictive Uncertainty Calibration (ECE).} To quantify probability calibration, we compute Expected Calibration Error ($\text{ECE} = \sum_{m=1}^M \frac{|B_m|}{N_q} |\text{acc}(B_m) - \text{conf}(B_m)|$) and Maximum Calibration Error ($\text{MCE} = \max_m |\text{acc}(B_m) - \text{conf}(B_m)|$) over $M=10$ bins. As Fig.~\ref{fig:calibration} (left) shows, the raw ensemble is under-confident ($\text{ECE} = 37.97\%$, $\text{MCE} = 56.01\%$) because diffuse zero-shot BioCLIP posteriors dilute Fisher logits (mean confidence: 78.61\% vs. 97.73\% test accuracy). Applying post-hoc temperature scaling $\mathbf{p}_{\text{cal}} = \text{softmax}(\log(\mathbf{p} + \epsilon)/T)$ with a global temperature $T = 0.50$ (tuned on a held-out 5-shot split) restores confidence alignment: BioDINO-Edge reaches \textbf{$\text{ECE} = \mathbf{0.81\%}$} and $\text{MCE} = 50.45\%$ (Fig.~\ref{fig:calibration}, right; mean confidence: 98.53\%), allowing automated spraying equipment to safely threshold on confidence.
+\subsection{Ablation Study}
+\label{sec:ablation_study}
+To isolate the contribution of each component, we conduct an ablation study on identical 5-shot splits (Table~\ref{tab:ablation}).
 
-\subsection{Edge Hardware and Dual-Tier Profiling}
-\label{sec:edge_bench}
-Table~\ref{tab:edge_bench} reports execution profiles on Microsoft ONNX Runtime (4-thread CPU, dynamic INT8 quantization), representing embedded processors such as Raspberry Pi 5 (quad-core ARM Cortex-A76) and mobile SoCs.
+\begin{table}[htbp]
+\caption{Systematic Component Ablation Study (5-Shot, 9,330 Queries)}
+\label{tab:ablation}
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcc}
+\toprule
+\textbf{Configuration / Component} & \textbf{Accuracy (\%)} & \textbf{Macro F1 (\%)} \\
+\midrule
+(1) Fast-Path DINOv2 Small alone & 85.42 & 82.10 \\
+(2) Deep-Path BioCLIP ViT-B alone & 92.27 & 89.70 \\
+(3) Naive Multi-Prompt Text Prototypes & 75.12 & 72.80 \\
+(4) Static Prototype Cosine Blending & 92.58 & 90.06 \\
+(5) Multi-View Augmentation (8 views, 440 vectors) & 94.15 & 93.60 \\
+(6) + Regularized Fisher-LDA Manifold Alignment & 96.76 & 95.08 \\
+(7) + Soft-Anchored Transductive Calibration (Single-Run) & 98.32 & 97.64 \\
+(8) + Peak Statistical Episode & \textbf{98.72} & \textbf{98.41} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\medskip
+\textbf{Effect of Removing DINOv2.} Using BioCLIP alone (Row~2) achieves 92.27\% accuracy. While BioCLIP provides taxonomic priors, its spatial resolution is limited, missing fine necrotic margins. Furthermore, running BioCLIP alone requires 67.61\,ms and 85.3\,MB, eliminating the fast-path capability.
+
+\medskip
+\textbf{Effect of Removing BioCLIP.} Using DINOv2 alone (Row~1) drops accuracy to 85.42\%. Without taxonomic supervision, DINOv2 confuses visually similar lesions across different crop families (e.g., potato early blight vs. apple scab).
+
+\medskip
+\textbf{Effect of the Shannon Gate.} Removing the routing gate impacts performance:
+\begin{itemize}
+    \item \textit{Forcing Tier-1 only}: Accuracy drops to 85.42\%, and ambiguous queries suffer from attention sinks.
+    \item \textit{Forcing Tier-2 only}: Latency increases to 67.61\,ms. Throughput drops from 47.4 to 14.8 FPS, violating the real-time ($>$45 FPS) requirement. The gate resolves 88.4\% of queries at Tier-1, maintaining an average latency of 26.5\,ms and preserving 96.74\%--97.37\% accuracy.
+\end{itemize}
+
+\medskip
+\textbf{Effect of Regularized Fisher-LDA.} Replacing Fisher-LDA with standard cosine blending (Row~4 vs. Row~6) causes a 4.18 point drop (96.76\% to 92.58\%). Fisher-LDA penalizes intra-class variance, dampening shared background noise by $>31\times$ while amplifying lesion-discriminant variance by $2.44\times$.
+
+\medskip
+\textbf{Effect of Multi-View Augmentation.} Estimating covariance from only $K=5$ raw images yields a rank-deficient matrix. Expanding to 8 views ($N=440$) stabilizes the covariance, providing a +1.57\% gain (92.58\% to 94.15\%) prior to Fisher-LDA.
+
+\medskip
+\textbf{Effect of Transductive Recalibration.} Omitting recalibration reduces accuracy from 97.37\% (30-run mean) to 95.08\%, demonstrating its role in mitigating centroid drift.
+
+\medskip
+\textbf{Effect of Lesion Cropping.} Contrary to the assumption that cropping lesions removes clutter, 27-way accuracy degraded from 58.73\% to 57.14\%. Tight cropping strips macroscopic host phyllotaxy (leaflet layout, venation), inducing cross-species confusion (e.g., tomato vs. potato blight). Maintaining host context is therefore critical.
+
+\subsection{Efficiency Analysis}
+\label{sec:efficiency_analysis}
+\textbf{Latency and Throughput.} Table~\ref{tab:edge_bench} reports execution profiles (ONNX Runtime, 4-thread CPU). The Tier-1 model executes in 21.12\,ms (47.4 FPS), exceeding the 45 FPS requirement. Tier-2 escalation runs in 67.61\,ms (14.8 FPS). The Fisher-LDA projection requires only 9.8\,kFLOPs (0.003\,ms), adding negligible overhead. Since 88.4\% of queries exit via Tier-1, the blended runtime is $0.884 \times 21.12 + 0.116 \times 67.61 \approx 26.5$\,ms ($>$37 FPS).
 
 \begin{table}[htbp]
 \caption{Edge Hardware INT8 Quantization \& Latency Profile (ONNX Runtime, 4-Thread CPU)}
@@ -353,10 +413,8 @@ Regularized Fisher Alignment & 9.8K FLOPs & $<$0.01\,MB & 0.003 & $>$10,000 FPS 
 }
 \end{table}
 
-The Tier 1 standalone model runs in 21.12\,ms (47.4 FPS) with a 22.05\,MB working set, compressing losslessly to 15.13\,MB. Packaged with the ONNX Runtime C++ engine, zero-GC CameraX pipeline, and bilingual UI, the complete Android APK is only 22.73\,MB and installs over low-bandwidth 2G/3G networks in seconds. Closed-form Fisher alignment adds negligible overhead (0.003\,ms). Clear field frames pass directly through Tier 1 ($>$45 FPS throughput), while ambiguous lesions trigger Tier 2 consensus.
-
-\subsection{Environmental Stress Robustness and Illumination Stability}
-To assess resilience to field capture artifacts, we corrupt test queries with four environmental regimes mimicking scouting conditions (Table~\ref{tab:stress_bench}).
+\medskip
+\textbf{Memory and Storage.} The INT8 Tier-1 model occupies 22.05\,MB in RAM and 15.13\,MB for OTA updates. Packaged with ONNX Runtime and the Android UI, the standalone APK is 22.73\,MB. The Tier-2 companion model occupies 85.3\,MB. The total edge storage footprint is 108.03\,MB, remaining within the 110\,MB budget and preserving RAM for other drone/rover operations.
 
 \begin{table}[htbp]
 \caption{Diagnostic Robustness Under Severe Field Environmental Corruptions}
@@ -377,7 +435,8 @@ Defocus Blur (Out of Focus) & 49.16\% & 3.37\% & 50.17\% & 48.15\% \\
 }
 \end{table}
 
-BioDINO-Edge exhibits strong illumination stability, maintaining \textbf{90.24\%} accuracy under intense specular glare and \textbf{91.92\%} under canopy shadows, showing that $\ell_2$ normalization and covariance shrinkage decorrelate lighting gradients effectively. Under severe defocus blur, accuracy drops to 49.16\% because optical blur attenuates high-frequency necrotic details into smooth color gradients; nevertheless, a parameter-free Laplacian variance filter ($\text{Var}(\nabla^2 I) < \theta$, $<0.5$\,ms) placed before inference reliably prompts the operator to refocus the lens before compute is spent.
+\medskip
+\textbf{Environmental Robustness.} Table~\ref{tab:stress_bench} evaluates stability under field corruptions. The system maintains 90.24\% accuracy under solar glare and 91.92\% under canopy shadows, demonstrating resilience to lighting gradients. Under severe defocus blur, accuracy drops to 49.16\% because high-frequency lesion textures are attenuated. Deploying a lightweight pre-inference Laplacian variance filter ($<$0.5\,ms) can reliably prompt operators to refocus before inference.
 
 \section{Discussion and Practical Deployment}
 Translating deep vision architectures from sanitized laboratory benchmarks into autonomous agronomic systems involves navigating the delicate tripartite trade-off between diagnostic sensitivity, inference latency, and computational autonomy:
@@ -386,7 +445,7 @@ Translating deep vision architectures from sanitized laboratory benchmarks into 
 
 \textbf{The Host-Context Loss Dilemma: Why Lesion Cropping Fails.} While cropping bounding boxes tightly around lesions is often assumed to reduce background clutter, doing so across all 27 PlantDoc categories via DINOv2 attention rollout degraded 27-way accuracy from 58.73\% to 57.14\% (macro F1: 57.95\% $\to$ 56.79\%). In-depth error analysis reveals that tight cropping strips away macro-morphological phyllotaxy (e.g., compound vs. simple leaflet layout, venation symmetry), inducing severe cross-species confusion between homologous necrotic spots on different crops (e.g., Early Blight on tomato vs. potato). Preserving macroscopic host context is as vital for taxonomic transfer as isolating localized lesions.
 
-\textbf{Closed-Form Adaptation as an Antidote to Edge Backpropagation.} While gradient-based meta-learning and fine-tuning pipelines require intensive GPU backpropagation, both Fisher alignment and transductive self-calibration in BioDINO-Edge are solved in closed form. Edge micro-controllers adapt to newly emerging pathogens in under 22\,ms without thermal throttling, memory fragmentation, or excessive computational overhead.
+\textbf{Closed-Form Adaptation as an Antidote to Edge Backpropagation.} While gradient-based meta-learning and fine-tuning pipelines require intensive GPU backpropagation, both Fisher alignment and transductive self-calibration in BioDINO-Edge are solved in closed form. Edge micro-controllers adapt to newly emerging pathogens in sub-second closed-form execution without thermal throttling, memory fragmentation, or excessive computational overhead.
 
 \textbf{Deployment in Connectivity-Constrained Rural Environments.} Intermittent rural connectivity is directly accommodated by our two-tier modularity. The 22.73\,MB standalone APK provides immediate offline diagnostic utility upon initial field deployment, while the 85.3\,MB companion downloads on demand when broadband connectivity becomes accessible.
 
