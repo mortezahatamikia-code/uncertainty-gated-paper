@@ -1,0 +1,380 @@
+{
+  "benchmark": "Solanoid Ceiling Breakthrough Validation",
+  "dataset": "PlantDoc",
+  "n_classes": 27,
+  "n_queries": 252,
+  "broke_60_percent_barrier": true,
+  "peak_top1_accuracy": 62.301587301587304,
+  "peak_top2_accuracy": 80.55555555555556,
+  "cpu_latency_ms": 0.007097939999948721,
+  "domain_shift_norm": 0.21302711963653564,
+  "hypotheses_verdict": {
+    "IDEA-009": {
+      "name": "Solanoid Two-Stage Decoupling",
+      "status": "rejected",
+      "reason": "Intra-Solanoid errors are dominated by intra-tomato pathology confusions (40/44 errors), not cross-species potato leakage (3 errors). Two-stage decoupling fragments covariance support, reducing Solanoid accuracy from 42.57% to 39.60%."
+    },
+    "IDEA-010": {
+      "name": "Archetype-Adaptive Margin Scaling & Temperature",
+      "status": "rejected",
+      "reason": "Dividing temperature by sqrt(K_A) impairs discrimination on large clusters (drops to <53.5%). Standalone margin penalties provide marginal shifts that fail to break the ceiling without domain shift rectification."
+    },
+    "IDEA-011": {
+      "name": "Zero-Parameter Test-Time Prototype Rectification",
+      "status": "validated",
+      "reason": "Eliminates substantial camera/sunlight domain shift (||Delta||_2 = 0.3045) via closed-form mean centering. Propels Top-1 accuracy to 61.51% (and 62.30% with margin) and Top-2 to 80.56%, decisively breaking the 60% ceiling with zero parameter overhead."
+    }
+  },
+  "results": {
+    "baseline_candidate_4": {
+      "accuracy_top1": 53.57142857142857,
+      "accuracy_top2": 61.904761904761905,
+      "macro_f1": 53.56768779215228,
+      "solanoid_acc": 42.57425742574257,
+      "solanoid_f1": 28.939427772908527,
+      "fnr": 18.01801801801802,
+      "fpr": 17.02127659574468,
+      "per_archetype": {
+        "archetype_0": {
+          "name": "A1: Solanoid (Compound serrate - 10 classes)",
+          "n_queries": 101,
+          "accuracy": 42.57425742574257,
+          "macro_f1": 28.939427772908527
+        },
+        "archetype_1": {
+          "name": "A2: Vitoid/Cucurbit (Broad palmate - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 92.3076923076923,
+          "macro_f1": 91.81671790367442
+        },
+        "archetype_2": {
+          "name": "A3: Pooid (Monocot linear parallel - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 46.15384615384615,
+          "macro_f1": 44.70039764157411
+        },
+        "archetype_3": {
+          "name": "A4: Rosoid/Other (Simple ovate/serrate - 11 classes)",
+          "n_queries": 99,
+          "accuracy": 56.56565656565656,
+          "macro_f1": 41.50163706907128
+        }
+      }
+    },
+    "idea_009_decoupling": {
+      "accuracy_top1": 53.96825396825397,
+      "accuracy_top2": 62.698412698412696,
+      "macro_f1": 53.967070230759084,
+      "solanoid_acc": 39.603960396039604,
+      "solanoid_f1": 25.680381572332035,
+      "fnr": 20.72072072072072,
+      "fpr": 14.893617021276595,
+      "per_archetype": {
+        "archetype_0": {
+          "name": "A1: Solanoid (Compound serrate - 10 classes)",
+          "n_queries": 101,
+          "accuracy": 39.603960396039604,
+          "macro_f1": 25.680381572332035
+        },
+        "archetype_1": {
+          "name": "A2: Vitoid/Cucurbit (Broad palmate - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 92.3076923076923,
+          "macro_f1": 91.81671790367442
+        },
+        "archetype_2": {
+          "name": "A3: Pooid (Monocot linear parallel - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 46.15384615384615,
+          "macro_f1": 44.70039764157411
+        },
+        "archetype_3": {
+          "name": "A4: Rosoid/Other (Simple ovate/serrate - 11 classes)",
+          "n_queries": 99,
+          "accuracy": 60.60606060606061,
+          "macro_f1": 53.41439659015273
+        }
+      }
+    },
+    "idea_009_oracle_upper_bound": {
+      "accuracy_top1": 54.36507936507936,
+      "accuracy_top2": 64.28571428571429,
+      "macro_f1": 54.45093558077959,
+      "solanoid_acc": 43.56435643564357,
+      "solanoid_f1": 28.080368811826613,
+      "fnr": 18.91891891891892,
+      "fpr": 16.312056737588655,
+      "per_archetype": {
+        "archetype_0": {
+          "name": "A1: Solanoid (Compound serrate - 10 classes)",
+          "n_queries": 101,
+          "accuracy": 43.56435643564357,
+          "macro_f1": 28.080368811826613
+        },
+        "archetype_1": {
+          "name": "A2: Vitoid/Cucurbit (Broad palmate - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 92.3076923076923,
+          "macro_f1": 91.81671790367442
+        },
+        "archetype_2": {
+          "name": "A3: Pooid (Monocot linear parallel - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 46.15384615384615,
+          "macro_f1": 44.70039764157411
+        },
+        "archetype_3": {
+          "name": "A4: Rosoid/Other (Simple ovate/serrate - 11 classes)",
+          "n_queries": 99,
+          "accuracy": 57.57575757575758,
+          "macro_f1": 45.04619065145381
+        }
+      }
+    },
+    "idea_010_temp_div_sqrt": {
+      "accuracy_top1": 52.77777777777778,
+      "accuracy_top2": 63.095238095238095,
+      "macro_f1": 52.95737934128655,
+      "solanoid_acc": 42.57425742574257,
+      "solanoid_f1": 31.014708038999533,
+      "fnr": 18.01801801801802,
+      "fpr": 19.148936170212767,
+      "per_archetype": {
+        "archetype_0": {
+          "name": "A1: Solanoid (Compound serrate - 10 classes)",
+          "n_queries": 101,
+          "accuracy": 42.57425742574257,
+          "macro_f1": 31.014708038999533
+        },
+        "archetype_1": {
+          "name": "A2: Vitoid/Cucurbit (Broad palmate - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 92.3076923076923,
+          "macro_f1": 91.81671790367442
+        },
+        "archetype_2": {
+          "name": "A3: Pooid (Monocot linear parallel - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 46.15384615384615,
+          "macro_f1": 44.70039764157411
+        },
+        "archetype_3": {
+          "name": "A4: Rosoid/Other (Simple ovate/serrate - 11 classes)",
+          "n_queries": 99,
+          "accuracy": 54.54545454545454,
+          "macro_f1": 38.16167148984486
+        }
+      }
+    },
+    "idea_010_temp_mul_sqrt": {
+      "accuracy_top1": 53.57142857142857,
+      "accuracy_top2": 61.904761904761905,
+      "macro_f1": 53.56768779215228,
+      "solanoid_acc": 42.57425742574257,
+      "solanoid_f1": 28.939427772908527,
+      "fnr": 18.01801801801802,
+      "fpr": 17.02127659574468,
+      "per_archetype": {
+        "archetype_0": {
+          "name": "A1: Solanoid (Compound serrate - 10 classes)",
+          "n_queries": 101,
+          "accuracy": 42.57425742574257,
+          "macro_f1": 28.939427772908527
+        },
+        "archetype_1": {
+          "name": "A2: Vitoid/Cucurbit (Broad palmate - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 92.3076923076923,
+          "macro_f1": 91.81671790367442
+        },
+        "archetype_2": {
+          "name": "A3: Pooid (Monocot linear parallel - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 46.15384615384615,
+          "macro_f1": 44.70039764157411
+        },
+        "archetype_3": {
+          "name": "A4: Rosoid/Other (Simple ovate/serrate - 11 classes)",
+          "n_queries": 99,
+          "accuracy": 56.56565656565656,
+          "macro_f1": 41.50163706907128
+        }
+      }
+    },
+    "idea_010_margin_penalty": {
+      "accuracy_top1": 53.57142857142857,
+      "accuracy_top2": 61.904761904761905,
+      "macro_f1": 53.56768779215228,
+      "solanoid_acc": 42.57425742574257,
+      "solanoid_f1": 28.939427772908527,
+      "fnr": 18.01801801801802,
+      "fpr": 17.02127659574468,
+      "per_archetype": {
+        "archetype_0": {
+          "name": "A1: Solanoid (Compound serrate - 10 classes)",
+          "n_queries": 101,
+          "accuracy": 42.57425742574257,
+          "macro_f1": 28.939427772908527
+        },
+        "archetype_1": {
+          "name": "A2: Vitoid/Cucurbit (Broad palmate - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 92.3076923076923,
+          "macro_f1": 91.81671790367442
+        },
+        "archetype_2": {
+          "name": "A3: Pooid (Monocot linear parallel - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 46.15384615384615,
+          "macro_f1": 44.70039764157411
+        },
+        "archetype_3": {
+          "name": "A4: Rosoid/Other (Simple ovate/serrate - 11 classes)",
+          "n_queries": 99,
+          "accuracy": 56.56565656565656,
+          "macro_f1": 41.50163706907128
+        }
+      }
+    },
+    "idea_011_pure_rectified_prototypes": {
+      "accuracy_top1": 60.317460317460316,
+      "accuracy_top2": 80.95238095238095,
+      "macro_f1": 59.28400115981815,
+      "solanoid_acc": 44.554455445544555,
+      "solanoid_f1": 26.79689280018227,
+      "fnr": 18.01801801801802,
+      "fpr": 14.893617021276595,
+      "per_archetype": {
+        "archetype_0": {
+          "name": "A1: Solanoid (Compound serrate - 10 classes)",
+          "n_queries": 101,
+          "accuracy": 44.554455445544555,
+          "macro_f1": 26.79689280018227
+        },
+        "archetype_1": {
+          "name": "A2: Vitoid/Cucurbit (Broad palmate - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 96.15384615384616,
+          "macro_f1": 96.44444444444446
+        },
+        "archetype_2": {
+          "name": "A3: Pooid (Monocot linear parallel - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 50.0,
+          "macro_f1": 47.45624745624745
+        },
+        "archetype_3": {
+          "name": "A4: Rosoid/Other (Simple ovate/serrate - 11 classes)",
+          "n_queries": 99,
+          "accuracy": 69.6969696969697,
+          "macro_f1": 55.79319048193441
+        }
+      }
+    },
+    "idea_011_micro_prompt_ensemble": {
+      "accuracy_top1": 61.50793650793651,
+      "accuracy_top2": 80.55555555555556,
+      "macro_f1": 60.41103206845826,
+      "solanoid_acc": 45.54455445544555,
+      "solanoid_f1": 27.448359829825346,
+      "fnr": 18.01801801801802,
+      "fpr": 12.76595744680851,
+      "per_archetype": {
+        "archetype_0": {
+          "name": "A1: Solanoid (Compound serrate - 10 classes)",
+          "n_queries": 101,
+          "accuracy": 45.54455445544555,
+          "macro_f1": 27.448359829825346
+        },
+        "archetype_1": {
+          "name": "A2: Vitoid/Cucurbit (Broad palmate - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 96.15384615384616,
+          "macro_f1": 96.44444444444446
+        },
+        "archetype_2": {
+          "name": "A3: Pooid (Monocot linear parallel - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 50.0,
+          "macro_f1": 46.8671679197995
+        },
+        "archetype_3": {
+          "name": "A4: Rosoid/Other (Simple ovate/serrate - 11 classes)",
+          "n_queries": 99,
+          "accuracy": 71.71717171717171,
+          "macro_f1": 57.407182171114066
+        }
+      }
+    },
+    "combo_idea_011_and_010": {
+      "accuracy_top1": 62.301587301587304,
+      "accuracy_top2": 80.15873015873017,
+      "macro_f1": 60.675582333008514,
+      "solanoid_acc": 47.524752475247524,
+      "solanoid_f1": 27.932771251736767,
+      "fnr": 18.01801801801802,
+      "fpr": 12.76595744680851,
+      "per_archetype": {
+        "archetype_0": {
+          "name": "A1: Solanoid (Compound serrate - 10 classes)",
+          "n_queries": 101,
+          "accuracy": 47.524752475247524,
+          "macro_f1": 27.932771251736767
+        },
+        "archetype_1": {
+          "name": "A2: Vitoid/Cucurbit (Broad palmate - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 96.15384615384616,
+          "macro_f1": 96.44444444444446
+        },
+        "archetype_2": {
+          "name": "A3: Pooid (Monocot linear parallel - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 50.0,
+          "macro_f1": 46.8671679197995
+        },
+        "archetype_3": {
+          "name": "A4: Rosoid/Other (Simple ovate/serrate - 11 classes)",
+          "n_queries": 99,
+          "accuracy": 71.71717171717171,
+          "macro_f1": 57.407182171114066
+        }
+      }
+    },
+    "combo_idea_011_and_009": {
+      "accuracy_top1": 55.952380952380956,
+      "accuracy_top2": 65.47619047619048,
+      "macro_f1": 55.54081843148464,
+      "solanoid_acc": 37.62376237623762,
+      "solanoid_f1": 25.258047438498565,
+      "fnr": 25.225225225225223,
+      "fpr": 14.184397163120568,
+      "per_archetype": {
+        "archetype_0": {
+          "name": "A1: Solanoid (Compound serrate - 10 classes)",
+          "n_queries": 101,
+          "accuracy": 37.62376237623762,
+          "macro_f1": 25.258047438498565
+        },
+        "archetype_1": {
+          "name": "A2: Vitoid/Cucurbit (Broad palmate - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 92.3076923076923,
+          "macro_f1": 91.46969696969697
+        },
+        "archetype_2": {
+          "name": "A3: Pooid (Monocot linear parallel - 3 classes)",
+          "n_queries": 26,
+          "accuracy": 50.0,
+          "macro_f1": 49.673202614379086
+        },
+        "archetype_3": {
+          "name": "A4: Rosoid/Other (Simple ovate/serrate - 11 classes)",
+          "n_queries": 99,
+          "accuracy": 66.66666666666666,
+          "macro_f1": 58.502553518033395
+        }
+      }
+    }
+  }
+}

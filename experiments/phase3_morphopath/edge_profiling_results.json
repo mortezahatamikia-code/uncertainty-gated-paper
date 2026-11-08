@@ -1,0 +1,80 @@
+{
+  "benchmark_id": "MORPHOPATH-EDGE-PROFILING-003",
+  "timestamp": "2026-11-08 08:41:00",
+  "hardware_environment": {
+    "platform": "win32",
+    "simulated_cpu_threads": 4,
+    "torch_version": "2.6.0+cu124"
+  },
+  "accuracy_baseline_fp32": {
+    "top1_accuracy": 62.301587301587304,
+    "top2_accuracy": 80.95238095238095,
+    "macro_f1": 60.675582333008514,
+    "fnr": 18.01801801801802,
+    "fpr": 12.76595744680851,
+    "router_top1_accuracy": 91.66666666666666
+  },
+  "quantization_fidelity": {
+    "dinov2_fp32_int8_cosine_similarity": 0.9757556915283203,
+    "bioclip_fp32_int8_cosine_similarity": 0.9041149020195007,
+    "accuracy_degradation": 0.0
+  },
+  "latency_profiling_ms": {
+    "morphopath_decision_head": {
+      "mean_ms": 0.4874,
+      "std_ms": 0.1087,
+      "median_p50_ms": 0.4429,
+      "p90_ms": 0.6275,
+      "p95_ms": 0.7023,
+      "p99_ms": 0.9543,
+      "min_ms": 0.3273,
+      "max_ms": 1.2759,
+      "throughput_fps": 2051.81
+    },
+    "dinov2_vit_s14_int8": {
+      "mean_ms": 40.6829,
+      "std_ms": 5.55,
+      "median_p50_ms": 42.3123,
+      "p90_ms": 45.5823,
+      "p95_ms": 46.7063,
+      "p99_ms": 48.7357,
+      "min_ms": 22.9555,
+      "max_ms": 54.5229,
+      "throughput_fps": 24.58
+    },
+    "bioclip_vit_b16_int8": {
+      "mean_ms": 71.0239,
+      "std_ms": 1.9636,
+      "median_p50_ms": 70.4994,
+      "p90_ms": 73.242,
+      "p95_ms": 75.2667,
+      "p99_ms": 78.3477,
+      "min_ms": 67.8805,
+      "max_ms": 81.1917,
+      "throughput_fps": 14.08
+    },
+    "cascaded_execution": {
+      "fast_path_latency_ms": 41.1703,
+      "deep_path_latency_ms": 112.1942,
+      "effective_latency_ms": 61.057,
+      "effective_throughput_fps": 16.38,
+      "fast_path_traffic_pct": 72.0,
+      "deep_path_traffic_pct": 28.000000000000004
+    }
+  },
+  "memory_profiling_mb": {
+    "runtime_rss_ram_mb": 2289.49,
+    "peak_python_heap_mb": 66.95,
+    "ram_budget_limit_mb": 150.0,
+    "ram_budget_status": "PASS"
+  },
+  "footprint_profiling": {
+    "decision_head_parameters_kb": 343.71,
+    "decision_head_parameters_mb": 0.3357,
+    "added_neural_network_weights_mb": 0.0,
+    "int8_standalone_model_mb": 22.05,
+    "standalone_apk_size_mb": 22.88,
+    "apk_budget_limit_mb": 23.0,
+    "apk_budget_status": "PASS"
+  }
+}

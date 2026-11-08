@@ -1007,8 +1007,8 @@
         "mce_pct": 56.01
       },
       "biodino_edge_calibrated": {
-        "ece_pct": 0.81,
-        "mce_pct": 50.45,
+        "ece_pct": 0.79,
+        "mce_pct": 7.22,
         "bin_data": [
           {
             "bin_idx": 0,
@@ -1050,28 +1050,28 @@
             "bin_idx": 4,
             "bin_lower": 0.4,
             "bin_upper": 0.5,
-            "count": 1,
-            "accuracy": 1.0,
-            "confidence": 0.4955052137374878,
-            "gap": 0.5044947862625122
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.45,
+            "gap": 0.0
           },
           {
             "bin_idx": 5,
             "bin_lower": 0.5,
             "bin_upper": 0.6000000000000001,
-            "count": 3,
-            "accuracy": 0.3333333333333333,
-            "confidence": 0.5739226937294006,
-            "gap": 0.24058936039606732
+            "count": 2,
+            "accuracy": 0.5,
+            "confidence": 0.5610529184341431,
+            "gap": 0.061052918434143066
           },
           {
             "bin_idx": 6,
             "bin_lower": 0.6000000000000001,
             "bin_upper": 0.7000000000000001,
-            "count": 5,
-            "accuracy": 0.6,
-            "confidence": 0.6609460711479187,
-            "gap": 0.06094607114791872
+            "count": 6,
+            "accuracy": 0.6666666666666666,
+            "confidence": 0.6506016850471497,
+            "gap": 0.01606498161951697
           },
           {
             "bin_idx": 7,
@@ -1086,19 +1086,19 @@
             "bin_idx": 8,
             "bin_lower": 0.8,
             "bin_upper": 0.9,
-            "count": 2,
-            "accuracy": 0.5,
-            "confidence": 0.851921558380127,
-            "gap": 0.35192155838012695
+            "count": 5,
+            "accuracy": 0.8,
+            "confidence": 0.8722322583198547,
+            "gap": 0.07223225831985469
           },
           {
             "bin_idx": 9,
             "bin_lower": 0.9,
             "bin_upper": 1.0,
-            "count": 9319,
-            "accuracy": 0.9777873162356476,
-            "confidence": 0.9856306314468384,
-            "gap": 0.007843315211190749
+            "count": 9317,
+            "accuracy": 0.9777825480304819,
+            "confidence": 0.9856377840042114,
+            "gap": 0.007855235973729502
           }
         ]
       }

@@ -206,6 +206,13 @@ Recalibration re-estimates the updated centroids $\boldsymbol{\mu}_c^{\text{tran
 \end{itemize}
 This results in a total edge storage footprint of 108.03\,MB.
 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_saliency.pdf}
+\caption{Visual explainability across in-the-wild benchmark crops (PlantDoc). Columns: Apple Cedar Rust, Grape Black Rot, and Potato Late Blight. Rows (top-to-bottom): (a) query leaf, (b) Tier-1 attention, and (c) calibrated overlay. In complex field conditions, standard ViT attention (Row~b) suffers from petiole sinks and background distractions (marked [!]); Tier-2 Fisher-LDA suppresses these artifacts and isolates pathogen-specific lesions with high confidence ($\mathcal{C}(\mathbf{x}) \ge 0.97$).}
+\label{fig:saliency}
+\end{figure}
+
 \section{Experiments}
 \label{sec:experiments}
 
@@ -301,7 +308,7 @@ Potato Healthy Foliage & 0.820 & 0.993 & 0.898 & 147 \\
 \end{table}
 }
 
-\textbf{Per-Class Error Diagnostics.} Table~\ref{tab:class_report} details per-class performance across 9,330 queries. Baselines frequently confuse visually similar classes (e.g., Grape Esca vs. Grape Black Rot, or Early vs. Late Potato Blight). Regularized Fisher-LDA effectively separates these by prioritizing pathogen-specific signatures, yielding high F1-scores (0.974--0.987) for these challenging classes.
+\textbf{Per-Class Error Diagnostics.} Table~\ref{tab:class_report} details per-class performance across 9,330 queries, while Fig.~\ref{fig:saliency} demonstrates dual-regime spatial explainability across representative foliar pathologies. Baselines frequently confuse visually similar classes (e.g., Grape Esca vs. Grape Black Rot, or Early vs. Late Potato Blight). Regularized Fisher-LDA effectively separates these by prioritizing pathogen-specific signatures, yielding high F1-scores (0.974--0.987) for these challenging classes.
 
 \textbf{Epidemiological Safety.} In agriculture, false negatives (misclassifying infection as healthy) are highly costly. BioDINO-Edge reduces the false-negative disease escape rate to \textbf{0.604\%} (43 of 7,125 diseased queries), a 58.6\% reduction compared to standard baselines (1.46\%). Cross-species confusion is limited to \textbf{0.011\%} (one potato leaf misattributed to apple). Potato Healthy shows high recall (0.993) but moderate precision (0.820), reflecting a conservative triage approach under severe class imbalance (147 healthy vs. $\approx$2,000 infected).
 

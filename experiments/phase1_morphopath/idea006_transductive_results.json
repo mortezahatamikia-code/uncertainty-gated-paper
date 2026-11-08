@@ -1,0 +1,139 @@
+{
+  "inductive_baseline": {
+    "oracle_top1": 56.34920634920635,
+    "router_top1": 51.19047619047619,
+    "macro_f1": 51.04536595470077,
+    "per_archetype": {
+      "A1: Solanoid (10 classes)": 44.554455445544555,
+      "A2: Vitoid/Cucurbit (3 classes)": 92.3076923076923,
+      "A3: Pooid (3 classes)": 42.30769230769231,
+      "A4: Rosoid/Other (11 classes)": 62.62626262626263
+    }
+  },
+  "global_transductive": {
+    "top1": 51.587301587301596,
+    "macro_f1": 50.735436933569375,
+    "anchors": 245,
+    "latency_ms": 748.5145999999077
+  },
+  "intra_archetype_sweep": {
+    "tau=None": {
+      "intra_solanoid": 44.554455445544555,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 42.30769230769231,
+      "intra_rosoid": 62.62626262626263,
+      "oracle_top1": 56.34920634920635,
+      "router_top1": 50.39682539682539,
+      "macro_f1": 50.42100564068528,
+      "anchors": 244,
+      "latency_ms": 2614.8740999997244
+    },
+    "tau=0.30": {
+      "intra_solanoid": 44.554455445544555,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 42.30769230769231,
+      "intra_rosoid": 62.62626262626263,
+      "oracle_top1": 56.34920634920635,
+      "router_top1": 50.39682539682539,
+      "macro_f1": 50.42100564068528,
+      "anchors": 244,
+      "latency_ms": 2556.5435999997135
+    },
+    "tau=0.40": {
+      "intra_solanoid": 44.554455445544555,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 42.30769230769231,
+      "intra_rosoid": 62.62626262626263,
+      "oracle_top1": 56.34920634920635,
+      "router_top1": 50.39682539682539,
+      "macro_f1": 50.42100564068528,
+      "anchors": 244,
+      "latency_ms": 2518.8733000004504
+    },
+    "tau=0.50": {
+      "intra_solanoid": 44.554455445544555,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 42.30769230769231,
+      "intra_rosoid": 62.62626262626263,
+      "oracle_top1": 56.34920634920635,
+      "router_top1": 50.39682539682539,
+      "macro_f1": 50.42100564068528,
+      "anchors": 244,
+      "latency_ms": 2506.768300000658
+    },
+    "tau=0.60": {
+      "intra_solanoid": 44.554455445544555,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 42.30769230769231,
+      "intra_rosoid": 61.61616161616161,
+      "oracle_top1": 55.952380952380956,
+      "router_top1": 50.0,
+      "macro_f1": 49.963191092227454,
+      "anchors": 242,
+      "latency_ms": 2498.3597000000373
+    },
+    "tau=0.70": {
+      "intra_solanoid": 42.57425742574257,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 42.30769230769231,
+      "intra_rosoid": 61.61616161616161,
+      "oracle_top1": 55.158730158730165,
+      "router_top1": 50.0,
+      "macro_f1": 49.963191092227454,
+      "anchors": 241,
+      "latency_ms": 2486.368400000174
+    },
+    "tau=0.80": {
+      "intra_solanoid": 42.57425742574257,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 42.30769230769231,
+      "intra_rosoid": 60.60606060606061,
+      "oracle_top1": 54.761904761904766,
+      "router_top1": 49.60317460317461,
+      "macro_f1": 49.34524114094416,
+      "anchors": 238,
+      "latency_ms": 2478.887599999325
+    },
+    "tau=0.90": {
+      "intra_solanoid": 42.57425742574257,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 38.46153846153847,
+      "intra_rosoid": 60.60606060606061,
+      "oracle_top1": 54.36507936507936,
+      "router_top1": 49.60317460317461,
+      "macro_f1": 49.29714109284412,
+      "anchors": 236,
+      "latency_ms": 2505.179199999475
+    }
+  },
+  "support_weight_sweep": {
+    "W_sup=1": {
+      "top1": 50.0,
+      "macro_f1": 49.963191092227454
+    },
+    "W_sup=2": {
+      "top1": 50.0,
+      "macro_f1": 49.963191092227454
+    },
+    "W_sup=3": {
+      "top1": 50.0,
+      "macro_f1": 49.963191092227454
+    },
+    "W_sup=5": {
+      "top1": 50.0,
+      "macro_f1": 49.963191092227454
+    },
+    "W_sup=8": {
+      "top1": 50.0,
+      "macro_f1": 49.963191092227454
+    }
+  },
+  "soft_prototype_ema": {
+    "top1": 50.79365079365079,
+    "macro_f1": 51.90618905817964
+  },
+  "best_transductive_config": "tau=None",
+  "best_transductive_acc": 50.39682539682539,
+  "best_transductive_gain": -0.7936507936507979,
+  "status": "rejected"
+}

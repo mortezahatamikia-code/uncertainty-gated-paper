@@ -1,0 +1,180 @@
+{
+  "archetype_cov_properties": {
+    "0": {
+      "name": "A1: Solanoid (10 classes)",
+      "n_classes": 10,
+      "n_support": 400,
+      "rank": 896,
+      "empirical_cond": "inf",
+      "ledoit_wolf_lambda": 0.11437240988016129,
+      "ledoit_wolf_cond": 1428.439737339278
+    },
+    "1": {
+      "name": "A2: Vitoid/Cucurbit (3 classes)",
+      "n_classes": 3,
+      "n_support": 120,
+      "rank": 896,
+      "empirical_cond": "inf",
+      "ledoit_wolf_lambda": 0.15401452779769897,
+      "ledoit_wolf_cond": 4040.1504800166076
+    },
+    "2": {
+      "name": "A3: Pooid (3 classes)",
+      "n_classes": 3,
+      "n_support": 120,
+      "rank": 896,
+      "empirical_cond": "inf",
+      "ledoit_wolf_lambda": 0.1592995822429657,
+      "ledoit_wolf_cond": 3843.7831119581087
+    },
+    "3": {
+      "name": "A4: Rosoid/Other (11 classes)",
+      "n_classes": 11,
+      "n_support": 440,
+      "rank": 896,
+      "empirical_cond": "inf",
+      "ledoit_wolf_lambda": 0.12799064815044403,
+      "ledoit_wolf_cond": 1450.2215291627285
+    }
+  },
+  "sweep": {
+    "lambda=0.001": {
+      "intra_solanoid": 37.62376237623762,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 38.46153846153847,
+      "intra_rosoid": 49.494949494949495,
+      "oracle_overall": 48.01587301587302,
+      "hierarchical_acc": 43.65079365079365,
+      "hierarchical_macro_f1": 42.249196650925605
+    },
+    "lambda=0.01": {
+      "intra_solanoid": 41.584158415841586,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 38.46153846153847,
+      "intra_rosoid": 50.505050505050505,
+      "oracle_overall": 50.0,
+      "hierarchical_acc": 45.23809523809524,
+      "hierarchical_macro_f1": 44.20907727283143
+    },
+    "lambda=0.05": {
+      "intra_solanoid": 38.613861386138616,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 38.46153846153847,
+      "intra_rosoid": 56.56565656565656,
+      "oracle_overall": 51.19047619047619,
+      "hierarchical_acc": 46.03174603174603,
+      "hierarchical_macro_f1": 45.40064512349801
+    },
+    "lambda=0.1": {
+      "intra_solanoid": 39.603960396039604,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 38.46153846153847,
+      "intra_rosoid": 56.56565656565656,
+      "oracle_overall": 51.587301587301596,
+      "hierarchical_acc": 46.42857142857143,
+      "hierarchical_macro_f1": 46.11197700149654
+    },
+    "lambda=0.2": {
+      "intra_solanoid": 44.554455445544555,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 38.46153846153847,
+      "intra_rosoid": 59.59595959595959,
+      "oracle_overall": 54.761904761904766,
+      "hierarchical_acc": 49.60317460317461,
+      "hierarchical_macro_f1": 48.6939237806111
+    },
+    "lambda=0.3": {
+      "intra_solanoid": 44.554455445544555,
+      "intra_vitoid": 88.46153846153845,
+      "intra_pooid": 38.46153846153847,
+      "intra_rosoid": 59.59595959595959,
+      "oracle_overall": 54.36507936507936,
+      "hierarchical_acc": 49.2063492063492,
+      "hierarchical_macro_f1": 48.78503939252732
+    },
+    "lambda=0.4": {
+      "intra_solanoid": 43.56435643564357,
+      "intra_vitoid": 88.46153846153845,
+      "intra_pooid": 38.46153846153847,
+      "intra_rosoid": 61.61616161616161,
+      "oracle_overall": 54.761904761904766,
+      "hierarchical_acc": 49.60317460317461,
+      "hierarchical_macro_f1": 49.49846024120729
+    },
+    "lambda=0.5": {
+      "intra_solanoid": 43.56435643564357,
+      "intra_vitoid": 88.46153846153845,
+      "intra_pooid": 42.30769230769231,
+      "intra_rosoid": 61.61616161616161,
+      "oracle_overall": 55.158730158730165,
+      "hierarchical_acc": 50.0,
+      "hierarchical_macro_f1": 49.7861009944442
+    },
+    "lambda=0.6": {
+      "intra_solanoid": 44.554455445544555,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 42.30769230769231,
+      "intra_rosoid": 62.62626262626263,
+      "oracle_overall": 56.34920634920635,
+      "hierarchical_acc": 51.19047619047619,
+      "hierarchical_macro_f1": 51.04536595470077
+    },
+    "lambda=0.7": {
+      "intra_solanoid": 43.56435643564357,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 42.30769230769231,
+      "intra_rosoid": 60.60606060606061,
+      "oracle_overall": 55.158730158730165,
+      "hierarchical_acc": 50.0,
+      "hierarchical_macro_f1": 49.920677348242286
+    },
+    "lambda=0.8": {
+      "intra_solanoid": 42.57425742574257,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 42.30769230769231,
+      "intra_rosoid": 61.61616161616161,
+      "oracle_overall": 55.158730158730165,
+      "hierarchical_acc": 50.0,
+      "hierarchical_macro_f1": 49.87657947081108
+    },
+    "lambda=0.9": {
+      "intra_solanoid": 42.57425742574257,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 38.46153846153847,
+      "intra_rosoid": 59.59595959595959,
+      "oracle_overall": 53.96825396825397,
+      "hierarchical_acc": 48.80952380952381,
+      "hierarchical_macro_f1": 48.45539994505759
+    },
+    "lambda=0.99": {
+      "intra_solanoid": 40.5940594059406,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 30.76923076923077,
+      "intra_rosoid": 60.60606060606061,
+      "oracle_overall": 52.77777777777778,
+      "hierarchical_acc": 47.22222222222222,
+      "hierarchical_macro_f1": 47.441292546829914
+    },
+    "auto": {
+      "intra_solanoid": 44.554455445544555,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 38.46153846153847,
+      "intra_rosoid": 57.57575757575758,
+      "oracle_overall": 53.96825396825397,
+      "hierarchical_acc": 48.80952380952381,
+      "hierarchical_macro_f1": 48.18152054306563
+    },
+    "archetype_adaptive": {
+      "intra_solanoid": 42.57425742574257,
+      "intra_vitoid": 92.3076923076923,
+      "intra_pooid": 38.46153846153847,
+      "intra_rosoid": 61.61616161616161,
+      "oracle_overall": 54.761904761904766,
+      "hierarchical_acc": 49.60317460317461,
+      "hierarchical_macro_f1": 49.28108201256852
+    }
+  },
+  "best_fixed": "lambda=0.6",
+  "best_fixed_acc": 51.19047619047619,
+  "status": "validated"
+}

@@ -1,0 +1,12 @@
+{
+  "baseTheme": "dark",
+  "legacyEditor": false,
+  "livePreview": true,
+  "showLineNumber": true,
+  "useMarkdownLinks": false,
+  "attachmentFolderPath": "Attachments",
+  "promptDelete": false,
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "root",
+  "trashOption": "system"
+}

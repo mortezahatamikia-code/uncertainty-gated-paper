@@ -1,0 +1,44 @@
+{
+  "results": {
+    "cls": {
+      "description": "1. Standard CLS Token (Baseline)",
+      "router_top1": 93.25396825396825,
+      "router_top2": 100.0,
+      "hierarchical_acc": 52.38095238095239,
+      "hierarchical_macro_f1": 52.09446947468365
+    },
+    "mean_patch": {
+      "description": "2. Uniform Mean Patch Pooling",
+      "router_top1": 91.26984126984127,
+      "router_top2": 100.0,
+      "hierarchical_acc": 48.41269841269841,
+      "hierarchical_macro_f1": 48.42121399179075
+    },
+    "soft_saliency": {
+      "description": "3. Soft Saliency-Weighted Patch Pooling",
+      "router_top1": 91.66666666666666,
+      "router_top2": 100.0,
+      "hierarchical_acc": 48.80952380952381,
+      "hierarchical_macro_f1": 48.148574093866074
+    },
+    "top50_foreground": {
+      "description": "4. Hard Foreground Top-50% Patches",
+      "router_top1": 92.46031746031747,
+      "router_top2": 100.0,
+      "hierarchical_acc": 49.60317460317461,
+      "hierarchical_macro_f1": 48.63089717627634
+    },
+    "cls_plus_soft": {
+      "description": "5. CLS + Soft Saliency Fusion",
+      "router_top1": 92.85714285714286,
+      "router_top2": 100.0,
+      "hierarchical_acc": 51.98412698412699,
+      "hierarchical_macro_f1": 51.713205858125896
+    }
+  },
+  "baseline_cls_hier_acc": 52.38095238095239,
+  "best_variant": "cls",
+  "best_variant_hier_acc": 52.38095238095239,
+  "gain_over_cls": 0.0,
+  "status": "rejected"
+}

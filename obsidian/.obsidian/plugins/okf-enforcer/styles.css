@@ -1,0 +1,280 @@
+/* OKF Enforcer — compact report styles */
+
+.okf-report {
+  padding: 6px 8px 16px 8px;
+  font-size: var(--font-ui-smaller);
+}
+
+.okf-toolbar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.okf-toolbar button {
+  cursor: pointer;
+  padding: 2px 8px;
+  font-size: var(--font-ui-smaller);
+}
+
+.okf-summary {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.okf-chip {
+  border-radius: 4px;
+  padding: 0 6px;
+  font-weight: 600;
+  font-size: var(--font-ui-smaller);
+  line-height: 1.6;
+}
+.okf-chip.okf-pass {
+  background: var(--background-modifier-success);
+  color: var(--text-normal);
+}
+.okf-chip.okf-error {
+  background: var(--background-modifier-error);
+  color: var(--text-on-accent);
+}
+.okf-chip.okf-warn {
+  background: var(--background-modifier-border);
+  color: var(--text-normal);
+}
+
+.okf-empty {
+  color: var(--text-muted);
+  padding: 8px 2px;
+}
+
+.okf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* Folder groups: the header names the folder once so the rows under it can be
+   file names rather than the same path prefix over and over. */
+.okf-group + .okf-group {
+  margin-top: 5px;
+}
+.okf-group-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+.okf-group-head:hover {
+  background: var(--background-modifier-hover);
+}
+.okf-group-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.okf-group-body {
+  padding-left: 12px;
+}
+
+/* The note in the editor, above the vault list and always open. */
+.okf-active {
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.okf-active-title {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 1px;
+}
+.okf-active-clean {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 4px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+/* Same width as the caret it stands in for, so a clean note and a failing one
+   line their names up at the same column. */
+.okf-ok {
+  width: 10px;
+  flex: 0 0 auto;
+  color: var(--text-success);
+}
+
+.okf-file-block {
+  border-radius: 4px;
+}
+.okf-file-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+.okf-file-head:hover {
+  background: var(--background-modifier-hover);
+}
+.okf-caret {
+  width: 10px;
+  color: var(--text-muted);
+  flex: 0 0 auto;
+}
+.okf-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.okf-dot.error {
+  background: var(--text-error);
+}
+.okf-dot.warning {
+  background: var(--text-warning);
+}
+.okf-file-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+}
+/* Shrinks far more readily than the file name beside it, so a narrow pane
+   ellipsizes the folder path and leaves the name it ends in legible. */
+.okf-file-dir {
+  flex: 0 999 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-muted);
+}
+.okf-file-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.okf-count {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  background: var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 0 6px;
+  font-size: var(--font-ui-smaller);
+}
+
+.okf-issues {
+  padding: 2px 4px 4px 26px;
+}
+.okf-issue {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+.okf-sev {
+  flex: 0 0 auto;
+}
+.okf-sev.error {
+  color: var(--text-error);
+}
+.okf-sev.warning {
+  color: var(--text-warning);
+}
+.okf-issue-text {
+  color: var(--text-normal);
+}
+.okf-rule {
+  color: var(--text-muted);
+}
+.okf-fixable {
+  color: var(--text-accent);
+}
+.okf-open-link {
+  display: inline-block;
+  margin: 4px 0 2px 26px;
+  font-size: var(--font-ui-smaller);
+  cursor: pointer;
+}
+
+.okf-statusbar-ok {
+  color: var(--text-success);
+}
+.okf-statusbar-bad {
+  color: var(--text-error);
+}
+.okf-statusbar-warn {
+  color: var(--text-warning);
+}
+
+/* progress bar */
+.okf-progress {
+  margin: 4px 0 8px 0;
+}
+.okf-progress.is-hidden {
+  display: none;
+}
+.okf-progress-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+}
+.okf-progress-bar {
+  height: 100%;
+  width: var(--okf-pct, 0%);
+  background: var(--interactive-accent);
+  transition: width 0.15s ease;
+}
+.okf-progress-label {
+  margin-top: 3px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+/* prompt modal */
+.okf-modal-field {
+  margin: 10px 0;
+}
+.okf-modal-field label {
+  display: block;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.okf-modal-field input {
+  width: 100%;
+}
+.okf-modal-issues {
+  margin: 8px 0;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--background-secondary);
+  font-size: var(--font-ui-smaller);
+}
+.okf-modal-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+/* Dependent settings: fully non-interactive when disabled (e.g. the Portent
+   sub-options while Portent validation is off). */
+.setting-item.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
