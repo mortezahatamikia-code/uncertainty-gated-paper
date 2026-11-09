@@ -87,7 +87,6 @@ def run_edge_profiling() -> Dict[str, Any]:
     print(f"[*] Simulating mobile edge processor with {n_threads} CPU threads.")
 
     process = psutil.Process()
-    tracemalloc.start()
     gc.collect()
     ram_initial_mb = process.memory_info().rss / (1024 * 1024)
     print(f"[*] Initial Baseline Process RAM: {ram_initial_mb:.2f} MB")
@@ -251,6 +250,8 @@ def run_edge_profiling() -> Dict[str, Any]:
     # 8. Memory Footprint Profiling (RAM & Heap)
     print("\n" + "-" * 70)
     print("[*] Profiling Memory Footprint (Runtime RAM & Heap)...")
+    tracemalloc.start()
+    _ = engine.forward(single_qry_joint)
     current_heap, peak_heap = tracemalloc.get_traced_memory()
     tracemalloc.stop()
 

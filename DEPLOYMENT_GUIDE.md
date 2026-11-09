@@ -18,7 +18,7 @@ research-few-shot/
 ├── web/                        # وب‌سایت استاتیک Next.js 16 + Tailwind CSS
 │   ├── public/
 │   │   ├── .nojekyll           # جلوگیری از فیلتر شدن فایل‌های _next در گیت‌هاب
-│   │   ├── my-img.jpg          # تصویر پروفایل رسمی
+│   │   ├── reyhane-javidi.webp        # تصویر پروفایل رسمی
 │   │   ├── Reyhane_Javidi_Alsaadi_CV.pdf # نسخه دانلودی رزومه
 │   │   ├── biodino_edge_paper.pdf        # مقاله کامل ۳.۶ مگابایت
 │   │   └── figures/            # نمودارهای معماری، کالیبراسیون و Saliency

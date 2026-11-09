@@ -35,8 +35,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
 import torch
-import torch.nn.functional as F
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.manifold import TSNE
 from sklearn.metrics import accuracy_score, f1_score
 
@@ -49,9 +47,11 @@ from pipeline.morphopath_engine import (
     ARCHETYPE_NAMES,
     DEFAULT_ARCHETYPE_MAP,
     MorphoPathEngine,
+    fit_shrunk_lda,
     infer_archetype_for_class,
     is_healthy_leaf_name,
     l2_normalize,
+    softmax_prob,
     tukey_power_transform,
 )
 
@@ -68,9 +68,9 @@ def compute_metrics(
     class_names: List[str],
 ) -> Dict[str, float]:
     """Computes Top-1, Top-2 differential accuracy, Macro F1, FNR, and FPR."""
-    n_queries = len(y_true)
     top1_acc = float(accuracy_score(y_true, y_pred) * 100.0)
-    top2_acc = float(np.mean([y_true[i] in top2_preds[i] for i in range(n_queries)]) * 100.0)
+    top2_flags = (y_true == top2_preds[:, 0]) | (y_true == top2_preds[:, 1])
+    top2_acc = float(np.mean(top2_flags) * 100.0)
     macro_f1 = float(f1_score(y_true, y_pred, average="macro", zero_division=0) * 100.0)
 
     healthy_indices = set(i for i, c in enumerate(class_names) if is_healthy_leaf_name(c))
@@ -162,7 +162,7 @@ def run_config_2_no_rectification(
 
     # Archetype routing
     sim_arch = l2_normalize(qry_dino) @ arch_protos_dino.T
-    p_arch = F.softmax(torch.tensor(sim_arch) * 12.0, dim=-1).numpy()
+    p_arch = softmax_prob(sim_arch, temp=12.0)
 
     # Visual similarity on unrectified features
     sims_unrect = qry_tukey @ unrect_protos.T
@@ -170,22 +170,19 @@ def run_config_2_no_rectification(
         if c == "Potato_leaf_late_blight":
             sims_unrect[:, i] -= 0.05
 
-    p_vis_m = F.softmax(torch.tensor(sims_unrect) * 15.0, dim=-1).numpy()
+    p_vis_m = softmax_prob(sims_unrect, temp=15.0)
 
     # Micro-symptom text fusion
     sim_micro = l2_normalize(qry_bio) @ l2_normalize(micro_protos).T
-    p_txt = F.softmax(torch.tensor(sim_micro) * 30.0, dim=-1).numpy()
+    p_txt = softmax_prob(sim_micro, temp=30.0)
     p_comb = 0.75 * p_vis_m + 0.25 * p_txt
 
     top1 = p_comb.argmax(axis=-1)
-    top2_list = []
-    for i in range(len(qry_joint)):
-        ranked = list(np.argsort(sims_unrect[i])[::-1])
-        p1 = top1[i]
-        p2 = ranked[1] if ranked[0] == p1 else ranked[0]
-        top2_list.append([p1, p2])
+    top2_ranked = np.argsort(-sims_unrect, axis=-1)[:, :2]
+    p2 = np.where(top2_ranked[:, 0] == top1, top2_ranked[:, 1], top2_ranked[:, 0])
+    top2_preds = np.column_stack([top1, p2])
 
-    metrics = compute_metrics(qry_labels, top1, np.array(top2_list), class_names)
+    metrics = compute_metrics(qry_labels, top1, top2_preds, class_names)
     metrics["router_top1_accuracy"] = float(
         np.mean(p_arch.argmax(axis=-1) == class_to_arch[qry_labels]) * 100.0
     )
@@ -269,7 +266,7 @@ def run_config_4_unregularized_lda(
     arch_protos_dino = l2_normalize(np.stack(arch_protos))
 
     sim_arch = l2_normalize(qry_dino) @ arch_protos_dino.T
-    p_arch = F.softmax(torch.tensor(sim_arch) * 12.0, dim=-1).numpy()
+    p_arch = softmax_prob(sim_arch, temp=12.0)
 
     # Fit unregularized LDA per archetype (shrinkage=0.001)
     clfs = {}
@@ -281,9 +278,7 @@ def run_config_4_unregularized_lda(
         y_loc = np.array([local_map[y] for y in sup_labels[sup_arch == a]])
         if len(np.unique(y_loc)) < 2:
             continue
-        clf = LinearDiscriminantAnalysis(solver="lsqr", shrinkage=0.001).fit(
-            sup_cent[sup_arch == a], y_loc
-        )
+        clf = fit_shrunk_lda(sup_cent[sup_arch == a], y_loc, shrinkage=0.001)
         clfs[a] = (clf, cands)
 
     # Micro-text similarities
@@ -300,7 +295,7 @@ def run_config_4_unregularized_lda(
             p_A = p_arch[i, a]
             k_A = len(cands)
             p_vis = clf.predict_proba(qry_cent[i : i + 1])[0]
-            p_txt = F.softmax(torch.tensor(sim_micro[i, cands]) * 30.0, dim=-1).numpy()
+            p_txt = softmax_prob(sim_micro[i, cands], temp=30.0)
             p_comb = 0.75 * p_vis + 0.25 * p_txt
             for idx_c, c in enumerate(cands):
                 scores[c] = p_A * (k_A * p_comb[idx_c])
@@ -371,26 +366,15 @@ def run_config_6_hard_argmax(
     engine.fit(sup_joint, sup_labels)
     out = engine.forward(qry_joint)
 
-    # Apply Hard Argmax Masking:
-    # Query only allows classes from the single top-1 predicted archetype
-    hard_probs = out.probabilities.copy()
-    for i in range(len(qry_joint)):
-        best_arch = out.archetype_preds[i]
-        valid_classes = np.where(engine.class_to_arch == best_arch)[0]
-        mask_other = np.ones(engine.n_classes, dtype=bool)
-        mask_other[valid_classes] = False
-        hard_probs[i, mask_other] = 0.0
-        sum_p = hard_probs[i].sum()
-        if sum_p > 0:
-            hard_probs[i] /= sum_p
+    # Apply Hard Argmax Masking (Vectorized):
+    mask = (engine.class_to_arch[None, :] != out.archetype_preds[:, None])
+    hard_probs = np.where(mask, 0.0, out.probabilities)
+    hard_probs /= (hard_probs.sum(axis=-1, keepdims=True) + 1e-12)
 
     top1 = hard_probs.argmax(axis=-1)
-    top2_list = []
-    for i in range(len(qry_joint)):
-        ranked = list(np.argsort(hard_probs[i])[::-1])
-        top2_list.append([ranked[0], ranked[1]])
+    top2_ranked = np.argsort(-hard_probs, axis=-1)[:, :2]
 
-    metrics = compute_metrics(qry_labels, top1, np.array(top2_list), class_names)
+    metrics = compute_metrics(qry_labels, top1, top2_ranked, class_names)
     metrics["router_top1_accuracy"] = float(
         np.mean(out.archetype_preds == engine.class_to_arch[qry_labels]) * 100.0
     )

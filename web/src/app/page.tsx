@@ -66,7 +66,7 @@ export default function HomePage() {
             "@type": "Person",
             name: "Reyhane Javidi Alsaadi",
             url: "https://reyhane-code.github.io/",
-            image: "https://reyhane-code.github.io/my-img.jpg",
+            image: "https://reyhane-code.github.io/reyhane-javidi.webp",
             email: "reyhane.code@gmail.com",
             jobTitle: "Computer Engineering Scholar & Edge AI Researcher",
             affiliation: {
@@ -109,7 +109,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden pt-12 pb-16 border-b border-zinc-200/90 bg-[#fafaf9] text-zinc-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            
+
             {/* Bio Details */}
             <div className="lg:col-span-8 space-y-6">
               <div className="inline-flex items-center space-x-2 px-3 py-1 rounded bg-zinc-100 border border-zinc-200 text-zinc-800 text-xs font-mono font-medium tracking-wide">
@@ -239,7 +239,7 @@ export default function HomePage() {
               <div className="w-64 sm:w-72 border border-zinc-200 bg-white p-2.5 shadow-xs">
                 <div className="relative overflow-hidden bg-zinc-100 aspect-[4/5]">
                   <img
-                    src="/my-img.jpg"
+                    src="/reyhane-javidi.webp"
                     alt="Reyhane Javidi Alsaadi"
                     className="w-full h-full object-cover object-center grayscale hover:grayscale-0 transition-all duration-300"
                   />
@@ -942,21 +942,19 @@ export default function HomePage() {
                 <div className="flex items-center space-x-1.5">
                   <button
                     onClick={() => setTranscriptTab("en")}
-                    className={`px-3 py-1.5 rounded text-xs font-mono font-medium transition-colors cursor-pointer ${
-                      transcriptTab === "en"
-                        ? "bg-zinc-950 text-white shadow-2xs font-semibold"
-                        : "bg-white text-zinc-700 hover:bg-zinc-200 border border-zinc-300"
-                    }`}
+                    className={`px-3 py-1.5 rounded text-xs font-mono font-medium transition-colors cursor-pointer ${transcriptTab === "en"
+                      ? "bg-zinc-950 text-white shadow-2xs font-semibold"
+                      : "bg-white text-zinc-700 hover:bg-zinc-200 border border-zinc-300"
+                      }`}
                   >
                     English Academic Translation (Unofficial)
                   </button>
                   <button
                     onClick={() => setTranscriptTab("fa")}
-                    className={`px-3 py-1.5 rounded text-xs font-mono font-medium transition-colors cursor-pointer ${
-                      transcriptTab === "fa"
-                        ? "bg-zinc-950 text-white shadow-2xs font-semibold"
-                        : "bg-white text-zinc-700 hover:bg-zinc-200 border border-zinc-300"
-                    }`}
+                    className={`px-3 py-1.5 rounded text-xs font-mono font-medium transition-colors cursor-pointer ${transcriptTab === "fa"
+                      ? "bg-zinc-950 text-white shadow-2xs font-semibold"
+                      : "bg-white text-zinc-700 hover:bg-zinc-200 border border-zinc-300"
+                      }`}
                   >
                     Original Persian Document
                   </button>

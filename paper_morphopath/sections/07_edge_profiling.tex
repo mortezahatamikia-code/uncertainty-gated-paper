@@ -3,7 +3,7 @@
 
 \subsection{Quantization Fidelity and Latency Profiling}
 \label{subsec:latency_profiling}
-We evaluate MorphoPath-Edge on mobile hardware simulating commodity quad-core ARM Cortex CPUs (PyTorch 2.6.0, 4 threads). Symmetric INT8 quantization yields high cosine fidelity with FP32 embeddings: \textbf{0.9758} for DINOv2 and \textbf{0.9041} for BioCLIP, incurring \textbf{zero downstream diagnostic degradation} (62.30\% Top-1 in both FP32 and INT8 modes). Table~\ref{tab:edge_profiling_consolidated} delineates latency and memory footprint across the deployment stack.
+We evaluate MorphoPath-Edge on mobile hardware simulating commodity quad-core ARM Cortex CPUs (PyTorch 2.6.0, 4 threads). Symmetric INT8 quantization yields high cosine fidelity with FP32 embeddings: \textbf{0.9758} for DINOv2 and \textbf{0.9041} for BioCLIP, incurring \textbf{zero downstream diagnostic degradation} (63.49\% Top-1 in both FP32 and INT8 modes). Table~\ref{tab:edge_profiling_consolidated} delineates latency and memory footprint across the deployment stack.
 
 \begin{table}[htbp]
 \footnotesize
@@ -19,8 +19,8 @@ We evaluate MorphoPath-Edge on mobile hardware simulating commodity quad-core AR
 \midrule
 DINOv2 ViT-S/14 (INT8) & $40.68 \pm 5.55$ & 42.31 & 46.71 & 24.58 FPS \\
 BioCLIP ViT-B/16 (INT8) & $71.02 \pm 1.96$ & 70.50 & 75.27 & 14.08 FPS \\
-MorphoPath Decision Head & $\mathbf{0.487 \pm 0.108}$ & \textbf{0.443} & \textbf{0.702} & \textbf{2,051.8 FPS} \\
-Effective Cascaded Streaming & $\mathbf{53.60 \pm 8.24}$ & \textbf{51.80} & \textbf{68.48} & $\mathbf{18.66\text{ FPS}}$ \\
+MorphoPath Decision Head & $\mathbf{0.185 \pm 0.042}$ & \textbf{0.164} & \textbf{0.245} & \textbf{5,392.5 FPS} \\
+Effective Cascaded Streaming & $\mathbf{46.77 \pm 6.85}$ & \textbf{44.20} & \textbf{58.30} & $\mathbf{21.40\text{ FPS}}$ \\
 \midrule
 \multicolumn{2}{l}{\textbf{Deployment Resource Dimension}} & \textbf{Measured} & \textbf{Budget} & \textbf{Status} \\
 \midrule
@@ -35,7 +35,7 @@ Effective Cascaded Streaming & $\mathbf{53.60 \pm 8.24}$ & \textbf{51.80} & \tex
 \end{table}
 
 \noindent\textbf{Sub-Millisecond Engine and Real-Time Streaming:}
-The algebraic decision head (Tukey normalization, manifold rectification, routing, regularized Fisher scoring, and Bayesian triage) executes in merely \textbf{0.487~ms} (2,051.8~FPS) with zero learned parameters. Under continuous camera streaming, cascaded execution resolves \textbf{72.0\% of queries} via fast DINOv2 (41.17~ms, $>24$~FPS), invoking BioCLIP only for ambiguous cases. Effective streaming latency stabilizes at \textbf{53.60~ms (18.66~FPS)} on mobile quad-core CPUs.
+The algebraic decision head (Tukey normalization, manifold rectification, routing, regularized Fisher scoring, and Bayesian triage) executes in merely \textbf{0.185~ms} (5,392.5~FPS) with zero learned parameters. Under continuous camera streaming, cascaded execution resolves \textbf{72.0\% of queries} via fast DINOv2 (40.68~ms, $>24$~FPS), invoking BioCLIP only for ambiguous cases. Effective streaming latency stabilizes at \textbf{46.77~ms (21.40~FPS)} on mobile quad-core CPUs.
 
 \subsection{Memory Footprint and Standalone APK Deployment}
 \label{subsec:memory_apk}
@@ -45,8 +45,8 @@ MorphoPath-Edge compiles into a standalone Android APK of \textbf{22.88~MB}, str
 \label{subsec:robotic_feasibility}
 Deploying MorphoPath-Edge aboard field machinery satisfies three core agronomic requirements:
 
-\textit{1) Thermal and Power Longevity:} Zero-backpropagation inference caps quad-core CPU temperatures below $42^\circ\text{C}$ and power draw under 3.2\,W, avoiding thermal throttling on passive heatsinks during continuous daylight scouting missions.
+\textit{1) Thermal Longevity:} Zero-backpropagation inference caps quad-core CPU temperatures below $42^\circ\text{C}$ and power under 3.2\,W, avoiding thermal throttling on passive heatsinks during daylight scouting missions.
 
-\textit{2) Offline Edge Autonomy:} The self-contained 22.88\,MB APK encapsulates INT8 foundation models and precomputed archetype statistics locally, eliminating cloud API round-trips and ensuring deterministic diagnostic latency in remote valleys devoid of cellular connectivity.
+\textit{2) Offline Edge Autonomy:} The self-contained 22.88\,MB APK encapsulates INT8 backbones and archetype statistics locally, eliminating cloud round-trips and ensuring deterministic diagnostic latency in remote valleys without cellular coverage.
 
-\textit{3) Closed-Loop Targeted Micro-Spraying:} Delivering 18.66\,FPS (53.60\,ms latency), the pipeline easily outpaces the $<100$\,ms response window required for pulse-width modulation (PWM) solenoid valves on smart spray booms. At typical ground speeds of 8--12\,km/h (2.2--3.3\,m/s), individual diseased leaves are localized within a 15\,cm spatial corridor, enabling targeted chemical deposition that reduces overall pesticide runoff.
+\textit{3) Closed-Loop Micro-Spraying:} Delivering 21.40\,FPS (46.77\,ms latency), the pipeline easily outpaces the $<100$\,ms response window required for pulse-width modulation (PWM) spray valves. At field transit speeds of 8--12\,km/h (2.2--3.3\,m/s), diseased foliage is localized within a 15\,cm spatial corridor, reducing agrochemical runoff.

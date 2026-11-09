@@ -46,7 +46,6 @@ import scipy.stats as stats
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import accuracy_score, f1_score
 from PIL import Image
 
@@ -64,6 +63,7 @@ from pipeline.biodino_hierarchical_pipeline import (
 from pipeline.morphopath_engine import (
     MorphoPathEngine,
     ARCHETYPE_NAMES,
+    fit_shrunk_lda,
     is_healthy_leaf_name,
     l2_normalize,
     tukey_power_transform,
@@ -328,7 +328,7 @@ def evaluate_baseline_2_rigid_router(
             local_map = {c: i for i, c in enumerate(s_classes)}
             y_loc = np.array([local_map[y] for y in sup_labels[s_mask]])
             if len(np.unique(y_loc)) > 1:
-                clf = LinearDiscriminantAnalysis(solver="lsqr", shrinkage="auto").fit(sup_joint[s_mask], y_loc)
+                clf = fit_shrunk_lda(sup_joint[s_mask], y_loc, shrinkage="auto")
                 species_clfs[s_idx] = (clf, s_classes)
 
     top1_preds = []
@@ -561,6 +561,9 @@ def run_comprehensive_plantvillage_benchmark(
             text_temp=30.0,
             w_vis=0.75,
             margin_penalty=0.05,
+            w_bio=0.65,
+            beta_bayes=0.20,
+            w_lda=0.30,
             penalized_classes=["Potato___Late_blight", "Tomato___Late_blight"],
             micro_prototypes=text_prototypes,
             class_names=class_names,
@@ -589,6 +592,9 @@ def run_comprehensive_plantvillage_benchmark(
             text_temp=30.0,
             w_vis=0.75,
             margin_penalty=0.05,
+            w_bio=0.65,
+            beta_bayes=0.20,
+            w_lda=0.30,
             penalized_classes=["Potato___Late_blight"],
             micro_prototypes=novel_text_protos,
             class_names=novel_classes,

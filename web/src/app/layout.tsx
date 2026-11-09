@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     images: [
       {
-        url: "https://reyhane-code.github.io/my-img.jpg",
+        url: "https://reyhane-code.github.io/reyhane-javidi.webp",
         width: 800,
         height: 1000,
         alt: "Reyhane Javidi Alsaadi - Computer Engineering Scholar & Researcher",
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     title: "Reyhane Javidi Alsaadi | AI Researcher & BioDINO-Edge Lead Author",
     description:
       "Top 5% Scholar (19.16/20 GPA) & Lead Author of BioDINO-Edge (98.72% accuracy). Seeking graduate research assistantships in Edge AI & Vision Models.",
-    images: ["https://reyhane-code.github.io/my-img.jpg"],
+    images: ["https://reyhane-code.github.io/reyhane-javidi.webp"],
   },
   icons: {
     icon: [
