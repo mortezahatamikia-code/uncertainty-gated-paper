@@ -75,7 +75,7 @@ This two-tier design reduces latency on routine foliage while enforcing a $<30$\
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=0.85\textwidth]{fig_architecture.pdf}
-\caption{BioDINO-Edge architecture. Offline Phase~0 computes Fisher-LDA projections and caches class text prototypes from predefined botanical templates. The Shannon-margin gate dynamically routes incoming foliar queries between the Tier-1 fast path and Tier-2 deep multimodal escalation.}
+\caption{BioDINO-Edge architecture. Offline Phase~0 computes Fisher-LDA projections and caches class text prototypes for the $C=11$ target crop pathologies from predefined botanical templates. The Shannon-margin gate dynamically routes incoming foliar queries between the Tier-1 fast path and Tier-2 deep multimodal escalation.}
 \label{fig:architecture}
 \end{figure*}
 
@@ -84,7 +84,7 @@ This two-tier design reduces latency on routine foliage while enforcing a $<30$\
 Reliable diagnosis in agricultural environments requires distinguishing variation in the vegetative background from leaf and lesion signals \cite{singh2020plantdoc, yang2024laboratory}. Vision encoders often fail to capture fine fungal structures \cite{yang2024laboratory}, while species-level taxonomic supervision biases models toward overall host identity rather than localized lesion pathology \cite{stevens2024bioclip}. To address this challenge, BioDINO-Edge builds a foliar representation from two foundation models, using support samples expanded through multi-view augmentation.
 
 \medskip
-\textbf{Few-Shot Multi-View Augmentation.} For each disease class $c \in \{1, \dots, C\}$, with $C=11$, calibration uses a support set $\mathcal{S}_c = \{(\mathbf{x}_i, c)\}_{i=1}^K$ of $K=5$ images randomly selected from PlantVillage \cite{hughes2012plantvillage}. Because PlantVillage images are captured under controlled conditions, each support image is resized to $224 \times 224$ and normalized, then passed eight times independently through a stochastic augmentation pipeline to approximate the variation seen in field imagery. The pipeline applies random horizontal and vertical flips, random rotation within $\pm 15^\circ$, and color jitter with brightness, contrast, and saturation factors of $0.2$. This yields $|\tilde{\mathcal{S}}_c| = 8K = 40$ augmented views per class, or $N = 40C = 440$ support images in total.
+\textbf{Few-Shot Multi-View Augmentation.} For each disease class $c \in \{1, \dots, C\}$, with $C=11$ spanning three economically vital crops from PlantVillage \cite{hughes2012plantvillage} (Apple, Grape, and Potato, covering healthy foliage and 8 fungal/bacterial pathologies; detailed in Section~\ref{sec:datasets_setup}), calibration uses a support set $\mathcal{S}_c = \{(\mathbf{x}_i, c)\}_{i=1}^K$ of $K=5$ images randomly selected from PlantVillage. Because PlantVillage images are captured under controlled conditions, each support image is resized to $224 \times 224$ and normalized, then passed eight times independently through a stochastic augmentation pipeline to approximate the variation seen in field imagery. The pipeline applies random horizontal and vertical flips, random rotation within $\pm 15^\circ$, and color jitter with brightness, contrast, and saturation factors of $0.2$. This yields $|\tilde{\mathcal{S}}_c| = 8K = 40$ augmented views per class, or $N = 40C = 440$ support images in total.
 
 \medskip
 \textbf{Dual-Foundation Visual Extraction.} Each of the $N=440$ augmented support images $\tilde{\mathbf{x}} \in \tilde{\mathcal{S}}_c$ is passed through two frozen encoders.
