@@ -1,0 +1,55 @@
+\section{Component Ablation Study and Discussion}
+\label{sec:ablation_discussion}
+
+\subsection{Systematic Component Ablation Analysis}
+\label{subsec:ablation_analysis}
+To quantify the exact scientific contribution of each proposed module within MorphoPath-Edge, we conduct a systematic component ablation study on the in-the-wild PlantDoc benchmark ($N=27$ classes, $K=5$ support shots, Seed 42, $|\mathcal{Q}|=252$ queries). Table~\ref{tab:ablation_study} summarizes the progressive degradation in classification accuracy, macro F1 score, clinical error rates, and routing precision as individual components are systematically ablated.
+
+\begin{table}[htbp]
+\footnotesize
+\centering
+\setlength{\tabcolsep}{3pt}
+\caption{Systematic Component Ablation Study on PlantDoc ($N=27, K=5$, Seed 42, $|\mathcal{Q}|=252$). Performance deltas ($\Delta$) are measured relative to the complete full model.}
+\label{tab:ablation_study}
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Ablated Configuration} & \textbf{Top-1 (\%)} & $\mathbf{\Delta_1}$ & \textbf{Top-2 (\%)} & $\mathbf{\Delta_2}$ & \textbf{F1 (\%)} & \textbf{FPR (\%)} \\
+\midrule
+\textbf{Full Model (MorphoPath Complete)} & \textbf{62.30} & \textbf{0.00} & \textbf{80.95} & \textbf{0.00} & \textbf{60.68} & \textbf{12.77} \\
+\midrule
+w/o Test-Time Manifold Rect. (ADR-005) & 53.57 & -8.73 & 74.60 & -6.35 & 51.78 & 17.02 \\
+w/o Botanical Archetype Router (ADR-001) & 53.97 & -8.33 & 74.60 & -6.35 & 53.19 & 15.60 \\
+w/o Covariance Shrinkage ($\lambda \to 0$) (ADR-002) & 51.59 & -10.71 & 61.11 & -19.84 & 51.00 & 17.73 \\
+w/o Micro-Symptom Prompts (ADR-004) & 60.32 & -1.98 & 80.95 & 0.00 & 59.28 & 14.89 \\
+w/o Bayesian Cardinality Gating (ADR-003) & 58.33 & -3.97 & 75.79 & -5.16 & 57.28 & 14.18 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\noindent\textbf{1) Manifold Rectification (ADR-005):} Disabling prototype centering precipitates an immediate \textbf{-8.73\%} drop in Top-1 accuracy (62.30\% $\to$ 53.57\%) and an \textbf{-8.90\%} drop in Macro F1 (60.68\% $\to$ 51.78\%). Without algebraic centering, translation offset $\|\Delta\|_2 \approx 0.30$ systematically shifts queries across decision boundaries. Rectification restores intra-class cluster compactness in 0.041\,ms with zero parameters.
+
+\noindent\textbf{2) Regularized Shrinkage (ADR-002):} Setting $\lambda \to 0$ subjects the decision head to singular sample covariances ($\kappa = \infty$), causing the most severe failure: Top-1 drops by \textbf{-10.71\%} (62.30\% $\to$ 51.59\%) and Top-2 collapses by \textbf{-19.84\%} (80.95\% $\to$ 61.11\%). Analytical shrinkage ($\lambda = 0.60$) conditions the matrix ($\kappa = 1428$), establishing numerical stability in few-shot regimes.
+
+\noindent\textbf{3) Botanical Archetype Routing (ADR-001):} Projecting directly into flat 27-way space incurs an \textbf{-8.33\%} Top-1 and \textbf{-6.35\%} Top-2 loss, as the classifier conflates visually homologous foliar lesions across unrelated families (e.g., Corn Gray Leaf Spot vs. Tomato Bacterial Spot).
+
+\noindent\textbf{4) Cardinality Gating vs. Hard Argmax (ADR-003):} Replacing soft equalized gating with hard argmax incurs a \textbf{-3.97\%} Top-1 and \textbf{-5.16\%} Top-2 penalty due to rigid boundary errors and uncalibrated class cardinality imbalances.
+
+\noindent\textbf{5) Micro-Symptom Prompt Ensembles (ADR-004):} Ablating prompt ensembles causes a \textbf{-1.98\%} Top-1 and \textbf{-1.40\%} F1 decline, confirming that text descriptions provide vital semantic anchoring for subtle lesions like early powdery mildew.
+
+\subsection{Phytopathological Analysis of Phenotypic Ambiguity Across Archetypes}
+\label{subsec:archetype_ambiguity}
+A detailed examination of diagnostic confusion across the four foliar macro-archetypes reveals critical phytopathological insights:
+\begin{enumerate}[\IEEEsetlabelwidth{A3}\setlength{\itemsep}{0pt}\setlength{\parsep}{0pt}\setlength{\topsep}{0.5pt}]
+    \item \textbf{Solanoid Archetype ($A_0$ -- 10 Classes):} In Tomato and Potato pathology, Early Blight (\textit{Alternaria solani}), Late Blight (\textit{Phytophthora infestans}), and Septoria Leaf Spot exhibit pronounced visual mimicry, manifesting as brown necrotic lesions bordered by chlorotic halos on compound serrate leaflets. Under flat nearest-prototype classification, inter-class overlap exceeds 34\%. Conditioning covariance shrinkage on the Solanoid partition and deploying Top-2 triage resolves over 88.5\% of these ambiguous cases.
+    \item \textbf{Vitoid Archetype ($A_1$ -- 3 Classes):} On broad palmate leaves of Grape and Squash, Black Rot and Powdery Mildew present overlapping desiccated margins. DINOv2's structural tokens isolate actinodromous primary venation radiating from the petiole, stabilizing coordinate frames and allowing BioCLIP to isolate fungal hyphae with 96.15\% archetype accuracy.
+    \item \textbf{Pooid Archetype ($A_2$ -- 3 Classes):} In monocot maize foliage, striate parallel venation restricts lesion expansion along linear interveinal pathways. Consequently, Corn Gray Leaf Spot (\textit{Cercospora zeae-maydis}) produces rectangular, vein-bounded streaks, whereas Common Rust produces circular pustules. Preserving the Pooid morphological prior prevents conflating linear maize lesions with irregular dicot leaf spots.
+    \item \textbf{Rosoid Archetype ($A_3$ -- 11 Classes):} Spanning simple ovate leaves across fruit trees (Apple, Peach, Cherry) and perennial crops (Bell Pepper, Strawberry, Blueberry), $A_3$ exhibits the greatest intra-archetype diversity. Without cardinality equalization ($K_{A_3} = 11$), individual Rosoid classes suffered severe under-prediction. Our equalization factor successfully balanced probability mass, elevating Rosoid Top-1 accuracy from 56.57\% to 71.72\% (+15.15\% gain).
+\end{enumerate}
+
+\subsection{Agronomic Safety and Elimination of Human Dependency}
+\label{subsec:discussion_phenotypic_overlap}
+In precision agriculture, false alarms (FPR) trigger unwarranted chemical fungicide sprays, inflating operational costs and accelerating pathogen resistance. MorphoPath-Edge achieves an FPR of \textbf{12.77\%} on PlantDoc (and \textbf{1.91\%} on PlantVillage), suppressing unneeded agrochemical sprays by nearly 38\% compared to traditional baselines.
+
+Crucially, MorphoPath-Edge eliminates the ``human-in-the-loop'' operational bottleneck. In prior pipelines (e.g., BioDINO-Edge~\cite{alsaadi2026biodino}), autonomous operation collapsed to 43.65\%--47.74\%, requiring growers to manually specify crop species to sustain 56.35\% oracle accuracy. Demanding human taxonomic inputs is untenable for autonomous spray booms and UAV scouts surveying hundreds of hectares. By achieving 91.39\%--93.25\% routing accuracy autonomously and delivering \textbf{62.30\% Top-1} and \textbf{80.95\% Top-2} field accuracy, MorphoPath-Edge provides the first truly autonomous, human-independent edge vision system for unconstrained crop pathology.

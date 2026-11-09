@@ -1,0 +1,210 @@
+{
+  "main": {
+    "id": "2794930a212e2ea2",
+    "type": "split",
+    "children": [
+      {
+        "id": "20a2dc7d71bc760c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "92954bf8fbd856bf",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "Project Board.canvas",
+                "viewState": {
+                  "x": 380,
+                  "y": 880,
+                  "zoom": -1.5689810808162308
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "Project Board"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "659200b341b74cbc",
+    "type": "split",
+    "children": [
+      {
+        "id": "22a8ab6ce4970823",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "487d807e9b075264",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "ce8ff01855bdcfd4",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "fe70f390b5115421",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200
+  },
+  "right": {
+    "id": "fdaac7ebc12c5a36",
+    "type": "split",
+    "children": [
+      {
+        "id": "50d7bc2d33aaa491",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d11352ac2f194ffd",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Project Board.canvas",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "83cd548565267631",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Project Board.canvas",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "841500bb97c9b458",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "ce19390d987150d5",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "92954bf8fbd856bf",
+  "lastOpenFiles": [
+    "Project Board.canvas",
+    "Tasks/TASK-REFINE-001.md",
+    "Reviews/Review-Humanize-Phase5.md",
+    "00 - Dashboard.md",
+    "Architecture/MorphoPath System Architecture.md",
+    "Tasks/TASK-HUMANIZE-006.md",
+    "Tasks/TASK-HUMANIZE-005.md",
+    "Tasks/TASK-HUMANIZE-004.md",
+    "Tasks/TASK-HUMANIZE-003.md",
+    "Tasks/TASK-HUMANIZE-002.md",
+    "Tasks/TASK-HUMANIZE-001.md",
+    "Drafts/Draft-04-Experiments-and-Master-Paper.md",
+    "Drafts/Draft-03-Methodology.md",
+    "Drafts/Draft-02-Related-Work.md",
+    "Drafts/Draft-01-Introduction.md",
+    "Tasks/TASK-DRAFT-004.md",
+    "Tasks/TASK-DRAFT-003.md",
+    "Tasks/TASK-DRAFT-002.md",
+    "Tasks/TASK-DRAFT-001.md",
+    "Architecture/Master-Comparative-Benchmark-BioDINO-vs-MorphoPath.md",
+    "Tasks/TASK-MORPHOPATH-005.md",
+    "Logs/Log-PlantVillage-Validation.md",
+    "Logs/Log-Phase3-Ablation-Study.md",
+    "Logs/Log-Phase3-Edge-Profiling.md",
+    "Logs/Log-Phase3-Monte-Carlo-Benchmark.md",
+    "Tasks/TASK-MORPHOPATH-004.md",
+    "Reviews",
+    "Drafts",
+    "Architecture/ADR",
+    "Ideation"
+  ]
+}

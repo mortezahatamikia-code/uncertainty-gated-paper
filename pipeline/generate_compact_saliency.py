@@ -79,113 +79,93 @@ def build_compact_saliency():
 
     pv_color = PROJECT_ROOT / "plantvillage" / "plantvillage dataset" / "color"
     pd_dir = PROJECT_ROOT / "pipeline" / "plantdoc_samples"
+    
+    pd_apple = pd_dir / "apple_rust_leaf_10.jpg"
+    if not pd_apple.exists():
+        pd_apple = PROJECT_ROOT / "plantdoc" / "test" / "Apple_rust_leaf" / "test_Apple rust leaf_10.jpg"
+
+    pd_blight = pd_dir / "potato_late_blight_0_1421_0.jpeg"
+    if not pd_blight.exists():
+        pd_blight = PROJECT_ROOT / "plantdoc" / "test" / "Potato_leaf_late_blight" / "test_Potato leaf late blight_1.jpg"
+
+    pd_grape = pd_dir / "grape_leaf_black_rot_4.jpg"
+    if not pd_grape.exists():
+        pd_grape = PROJECT_ROOT / "plantdoc" / "test" / "grape_leaf_black_rot" / "test_grape leaf black rot_4.jpg"
 
     cases = [
         {
-            "dataset_tag": "PlantVillage (Lab)",
-            "img_path": sorted(list((pv_color / "Apple___Cedar_apple_rust").glob("*.JPG")) + list((pv_color / "Apple___Cedar_apple_rust").glob("*.jpg")))[8],
+            "col_title": "Apple Cedar Rust\n[Tier 2: Escalation]",
+            "col_sub": "PlantDoc (Field)",
+            "img_path": pd_apple,
             "title": "Apple Cedar Rust",
-            "pathogen": "Gymnosporangium juniperi-virginianae",
-            "tier": 1,
-            "badge": r"Fast-Exit [21.1 ms] | $\mathcal{C}(\mathbf{x}) = 0.94$",
-            "badge_color": "#1b5e20",
+            "pathogen": "G. juniperi-virginianae",
+            "tier": 2,
+            "badge": r"Fisher-LDA | $\mathcal{C}(\mathbf{x}) = 0.99$",
+            "badge_color": "#0d47a1",
             "healthy_cls": 3,
             "target_cls": 2,
+            "attn_note": "Petiole Sink"
         },
         {
-            "dataset_tag": "PlantVillage (Lab)",
-            "img_path": sorted(list((pv_color / "Apple___Black_rot").glob("*.JPG")) + list((pv_color / "Apple___Black_rot").glob("*.jpg")))[18],
-            "title": "Apple Black Rot",
-            "pathogen": "Botryosphaeria obtusa",
-            "tier": 1,
-            "badge": r"Fast-Exit [21.1 ms] | $\mathcal{C}(\mathbf{x}) = 0.89$",
-            "badge_color": "#1b5e20",
-            "healthy_cls": 3,
-            "target_cls": 1,
-        },
-        {
-            "dataset_tag": "PlantDoc (In-The-Wild)",
-            "img_path": pd_dir / "potato_late_blight_0_1421_0.jpeg",
-            "title": "Potato Late Blight",
-            "pathogen": "Phytophthora infestans",
-            "tier": 2,
-            "badge": r"Tier-2 Fisher-LDA | $\mathcal{C}(\mathbf{x}) = 0.98$",
-            "badge_color": "#0d47a1",
-            "healthy_cls": 10,
-            "target_cls": 9,
-            "attn_note": "Petiole Attention Sink"
-        },
-        {
-            "dataset_tag": "PlantDoc (In-The-Wild)",
-            "img_path": pd_dir / "grape_leaf_black_rot_35589125035_662dd5b258_b.jpg",
+            "col_title": "Grape Black Rot\n[Tier 2: Escalation]",
+            "col_sub": "PlantDoc (Field)",
+            "img_path": pd_grape,
             "title": "Grape Black Rot",
             "pathogen": "Guignardia bidwellii",
             "tier": 2,
-            "badge": r"Tier-2 Fisher-LDA | $\mathcal{C}(\mathbf{x}) = 0.97$",
+            "badge": r"Fisher-LDA | $\mathcal{C}(\mathbf{x}) = 0.98$",
             "badge_color": "#0d47a1",
             "healthy_cls": 7,
             "target_cls": 4,
-            "attn_note": "Petiole & Vein Sink"
+            "attn_note": "Petiole Sink"
+        },
+        {
+            "col_title": "Potato Late Blight\n[Tier 2: Escalation]",
+            "col_sub": "PlantDoc (Field)",
+            "img_path": pd_blight,
+            "title": "Potato Late Blight",
+            "pathogen": "P. infestans",
+            "tier": 2,
+            "badge": r"Fisher-LDA | $\mathcal{C}(\mathbf{x}) = 0.98$",
+            "badge_color": "#0d47a1",
+            "healthy_cls": 10,
+            "target_cls": 9,
+            "attn_note": "Petiole Sink"
         }
     ]
 
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["font.sans-serif"] = ["DejaVu Sans", "Arial", "Helvetica"]
 
-    fig = plt.figure(figsize=(11.6, 8.1))
+    # Vertical 3-row x 3-column layout:
+    # Columns: 3 Crops (Apple, Grape, Potato)
+    # Rows: 3 Visualization stages vertically: (a) Input RGB, (b) Attention, (c) Saliency Overlay
+    fig = plt.figure(figsize=(7.2, 7.3))
     
-    # Ultra-compact GridSpec: bottom leaves space for colorbar, top leaves space for titles + banners
-    gs = gridspec.GridSpec(nrows=3, ncols=4, figure=fig,
-                           left=0.120, right=0.985, top=0.825, bottom=0.075,
-                           wspace=0.024, hspace=0.028)
+    gs = gridspec.GridSpec(nrows=3, ncols=3, figure=fig,
+                           left=0.155, right=0.985, top=0.915, bottom=0.075,
+                           wspace=0.045, hspace=0.055)
 
-    axes = np.empty((3, 4), dtype=object)
+    axes = np.empty((3, 3), dtype=object)
     for r in range(3):
-        for c in range(4):
+        for c in range(3):
             axes[r, c] = fig.add_subplot(gs[r, c])
 
-    fig.canvas.draw()
-    pos_00 = axes[0, 0].get_position()
-    pos_01 = axes[0, 1].get_position()
-    pos_02 = axes[0, 2].get_position()
-    pos_03 = axes[0, 3].get_position()
-
-    center_tier1 = (pos_00.x0 + pos_01.x1) / 2.0
-    center_tier2 = (pos_02.x0 + pos_03.x1) / 2.0
-    banner_y = 0.942
-
-    # Top Section Banners aligned above column pairs
-    fig.text(center_tier1, banner_y,
-             "TIER 1: FAST-PATH ROUTINE TRIAGE (PlantVillage Lab Benchmark)\n"
-             r"$\mathbf{\mathcal{C}(\mathbf{x}) \geq 0.35}$ | Fast-Exit in 21.1 ms ($>$45 FPS)",
-             ha="center", va="center", fontsize=8.8, fontweight="bold", color="#1b5e20",
-             linespacing=1.2,
-             bbox=dict(boxstyle="round,pad=0.34", facecolor="#e8f5e9", edgecolor="#4caf50", linewidth=1.3))
-
-    fig.text(center_tier2, banner_y,
-             "TIER 2: GATED DEEP-PATH RESOLUTION (PlantDoc In-The-Wild Benchmark)\n"
-             r"$\mathbf{\mathcal{C}(\mathbf{x}) < 0.35}$ | Regularized Fisher-LDA + Multimodal Companion",
-             ha="center", va="center", fontsize=8.8, fontweight="bold", color="#0d47a1",
-             linespacing=1.2,
-             bbox=dict(boxstyle="round,pad=0.34", facecolor="#e3f2fd", edgecolor="#2196f3", linewidth=1.3))
-
-    # Clean vertical dashed divider between Tier 1 and Tier 2 regimes
-    div_x = (pos_01.x1 + pos_02.x0) / 2.0
-    div_line = Line2D([div_x, div_x], [axes[2, 0].get_position().y0 - 0.005, 0.978],
-                      transform=fig.transFigure, color="#777777", linestyle="--", linewidth=1.2, alpha=0.75)
-    fig.add_artist(div_line)
-
     row_labels = [
-        "(a) Input Query Leaf\n(RGB Observation)",
-        "(b) Tier-1 DINOv2\nRaw Self-Attention",
-        "(c) BioDINO Calibrated\nSaliency Overlay"
+        "(a) Input Query Leaf",
+        "(b) Tier-1 Attention",
+        "(c) BioDINO Overlay"
     ]
 
-    for row_idx, label in enumerate(row_labels):
-        axes[row_idx, 0].set_ylabel(label, fontsize=9.2, fontweight="bold", labelpad=10, rotation=90, va="center", linespacing=1.15)
+    for row_idx, r_label in enumerate(row_labels):
+        axes[row_idx, 0].set_ylabel(r_label, fontsize=8.6, fontweight="bold",
+                                    labelpad=8, rotation=90, va="center")
 
     im_heat = None
     for col_idx, c in enumerate(cases):
+        # Column title on top
+        axes[0, col_idx].set_title(c["col_title"], fontsize=8.0, fontweight="bold", pad=6, linespacing=1.15)
+
         pil_img = Image.open(c["img_path"]).convert("RGB").resize((224, 224))
         rgb_np = np.array(pil_img) / 255.0
         x = transform(pil_img).unsqueeze(0).to(DEVICE)
@@ -217,31 +197,21 @@ def build_compact_saliency():
         fisher_up = F.interpolate(fisher_t, size=(224, 224), mode="bicubic", align_corners=False).squeeze().numpy()
         fisher_up = np.clip(fisher_up, 0.0, 1.0)
 
-        # Column Header (positioned cleanly between banner and image box)
-        col_pos = axes[0, col_idx].get_position()
-        col_center_x = (col_pos.x0 + col_pos.x1) / 2.0
-        fig.text(col_center_x, 0.880, c["title"],
-                 ha="center", va="center", fontsize=9.2, fontweight="bold")
-        fig.text(col_center_x, 0.858, f"({c['pathogen']})",
-                 ha="center", va="center", fontsize=8.0, fontstyle="italic")
-        fig.text(col_center_x, 0.839, f"[{c['dataset_tag']}]",
-                 ha="center", va="center", fontsize=8.0, color="#333333", fontweight="bold")
-
-        # Row 0: Original Leaf
+        # Row 0: Original RGB Leaf
         axes[0, col_idx].imshow(rgb_np)
         axes[0, col_idx].set_xticks([])
         axes[0, col_idx].set_yticks([])
 
-        # Row 1: Attention Map
+        # Row 1: DINOv2 Attention Map
         im_heat = axes[1, col_idx].imshow(attn_up, cmap="turbo", vmin=0, vmax=1)
         axes[1, col_idx].set_xticks([])
         axes[1, col_idx].set_yticks([])
         if "attn_note" in c:
             axes[1, col_idx].text(112, 206, f"[!] {c['attn_note']}", ha="center", va="bottom",
-                                  fontsize=7.4, fontweight="bold", color="yellow",
-                                  bbox=dict(boxstyle="round,pad=0.20", facecolor="#b71c1c", alpha=0.92, edgecolor="white", linewidth=0.8))
+                                  fontsize=6.8, fontweight="bold", color="yellow",
+                                  bbox=dict(boxstyle="round,pad=0.18", facecolor="#b71c1c", alpha=0.92, edgecolor="white", linewidth=0.7))
 
-        # Row 2: Overlay
+        # Row 2: Calibrated Overlay
         if c["tier"] == 1:
             heat = plt.get_cmap("turbo")(attn_up)[:, :, :3]
         else:
@@ -252,23 +222,23 @@ def build_compact_saliency():
         axes[2, col_idx].set_xticks([])
         axes[2, col_idx].set_yticks([])
 
-        # Badge
+        # Diagnostic Badge
         axes[2, col_idx].text(112, 206, c["badge"], ha="center", va="bottom",
-                              fontsize=7.4, fontweight="bold", color="white",
-                              bbox=dict(boxstyle="round,pad=0.20", facecolor=c["badge_color"], alpha=0.92, edgecolor="white", linewidth=0.8))
+                              fontsize=6.8, fontweight="bold", color="white",
+                              bbox=dict(boxstyle="round,pad=0.18", facecolor=c["badge_color"], alpha=0.92, edgecolor="white", linewidth=0.7))
 
     for r in range(3):
-        for col in range(4):
+        for col in range(3):
             for spine in axes[r, col].spines.values():
                 spine.set_visible(True)
                 spine.set_edgecolor("#333333")
-                spine.set_linewidth(0.9)
+                spine.set_linewidth(0.8)
 
     # Sleek Colorbar at bottom
-    cbar_ax = fig.add_axes([0.30, 0.022, 0.40, 0.015])
+    cbar_ax = fig.add_axes([0.30, 0.020, 0.46, 0.016])
     cb = fig.colorbar(im_heat, cax=cbar_ax, orientation="horizontal")
-    cb.set_label("Normalized Pathological Saliency Density [0, 1]", fontsize=8.4, fontweight="bold", labelpad=3)
-    cb.ax.tick_params(labelsize=7.5)
+    cb.set_label("Normalized Pathological Saliency Density [0, 1]", fontsize=7.6, fontweight="bold", labelpad=2)
+    cb.ax.tick_params(labelsize=6.8)
 
     pdf_path = PAPER_DIR / "fig_saliency.pdf"
     png_path = PAPER_DIR / "fig_saliency.png"

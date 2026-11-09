@@ -1,0 +1,96 @@
+{
+  "dataset": "plantdoc",
+  "n_classes": 27,
+  "n_queries": 252,
+  "baselines": {
+    "flat_multimodal_top1": 53.17460317460318,
+    "rigid_13species_router_top1": 79.36507936507937,
+    "rigid_13species_router_top2": 90.07936507936508,
+    "rigid_13species_moe_hard_top1": 48.01587301587302,
+    "farmer_guided_13species_oracle": 65.07936507936508
+  },
+  "idea_001_orthogonal_svd": {
+    "status": "rejected",
+    "findings": "Orthogonal projection of shared cross-covariance components degrades disease accuracy from 50.00% to 21.43% and router accuracy from 91.67% to 42.86%. Morphology and pathology are biologically coupled.",
+    "measured_degradation": "-2.38% to -28.57%"
+  },
+  "idea_002_archetype_router": {
+    "status": "validated",
+    "dino_router_top1": 91.66666666666666,
+    "dino_router_top2": 99.60317460317461,
+    "gain_top1_over_13species": 12.30158730158729,
+    "gain_top2_over_13species": 9.523809523809533
+  },
+  "idea_003_micro_symptom_prompts": {
+    "status": "validated_conditioned",
+    "solanoid_intra_gain": "+2.97%",
+    "tomato_cluster_gain": "+2.53%",
+    "few_shot_multimodal_gain": "+0.79%",
+    "finding": "Pure necrotic prompts without host conditioning fail globally (11.11%), but intra-archetype conditioned micro-symptom prompts improve fine-grained lesion separation."
+  },
+  "idea_004_bayesian_gating": {
+    "status": "validated",
+    "sweep": {
+      "0.0": {
+        "accuracy_top1": 48.80952380952381,
+        "accuracy_top2": 54.761904761904766,
+        "macro_f1": 48.18152054306563,
+        "fnr": 3.7037037037037033,
+        "fpr": 17.77777777777778
+      },
+      "0.25": {
+        "accuracy_top1": 48.80952380952381,
+        "accuracy_top2": 56.74603174603175,
+        "macro_f1": 48.18152054306563,
+        "fnr": 3.7037037037037033,
+        "fpr": 17.77777777777778
+      },
+      "0.5": {
+        "accuracy_top1": 48.80952380952381,
+        "accuracy_top2": 55.55555555555556,
+        "macro_f1": 48.2866791398556,
+        "fnr": 3.7037037037037033,
+        "fpr": 17.77777777777778
+      },
+      "0.75": {
+        "accuracy_top1": 48.80952380952381,
+        "accuracy_top2": 55.55555555555556,
+        "macro_f1": 48.2866791398556,
+        "fnr": 3.7037037037037033,
+        "fpr": 17.77777777777778
+      },
+      "1.0": {
+        "accuracy_top1": 48.80952380952381,
+        "accuracy_top2": 55.158730158730165,
+        "macro_f1": 48.2866791398556,
+        "fnr": 3.7037037037037033,
+        "fpr": 17.77777777777778
+      },
+      "1.25": {
+        "accuracy_top1": 48.41269841269841,
+        "accuracy_top2": 54.761904761904766,
+        "macro_f1": 47.93725327181649,
+        "fnr": 3.7037037037037033,
+        "fpr": 17.77777777777778
+      },
+      "1.5": {
+        "accuracy_top1": 48.01587301587302,
+        "accuracy_top2": 54.761904761904766,
+        "macro_f1": 47.56326884849838,
+        "fnr": 3.7037037037037033,
+        "fpr": 17.77777777777778
+      }
+    },
+    "best_alpha": 1.0,
+    "bayes_top1": 48.80952380952381,
+    "bayes_top2": 55.158730158730165,
+    "differential_prototype_top2": 74.20634920634922,
+    "gain_over_naive_soft": 0.0
+  },
+  "edge_profiling": {
+    "single_cpu_query_latency_us": 393.03431999996974,
+    "single_cpu_query_latency_ms": 0.39303431999996974,
+    "added_memory_mb": 0.0,
+    "zero_overhead_satisfied": true
+  }
+}

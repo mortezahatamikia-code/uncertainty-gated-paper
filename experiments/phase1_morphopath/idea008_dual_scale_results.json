@@ -1,0 +1,72 @@
+{
+  "results": {
+    "1. Global Only (Bio 512 + DINO 384 = 896d)": {
+      "solanoid_acc": 42.57425742574257,
+      "vitoid_acc": 92.3076923076923,
+      "pooid_acc": 38.46153846153847,
+      "rosoid_acc": 64.64646464646465,
+      "oracle_acc": 55.952380952380956,
+      "hierarchical_acc": 52.38095238095239,
+      "macro_f1": 52.09446947468365
+    },
+    "2. Crop 70% Only (Bio 512 + DINO 384 = 896d)": {
+      "solanoid_acc": 44.554455445544555,
+      "vitoid_acc": 96.15384615384616,
+      "pooid_acc": 46.15384615384615,
+      "rosoid_acc": 57.57575757575758,
+      "oracle_acc": 55.158730158730165,
+      "hierarchical_acc": 51.19047619047619,
+      "macro_f1": 50.24822008333074
+    },
+    "3. Crop 50% Only (Bio 512 + DINO 384 = 896d)": {
+      "solanoid_acc": 42.57425742574257,
+      "vitoid_acc": 92.3076923076923,
+      "pooid_acc": 38.46153846153847,
+      "rosoid_acc": 53.535353535353536,
+      "oracle_acc": 51.587301587301596,
+      "hierarchical_acc": 48.01587301587302,
+      "macro_f1": 46.35196617943376
+    },
+    "4. Dual-Scale Concat 1792d [Global, Crop70]": {
+      "solanoid_acc": 43.56435643564357,
+      "vitoid_acc": 92.3076923076923,
+      "pooid_acc": 38.46153846153847,
+      "rosoid_acc": 59.59595959595959,
+      "oracle_acc": 54.36507936507936,
+      "hierarchical_acc": 50.79365079365079,
+      "macro_f1": 49.94807825240115
+    },
+    "5. Dual-Scale BioCLIP Fusion (Bio 50% Glob + 50% Crop70) + DINO Glob = 896d": {
+      "solanoid_acc": 44.554455445544555,
+      "vitoid_acc": 92.3076923076923,
+      "pooid_acc": 38.46153846153847,
+      "rosoid_acc": 61.61616161616161,
+      "oracle_acc": 55.55555555555556,
+      "hierarchical_acc": 52.38095238095239,
+      "macro_f1": 51.91165894386008
+    },
+    "6. Dual-Scale Equal Average 896d (Global + Crop70)": {
+      "solanoid_acc": 40.5940594059406,
+      "vitoid_acc": 96.15384615384616,
+      "pooid_acc": 38.46153846153847,
+      "rosoid_acc": 59.59595959595959,
+      "oracle_acc": 53.57142857142857,
+      "hierarchical_acc": 50.0,
+      "macro_f1": 49.33399810217164
+    },
+    "7. Dual-Scale Convex (0.7 Global + 0.3 Crop70)": {
+      "solanoid_acc": 43.56435643564357,
+      "vitoid_acc": 92.3076923076923,
+      "pooid_acc": 38.46153846153847,
+      "rosoid_acc": 63.63636363636363,
+      "oracle_acc": 55.952380952380956,
+      "hierarchical_acc": 52.38095238095239,
+      "macro_f1": 52.02549448339221
+    }
+  },
+  "baseline_global_acc": 52.38095238095239,
+  "best_configuration": "1. Global Only (Bio 512 + DINO 384 = 896d)",
+  "best_hierarchical_acc": 52.38095238095239,
+  "net_gain": 0.0,
+  "status": "rejected"
+}

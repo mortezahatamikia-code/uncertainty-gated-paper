@@ -1,0 +1,70 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% IEEE standard packages
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{balance}
+
+% IEEE-compliant layout and float spacing optimizations
+\setlength{\textfloatsep}{3.5pt plus 1.0pt minus 1.0pt}
+\setlength{\floatsep}{3.0pt plus 1.0pt minus 1.0pt}
+\setlength{\intextsep}{3.0pt plus 1.0pt minus 1.0pt}
+\setlength{\dbltextfloatsep}{4.0pt plus 1.0pt minus 1.0pt}
+\setlength{\dblfloatsep}{3.0pt plus 1.0pt minus 1.0pt}
+\setlength{\abovedisplayskip}{2.5pt plus 1.0pt minus 0.5pt}
+\setlength{\belowdisplayskip}{2.5pt plus 1.0pt minus 0.5pt}
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.95}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.85}
+\renewcommand{\dbltopfraction}{0.95}
+\renewcommand{\dblfloatpagefraction}{0.85}
+
+\begin{document}
+
+\title{MorphoPath-Edge: Decoupled Foliar-Morphology and Pathological-Symptom Reasoning atop Frozen Vision Foundation Models for Autonomous Edge Precision Agriculture}
+
+\author{
+    \IEEEauthorblockN{Reyhane Javidi Alsaadi}
+    \IEEEauthorblockA{\textit{Department of Computer Engineering} \\
+    \textit{Dr. Shariaty Technical University} \\
+    Tehran, Iran \\
+    reyhane.code@gmail.com}
+    \and
+    \IEEEauthorblockN{Mohammad Reza Samad Zadeh}
+    \IEEEauthorblockA{\textit{Department of Computer Engineering} \\
+    \textit{Dr. Shariaty Technical University} \\
+    Tehran, Iran \\
+    samadzadeh@ut.ac.ir}
+}
+
+\maketitle
+
+\begin{abstract}
+Autonomous diagnosis of foliar phytopathogens under unconstrained field canopies remains limited by environmental perturbations and cascading hierarchical routing failures, which previously forced operational models to rely on grower species identification. To resolve this fundamental operational bottleneck, we introduce \textbf{MorphoPath-Edge}, an autonomous, biologically grounded, zero-parameter few-shot foliar diagnostic framework engineered for resource-constrained edge hardware. MorphoPath-Edge decouples macroscopic leaf geometry from microscopic lesion pathology atop frozen vision foundation models (DINOv2 and BioCLIP). By replacing fragile cultigen-specific classifiers with \textbf{Four Macro-Botanical Foliar Archetypes} (Solanoid, Vitoid, Pooid, and Rosoid), autonomous in-the-wild routing accuracy advances from 79.35\% to \textbf{93.25\%} (with 100\% Top-2 recall), removing human-in-the-loop dependencies. To counteract field illumination and sensor domain shifts without gradient backpropagation, we derive an exact closed-form \textbf{Zero-Parameter Test-Time Manifold Rectification} theorem that algebraically cancels centroid translation ($\|\Delta\|_2 \approx 0.30$) in 0.04\,ms. Within archetype partitions, singular high-dimensional covariance matrices are conditioned via analytical Ledoit--Wolf shrinkage ($\lambda=0.60$) and coupled with archetype-conditioned micro-symptom prompt ensembles. Finally, a \textbf{Cardinality-Equalized Bayesian Differential Triage} engine mitigates class imbalance and produces calibrated Top-2 clinical candidates. Across 30-episode Monte Carlo evaluations on the unconstrained PlantDoc benchmark, MorphoPath-Edge achieves \textbf{62.30\% Top-1} and \textbf{80.95\% Top-2} accuracy, outperforming autonomous hierarchical baselines by \textbf{+11.84\%} ($p = 1.03 \times 10^{-21}$) and reducing false-positive fungicide alerts by 38.1\%. On PlantVillage, it sustains \textbf{99.20\%} Top-2 accuracy on emerging cultigens and \textbf{94.25\%} across all 38 classes simultaneously. Executing on a mobile quad-core CPU via INT8 quantization, the system delivers real-time streaming throughput of \textbf{18.66\,FPS (53.60\,ms latency)}, a peak RAM heap of \textbf{66.95\,MB}, and a standalone Android package footprint of \textbf{22.88\,MB} with zero added learned neural weights.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Few-Shot Learning, Precision Agriculture, Foliar Pathology, Vision Foundation Models, Botanical Archetypes, Manifold Rectification, Bayesian Differential Triage, Edge AI.
+\end{IEEEkeywords}
+
+\input{sections/01_introduction.tex}
+\input{sections/02_related_work.tex}
+\input{sections/03_problem_formulation.tex}
+\input{sections/04_methodology.tex}
+\input{sections/05_experiments.tex}
+\input{sections/06_ablation_discussion.tex}
+\input{sections/07_edge_profiling.tex}
+\input{sections/08_conclusion.tex}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

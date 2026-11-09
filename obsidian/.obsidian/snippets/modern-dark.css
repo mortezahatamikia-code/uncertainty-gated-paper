@@ -1,0 +1,114 @@
+/* ========================================================
+   MODERN DARK THEME & GLASSMORPHISM SNIPPET FOR OBSIDIAN
+   ======================================================== */
+
+body.theme-dark {
+  --font-text: "Vazirmatn", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-monospace: "JetBrains Mono", "Fira Code", Consolas, monospace;
+
+  /* Deep Luxury Dark Palette */
+  --background-primary: #0b0f19;
+  --background-primary-alt: #0e1320;
+  --background-secondary: #111827;
+  --background-secondary-alt: #162032;
+  --background-modifier-border: rgba(255, 255, 255, 0.08);
+  --background-modifier-border-hover: rgba(255, 255, 255, 0.16);
+
+  /* Vivid Accents */
+  --interactive-accent: #6366f1;
+  --interactive-accent-hover: #4f46e5;
+  --text-normal: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+  --text-accent: #38bdf8;
+  
+  /* Smooth Radius */
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 14px;
+}
+
+/* Custom Tag Badges */
+a.tag[href*="#task/done"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  border-radius: 9999px !important;
+  padding: 2px 10px !important;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+}
+
+a.tag[href*="#task/in-progress"] {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  border-radius: 9999px !important;
+  padding: 2px 10px !important;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+}
+
+a.tag[href*="#task/todo"] {
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  border-radius: 9999px !important;
+  padding: 2px 10px !important;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+
+a.tag[href*="#task/backlog"], a.tag[href*="#idea"] {
+  background: rgba(168, 85, 247, 0.15) !important;
+  color: #c084fc !important;
+  border: 1px solid rgba(168, 85, 247, 0.3) !important;
+  border-radius: 9999px !important;
+  padding: 2px 10px !important;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+}
+
+/* Glassmorphism Cards & Panels */
+.callout {
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Canvas Styling */
+.canvas-node {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.canvas-node:hover {
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6) !important;
+}
+
+.canvas-group-label {
+  font-weight: 700 !important;
+  letter-spacing: 0.5px;
+}
+
+/* Smooth Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
