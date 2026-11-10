@@ -67,7 +67,7 @@ where $\lambda = 0.60$ reduces the condition number to $\kappa = 1428$. The visu
 \end{equation}
 where $d_{\Sigma}^{(k)}(u, v) = (u - v)^\top (\Sigma_{\text{shrunk}}^{(k)})^{-1} (u - v)$.
 
-To incorporate phytopathological semantics (ADR-004), an ensemble of $M = 5$ structured micro-symptom prompts is encoded via BioCLIP's text encoder: $T_c = \text{norm}\left(\frac{1}{M}\sum_{m=1}^M g_{\text{text}}(t_{c,m})\right) \in \mathbb{R}^{512}$, capturing necrotic pustules and chlorotic halos. The semantic text likelihood $P_{\text{text}}(c \mid x, A_k) \propto \exp\left(\tau \cdot \cos(z_{\text{bio}}, T_c)\right)$ ($\tau=15$) is fused convexly with visual likelihood ($w_{\text{vis}} = 0.85$):
+To incorporate phytopathological semantics (ADR-004), an ensemble of $M = 5$ structured micro-symptom prompts is encoded via BioCLIP: $T_c = \text{norm}\left(\frac{1}{M}\sum_{m=1}^M g_{\text{text}}(t_{c,m})\right) \in \mathbb{R}^{512}$, capturing necrotic pustules and chlorosis. Rather than naive equal concatenation, decoupled visual similarity balances pathology and geometry ($S_{\text{vis}} = 0.65 S_{\text{bio}} + 0.35 S_{\text{dino}}$), while zero-parameter negative rejectors penalize specular canopy glare and background voids without learned parameters. The text likelihood $P_{\text{text}}(c \mid x, A_k) \propto \exp\left(\tau \cdot \cos(z_{\text{bio}}, T_c)\right)$ ($\tau=15$) is fused convexly with visual likelihood ($w_{\text{vis}} = 0.85$):
 \begin{equation}
     P_{\text{comb}}(c \mid x, A_k) = w_{\text{vis}} P_{\text{vis}} + (1 - w_{\text{vis}}) P_{\text{text}}.
     \label{eq:p_comb}
@@ -88,4 +88,4 @@ where $K_{A_k} = |\mathcal{Y}_{A_k}|$ and $\alpha = 1.0$. Scaling by $K_{A_k}$ r
 accompanied by confidence ratios $p_1 = \frac{\text{Score}(\hat{c}_1)}{\text{Score}(\hat{c}_1) + \text{Score}(\hat{c}_2)}$ and $p_2 = 1 - p_1$.
 
 \noindent\textbf{Computational Complexity and Streaming Execution:}
-With $\left(\Sigma_{\text{shrunk}}^{(k)}\right)^{-1}$ precomputed offline, the algebraic decision head executes in $\mathcal{O}(D)$ time, consuming merely \textbf{0.487~ms} (2,051~FPS) with zero learned parameters. A dynamic cascaded policy resolves 72.0\% of confident queries via the fast DINOv2 path (41.17~ms), invoking the deep dual-stream path for only 28.0\% of ambiguous queries, achieving an effective streaming latency of \textbf{53.60~ms (18.66~FPS)} on mobile quad-core CPUs.
+With $\left(\Sigma_{\text{shrunk}}^{(k)}\right)^{-1}$ precomputed offline and zero-copy vectorization deployed, the algebraic decision head executes in $\mathcal{O}(D)$ time, consuming merely \textbf{0.185~ms} (5,392.5~FPS) with zero learned parameters. A dynamic cascaded policy resolves 72.0\% of confident queries via the fast DINOv2 path (40.68~ms), invoking the deep dual-stream path for only 28.0\% of ambiguous queries, achieving an effective streaming latency of \textbf{46.77~ms (21.40~FPS)} on mobile quad-core CPUs.

@@ -35,8 +35,6 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 import scipy.stats as stats
 import torch
-import torch.nn.functional as F
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import accuracy_score, f1_score
 
 # Ensure project root is in sys.path
@@ -44,15 +42,13 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from pipeline.biodino_hierarchical_pipeline import (
-    extract_botanical_species,
-    fit_fisher_lda,
-    is_healthy_leaf,
-)
+from pipeline.biodino_hierarchical_pipeline import extract_botanical_species
 from pipeline.morphopath_engine import (
     MorphoPathEngine,
+    fit_shrunk_lda,
     is_healthy_leaf_name,
     l2_normalize,
+    softmax_prob,
 )
 
 CACHE_FILE = PROJECT_ROOT / "experiments" / "phase1_morphopath" / "plantdoc_features_seed42.pt"
@@ -176,9 +172,7 @@ def evaluate_baseline_2_rigid_13species(
             y_loc = np.array([local_map[y] for y in sup_labels[s_mask]])
             if len(np.unique(y_loc)) > 1:
                 shrink_val = 0.001 if use_exact_unregularized_cov else "auto"
-                clf = LinearDiscriminantAnalysis(solver="lsqr", shrinkage=shrink_val).fit(
-                    sup_joint[s_mask], y_loc
-                )
+                clf = fit_shrunk_lda(sup_joint[s_mask], y_loc, shrinkage=shrink_val)
                 species_clfs[s_idx] = (clf, s_classes)
             else:
                 species_clfs[s_idx] = (None, s_classes)
@@ -188,7 +182,7 @@ def evaluate_baseline_2_rigid_13species(
     # 3. Predict queries
     top1_preds = []
     top2_preds_list = []
-    species_probs = F.softmax(torch.tensor(sim_spec) * 12.0, dim=-1).numpy()
+    species_probs = softmax_prob(sim_spec, temp=12.0)
 
     for i in range(n_queries):
         s_pred = top1_species_pred[i]

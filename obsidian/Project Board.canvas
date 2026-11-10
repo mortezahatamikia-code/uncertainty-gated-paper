@@ -1,62 +1,1032 @@
 {
-	"nodes":[
-		{"id":"phase-1","type":"group","x":-2150,"y":-420,"width":760,"height":2600,"color":"6","label":"💡 فاز ۱: فرضیات و ایده‌های اولیه (Ideation)"},
-		{"id":"phase-2","type":"group","x":-1290,"y":-420,"width":760,"height":2600,"color":"3","label":"🧪 فاز ۲: ترکیب، غربالگری و تصمیمات (Synthesis & ADR)"},
-		{"id":"phase-3","type":"group","x":-430,"y":-420,"width":760,"height":2600,"color":"5","label":"⚡ فاز ۳: پیاده‌سازی و بنچمارک هوش مصنوعی (AI Engine)"},
-		{"id":"phase-4","type":"group","x":430,"y":-420,"width":760,"height":2600,"color":"4","label":"📝 فاز ۴: نگارش پیش‌نویس علمی (Scientific Drafting)"},
-		{"id":"phase-5","type":"group","x":1290,"y":-420,"width":760,"height":2600,"color":"4","label":"✍️ فاز ۵: انسانی‌نویسی و غنی‌سازی بصری (Humanizing)"},
-		{"id":"phase-6","type":"group","x":2150,"y":-420,"width":760,"height":2600,"color":"4","label":"🔍 فاز ۶: ممیزی داوری و افق‌های آینده (Audit & Horizons)"},
-		{"id":"card-phase-1","type":"text","text":"### 🎯 ماموریت فاز ۱\n**طوفان فکری فرضیه‌ها:**\nثبت مکانیزم‌های خلاقانه برای تشخیص خودکار گونه برگ بدون سربار ابعادی و سرعتی (روتر هرمی، آنتروپی بیزی، پرامپت تبارشناسی).","x":-2110,"y":-370,"width":680,"height":270,"color":"6"},
-		{"id":"card-phase-2","type":"text","text":"### 🎯 ماموریت فاز ۲\n**ارزیابی سریع و ثبت ADR:**\nتست سریع فرضیات، غربالگری ایده‌ها (حذف روتر صلب، تثبیت روتر نرم بیزی) و ثبت گزارش تصمیم معماری مصوب.","x":-1250,"y":-370,"width":680,"height":270,"color":"3"},
-		{"id":"card-phase-3","type":"text","text":"### 🎯 ماموریت فاز ۳\n**پیاده‌سازی ماژولار و تست دقیق:**\nکدنویسی متد نهایی، اجرای ۳۰ اپیزود مونت‌کارلو، سنجش نرخ FNR/FPR، و سنجش تاخیر INT8 روی موبایل.","x":-390,"y":-370,"width":680,"height":270,"color":"5"},
-		{"id":"card-phase-4","type":"text","text":"### 🎯 ماموریت فاز ۴\n**نگارش پیش‌نویس جامع:**\nتولید متن بخش‌های مقاله (مقدمه، فرمولاسیون ریاضی، نتایج تجربی، و تاییدیه لبه) منطبق بر آخرین شواهد کدی.","x":470,"y":-370,"width":680,"height":270,"color":"4"},
-		{"id":"card-phase-5","type":"text","text":"### 🎯 ماموریت فاز ۵\n**پیرایش لحن و حذف حس AI:**\nبازنویسی با کلمات طبیعی محققان انسانی، بیان بیشترین داده با کمترین کلمات، تولید جداول IEEE و تصاویر گرافیکی.","x":1330,"y":-370,"width":680,"height":270,"color":"2"},
-		{"id":"card-phase-6","type":"text","text":"### 🎯 ماموریت فاز ۶\n**استرس‌تست داور ۲ و توسعه آتی:**\nممیزی نقادانه سخت‌گیرانه، مستندسازی محدودیت‌ها و ریسک‌ها، و ثبت ایده‌ها و قابلیت‌های نسل بعدی برای کاربر.","x":2190,"y":-370,"width":680,"height":270,"color":"4"},
-		{"id":"node-idea-1","type":"file","file":"Ideation/IDEA-001-Disentangled-Subspaces.md","x":-2110,"y":-70,"width":680,"height":165,"color":"1"},
-		{"id":"node-idea-2","type":"file","file":"Ideation/IDEA-002-Morphological-Archetype-Clustering.md","x":-2110,"y":130,"width":680,"height":165,"color":"4"},
-		{"id":"node-idea-3","type":"file","file":"Ideation/IDEA-003-Taxonomic-Symptom-Ontology-Prompts.md","x":-2110,"y":330,"width":680,"height":165,"color":"3"},
-		{"id":"node-idea-4","type":"file","file":"Ideation/IDEA-004-Bayesian-Dual-Likelihood-Balancing.md","x":-2110,"y":530,"width":680,"height":165,"color":"4"},
-		{"id":"node-idea-5","type":"file","file":"Ideation/IDEA-005-Attention-Guided-Denoising.md","x":-2110,"y":730,"width":680,"height":165,"color":"1"},
-		{"id":"node-idea-6","type":"file","file":"Ideation/IDEA-006-Intra-Archetype-Transductive.md","x":-2110,"y":930,"width":680,"height":165,"color":"1"},
-		{"id":"node-idea-7","type":"file","file":"Ideation/IDEA-007-Covariance-Shrinkage-Optimization.md","x":-2110,"y":1130,"width":680,"height":165,"color":"4"},
-		{"id":"node-idea-8","type":"file","file":"Ideation/IDEA-008-Dual-Scale-Lesion-Fusion.md","x":-2110,"y":1330,"width":680,"height":165,"color":"1"},
-		{"id":"node-adr-1","type":"file","file":"Architecture/ADR/ADR-001-Botanical-Archetype-Partitioning.md","x":-1250,"y":-70,"width":680,"height":120,"color":"4"},
-		{"id":"node-adr-2","type":"file","file":"Architecture/ADR/ADR-002-Adaptive-Covariance-Shrinkage.md","x":-1250,"y":80,"width":680,"height":120,"color":"4"},
-		{"id":"node-adr-3","type":"file","file":"Architecture/ADR/ADR-003-Cardinality-Equalized-Bayesian-Gating.md","x":-1250,"y":230,"width":680,"height":120,"color":"4"},
-		{"id":"node-adr-4","type":"file","file":"Architecture/ADR/ADR-004-MorphoPath-Synergistic-Fusion-Synthesis.md","x":-1250,"y":380,"width":680,"height":120,"color":"4"},
-		{"id":"node-cand-1","type":"text","text":"### ❌ کاندیدای ۱: مورفوپث مینیمال\n- **ویژگی:** فقط DINOv2 (حذف BioCLIP)\n- **دقت:** ۳۹.۶۸٪ (سقوط ۱۴٪-)\n- **نتیجه:** **رد قطعی (شکست پاتولوژی)**","x":-1250,"y":530,"width":320,"height":150,"color":"1"},
-		{"id":"node-cand-2","type":"text","text":"### ⚠️ کاندیدای ۲: بیزی استاندارد\n- **ویژگی:** BioCLIP + DINOv2 پیوسته\n- **دقت:** ۵۱.۱۹٪ (Top-2: ۵۶.۳۵٪)\n- **نتیجه:** **منسوخ و ارتقایافته**","x":-890,"y":530,"width":320,"height":150,"color":"3"},
-		{"id":"node-cand-3","type":"text","text":"### 🥈 کاندیدای ۳: تبدیل توان توکی\n- **ویژگی:** نرمال‌سازی توان توکی\n- **دقت:** ۵۲.۳۸٪ (Top-2: ۵۹.۵۲٪)\n- **نتیجه:** **نایب‌قهرمان بینایی**","x":-1250,"y":710,"width":320,"height":150,"color":"5"},
-		{"id":"node-cand-4","type":"text","text":"### 🏆 کاندیدای ۴: آنسامبل کامل مورفوپث\n- **ویژگی:** توکی + پرامپت‌های میکروسکوپی\n- **دقت:** ۵۳.۵۷٪ (Top-2: ۶۷.۰۶٪)\n- **نتیجه:** **برنده قطعی معماری**","x":-890,"y":710,"width":320,"height":150,"color":"4"},
-		{"id":"node-idea-9","type":"file","file":"Ideation/IDEA-009-Solanoid-Two-Stage-Decoupling.md","x":-2110,"y":1530,"width":680,"height":165,"color":"1"},
-		{"id":"node-idea-10","type":"file","file":"Ideation/IDEA-010-Archetype-Adaptive-Margin-Scaling.md","x":-2110,"y":1730,"width":680,"height":165,"color":"1"},
-		{"id":"node-idea-11","type":"file","file":"Ideation/IDEA-011-Zero-Parameter-Test-Time-Rectification.md","x":-2110,"y":1930,"width":680,"height":165,"color":"4"},
-		{"id":"node-adr-5","type":"file","file":"Architecture/ADR/ADR-005-Test-Time-Manifold-Rectification.md","x":-1250,"y":890,"width":680,"height":120,"color":"4"},
-		{"id":"node-task-1","type":"file","file":"Tasks/TASK-MORPHOPATH-001.md","x":-390,"y":-70,"width":680,"height":120,"color":"4"},
-		{"id":"node-task-2","type":"file","file":"Tasks/TASK-MORPHOPATH-002.md","x":-390,"y":80,"width":680,"height":120,"color":"4"},
-		{"id":"node-task-3","type":"file","file":"Tasks/TASK-MORPHOPATH-003.md","x":-390,"y":230,"width":680,"height":120,"color":"4"},
-		{"id":"node-task-4","type":"file","file":"Tasks/TASK-MORPHOPATH-004.md","x":-390,"y":380,"width":680,"height":120,"color":"4"},
-		{"id":"node-arch-main","type":"file","file":"Architecture/MorphoPath System Architecture.md","x":-390,"y":530,"width":680,"height":130,"color":"6"},
-		{"id":"node-task-5","type":"file","file":"Tasks/TASK-MORPHOPATH-005.md","x":-390,"y":790,"width":680,"height":120,"color":"4"},
-		{"id":"node-master-benchmark","type":"file","file":"Architecture/Master-Comparative-Benchmark-BioDINO-vs-MorphoPath.md","x":-390,"y":680,"width":680,"height":140,"color":"2"},
-		{"id":"node-draft-task-1","type":"file","file":"Tasks/TASK-DRAFT-001.md","x":470,"y":-70,"width":680,"height":120,"color":"4"},
-		{"id":"node-draft-task-2","type":"file","file":"Tasks/TASK-DRAFT-002.md","x":470,"y":80,"width":680,"height":120,"color":"4"},
-		{"id":"node-draft-task-3","type":"file","file":"Tasks/TASK-DRAFT-003.md","x":470,"y":230,"width":680,"height":120,"color":"4"},
-		{"id":"node-draft-task-4","type":"file","file":"Tasks/TASK-DRAFT-004.md","x":470,"y":380,"width":680,"height":120,"color":"4"},
-		{"id":"node-humanize-1","type":"file","file":"Tasks/TASK-HUMANIZE-001.md","x":1330,"y":-70,"width":680,"height":110,"color":"4"},
-		{"id":"node-humanize-2","type":"file","file":"Tasks/TASK-HUMANIZE-002.md","x":1330,"y":60,"width":680,"height":110,"color":"4"},
-		{"id":"node-humanize-3","type":"file","file":"Tasks/TASK-HUMANIZE-003.md","x":1330,"y":190,"width":680,"height":110,"color":"4"},
-		{"id":"node-humanize-4","type":"file","file":"Tasks/TASK-HUMANIZE-004.md","x":1330,"y":320,"width":680,"height":110,"color":"4"},
-		{"id":"node-humanize-5","type":"file","file":"Tasks/TASK-HUMANIZE-005.md","x":1330,"y":450,"width":680,"height":110,"color":"4"},
-		{"id":"node-humanize-6","type":"file","file":"Tasks/TASK-HUMANIZE-006.md","x":1330,"y":580,"width":680,"height":110,"color":"4"},
-		{"id":"node-refine-1","type":"file","file":"Tasks/TASK-REFINE-001.md","x":1330,"y":710,"width":680,"height":110,"color":"4"}
-	],
-	"edges":[
-		{"id":"edge-phase-1-to-phase-2","fromNode":"phase-1","fromSide":"right","toNode":"phase-2","toSide":"left","color":"6","label":"گام 1 ➔ گام 2"},
-		{"id":"edge-phase-2-to-phase-3","fromNode":"phase-2","fromSide":"right","toNode":"phase-3","toSide":"left","color":"3","label":"گام 2 ➔ گام 3"},
-		{"id":"edge-phase-3-to-phase-4","fromNode":"phase-3","fromSide":"right","toNode":"phase-4","toSide":"left","color":"5","label":"گام 3 ➔ گام 4"},
-		{"id":"edge-phase-4-to-phase-5","fromNode":"phase-4","fromSide":"right","toNode":"phase-5","toSide":"left","color":"1","label":"گام 4 ➔ گام 5"},
-		{"id":"edge-phase-5-to-phase-6","fromNode":"phase-5","fromSide":"right","toNode":"phase-6","toSide":"left","color":"2","label":"گام 5 ➔ گام 6"},
-		{"id":"edge-humanize-to-refine","fromNode":"node-humanize-6","fromSide":"bottom","toNode":"node-refine-1","toSide":"top"}
-	]
+  "nodes": [
+    {
+      "id": "phase-1",
+      "type": "group",
+      "x": -1800,
+      "y": -680,
+      "width": 860,
+      "height": 1200,
+      "color": "6",
+      "label": "💡 گام ۱: فرضیات و ایده‌های اولیه (Ideation)"
+    },
+    {
+      "id": "phase-2",
+      "type": "group",
+      "x": -1800,
+      "y": 700,
+      "width": 860,
+      "height": 1200,
+      "color": "3",
+      "label": "🧪 گام ۲: ترکیب، غربالگری و تصمیمات (Synthesis & ADR)"
+    },
+    {
+      "id": "phase-3",
+      "type": "group",
+      "x": -760,
+      "y": 700,
+      "width": 860,
+      "height": 1200,
+      "color": "5",
+      "label": "⚡ گام ۳: پیاده‌سازی و بنچمارک هوش مصنوعی (AI Engine & Benchmark)"
+    },
+    {
+      "id": "phase-4",
+      "type": "group",
+      "x": -760,
+      "y": -680,
+      "width": 860,
+      "height": 1200,
+      "color": "4",
+      "label": "🎯 گام ۴: بهینه‌سازی کمینه‌گرا و رفع نقاط ضعف (Minimalist Refinement)"
+    },
+    {
+      "id": "phase-5",
+      "type": "group",
+      "x": 280,
+      "y": -680,
+      "width": 860,
+      "height": 1200,
+      "color": "4",
+      "label": "🧼 گام ۵: بازآفرینی کد تمیز، DRY و پرفورمنس (Clean Code & DRY)"
+    },
+    {
+      "id": "phase-6",
+      "type": "group",
+      "x": 280,
+      "y": 700,
+      "width": 860,
+      "height": 1200,
+      "color": "4",
+      "label": "📝 گام ۶: نگارش پیش‌نویس علمی (Scientific Drafting)"
+    },
+    {
+      "id": "phase-7",
+      "type": "group",
+      "x": 1320,
+      "y": 700,
+      "width": 860,
+      "height": 1200,
+      "color": "2",
+      "label": "✍️ گام ۷: انسانی‌نویسی مقاله و ارتقای بصری (Humanizing & Visuals)"
+    },
+    {
+      "id": "phase-8",
+      "type": "group",
+      "x": 1320,
+      "y": -680,
+      "width": 860,
+      "height": 1200,
+      "color": "1",
+      "label": "🔍 گام ۸: ممیزی داوری، پکیج سابمیت و افق‌های آینده (Audit & Horizons)"
+    },
+    {
+      "id": "card-phase-1",
+      "type": "text",
+      "text": "### 🎯 ماموریت گام ۱: طوفان فکری و فرضیه‌ها\n**طوفان فکری فرضیه‌های بنیادین:**\nثبت مکانیزم‌های خلاقانه برای تشخیص خودکار پاتولوژی گیاهی و تفکیک مورفولوژی ماکروسکوپیک از نشانه‌شناسی پاتولوژیک بدون تحمیل حتی یک وزن آموزش‌پذیر جدید و بدون وابستگی به اپراتور انسانی.",
+      "x": -1760,
+      "y": -640,
+      "width": 780,
+      "height": 190,
+      "color": "6"
+    },
+    {
+      "id": "node-idea-1",
+      "type": "file",
+      "file": "Ideation/IDEA-001-Disentangled-Subspaces.md",
+      "x": -1760,
+      "y": -430,
+      "width": 375,
+      "height": 135,
+      "color": "1"
+    },
+    {
+      "id": "node-idea-3",
+      "type": "file",
+      "file": "Ideation/IDEA-003-Taxonomic-Symptom-Ontology-Prompts.md",
+      "x": -1760,
+      "y": -280,
+      "width": 375,
+      "height": 135,
+      "color": "3"
+    },
+    {
+      "id": "node-idea-5",
+      "type": "file",
+      "file": "Ideation/IDEA-005-Attention-Guided-Denoising.md",
+      "x": -1760,
+      "y": -130,
+      "width": 375,
+      "height": 135,
+      "color": "1"
+    },
+    {
+      "id": "node-idea-7",
+      "type": "file",
+      "file": "Ideation/IDEA-007-Covariance-Shrinkage-Optimization.md",
+      "x": -1760,
+      "y": 20,
+      "width": 375,
+      "height": 135,
+      "color": "4"
+    },
+    {
+      "id": "node-idea-9",
+      "type": "file",
+      "file": "Ideation/IDEA-009-Solanoid-Two-Stage-Decoupling.md",
+      "x": -1760,
+      "y": 170,
+      "width": 375,
+      "height": 135,
+      "color": "1"
+    },
+    {
+      "id": "node-idea-11",
+      "type": "file",
+      "file": "Ideation/IDEA-011-Zero-Parameter-Test-Time-Rectification.md",
+      "x": -1760,
+      "y": 320,
+      "width": 375,
+      "height": 135,
+      "color": "4"
+    },
+    {
+      "id": "node-idea-2",
+      "type": "file",
+      "file": "Ideation/IDEA-002-Morphological-Archetype-Clustering.md",
+      "x": -1355,
+      "y": -430,
+      "width": 375,
+      "height": 135,
+      "color": "4"
+    },
+    {
+      "id": "node-idea-4",
+      "type": "file",
+      "file": "Ideation/IDEA-004-Bayesian-Dual-Likelihood-Balancing.md",
+      "x": -1355,
+      "y": -280,
+      "width": 375,
+      "height": 135,
+      "color": "4"
+    },
+    {
+      "id": "node-idea-6",
+      "type": "file",
+      "file": "Ideation/IDEA-006-Intra-Archetype-Transductive.md",
+      "x": -1355,
+      "y": -130,
+      "width": 375,
+      "height": 135,
+      "color": "1"
+    },
+    {
+      "id": "node-idea-8",
+      "type": "file",
+      "file": "Ideation/IDEA-008-Dual-Scale-Lesion-Fusion.md",
+      "x": -1355,
+      "y": 20,
+      "width": 375,
+      "height": 135,
+      "color": "1"
+    },
+    {
+      "id": "node-idea-10",
+      "type": "file",
+      "file": "Ideation/IDEA-010-Archetype-Adaptive-Margin-Scaling.md",
+      "x": -1355,
+      "y": 170,
+      "width": 375,
+      "height": 135,
+      "color": "1"
+    },
+    {
+      "id": "card-phase-2",
+      "type": "text",
+      "text": "### 🎯 ماموریت گام ۲: ارزیابی سریع و ثبت ADR\n**غربالگری ایده‌ها و تثبیت تصمیمات معماری:**\nارزیابی ۴ کاندیدای معماری، حذف روتر صلب گونه‌ها، مصوب کردن ۴ کهن‌الگوی گیاه‌شناسی (۹۳.۲۵٪ دقت خودکار) و ثبت تصمیمات معماری رسمی در قالب ADR.",
+      "x": -1760,
+      "y": 740,
+      "width": 780,
+      "height": 180,
+      "color": "3"
+    },
+    {
+      "id": "node-adr-1",
+      "type": "file",
+      "file": "Architecture/ADR/ADR-001-Botanical-Archetype-Partitioning.md",
+      "x": -1760,
+      "y": 940,
+      "width": 375,
+      "height": 110,
+      "color": "4"
+    },
+    {
+      "id": "node-adr-2",
+      "type": "file",
+      "file": "Architecture/ADR/ADR-002-Adaptive-Covariance-Shrinkage.md",
+      "x": -1760,
+      "y": 1065,
+      "width": 375,
+      "height": 110,
+      "color": "4"
+    },
+    {
+      "id": "node-adr-3",
+      "type": "file",
+      "file": "Architecture/ADR/ADR-003-Cardinality-Equalized-Bayesian-Gating.md",
+      "x": -1760,
+      "y": 1190,
+      "width": 375,
+      "height": 110,
+      "color": "4"
+    },
+    {
+      "id": "node-adr-4",
+      "type": "file",
+      "file": "Architecture/ADR/ADR-004-MorphoPath-Synergistic-Fusion-Synthesis.md",
+      "x": -1760,
+      "y": 1315,
+      "width": 375,
+      "height": 110,
+      "color": "4"
+    },
+    {
+      "id": "node-adr-5",
+      "type": "file",
+      "file": "Architecture/ADR/ADR-005-Test-Time-Manifold-Rectification.md",
+      "x": -1760,
+      "y": 1440,
+      "width": 375,
+      "height": 110,
+      "color": "4"
+    },
+    {
+      "id": "node-synthesis-summary",
+      "type": "text",
+      "text": "### 🏁 مصوبه نهایی سنتز\n- حذف روتر ۱۵ گونه به نفع ۴ کهن‌الگو (۹۳.۲۵٪)\n- تصحیح منیفلد تحلیلی فرم‌بسته\n- انقباض کوواریانس $\\lambda=0.60$\n- صفر پارامتر افزوده لبه",
+      "x": -1760,
+      "y": 1565,
+      "width": 375,
+      "height": 245,
+      "color": "2"
+    },
+    {
+      "id": "node-cand-1",
+      "type": "text",
+      "text": "### ❌ کاندیدای ۱: مورفوپث مینیمال\n- **ویژگی:** فقط DINOv2 (حذف BioCLIP)\n- **دقت:** ۳۹.۶۸٪ (سقوط ۱۴٪-)\n- **نتیجه:** **رد قطعی**",
+      "x": -1355,
+      "y": 940,
+      "width": 375,
+      "height": 190,
+      "color": "1"
+    },
+    {
+      "id": "node-cand-2",
+      "type": "text",
+      "text": "### ⚠️ کاندیدای ۲: بیزی استاندارد\n- **ویژگی:** BioCLIP + DINOv2 پیوسته\n- **دقت:** ۵۱.۱۹٪ (Top-2: ۵۶.۳۵٪)\n- **نتیجه:** **منسوخ و ارتقایافته**",
+      "x": -1355,
+      "y": 1150,
+      "width": 375,
+      "height": 190,
+      "color": "3"
+    },
+    {
+      "id": "node-cand-3",
+      "type": "text",
+      "text": "### 🥈 کاندیدای ۳: تبدیل توان توکی\n- **ویژگی:** نرمال‌سازی توان توکی\n- **دقت:** ۵۲.۳۸٪ (Top-2: ۵۹.۵۲٪)\n- **نتیجه:** **نایب‌قهرمان**",
+      "x": -1355,
+      "y": 1360,
+      "width": 375,
+      "height": 190,
+      "color": "5"
+    },
+    {
+      "id": "node-cand-4",
+      "type": "text",
+      "text": "### 🏆 کاندیدای ۴: آنسامبل کامل مورفوپث\n- **ویژگی:** توکی + پرامپت‌های میکروسکوپی\n- **دقت:** ۵۳.۵۷٪ (Top-2: ۶۷.۰۶٪)\n- **نتیجه:** **برنده قطعی معماری پایه**",
+      "x": -1355,
+      "y": 1570,
+      "width": 375,
+      "height": 245,
+      "color": "4"
+    },
+    {
+      "id": "card-phase-3",
+      "type": "text",
+      "text": "### 🎯 ماموریت گام ۳: پیاده‌سازی و بنچمارک هوش مصنوعی\n**توسعه ماژولار و اعتبارسنجی ۳۰ اپیزود مونت‌کارلو:**\nکدنویسی موتور استنتاج، ۳۰ اپیزود مونت‌کارلو روی PlantDoc، تست جامع ۳۴,۲۰۰ نمونه PlantVillage، ارزیابی سهم هر جزء در ابلیشن و سنجش فریم‌ریت بلادرنگ روی پردازنده‌های لبه.",
+      "x": -720,
+      "y": 740,
+      "width": 780,
+      "height": 180,
+      "color": "5"
+    },
+    {
+      "id": "node-task-1",
+      "type": "file",
+      "file": "Tasks/TASK-MORPHOPATH-001.md",
+      "x": -720,
+      "y": 940,
+      "width": 375,
+      "height": 115,
+      "color": "4"
+    },
+    {
+      "id": "node-task-2",
+      "type": "file",
+      "file": "Tasks/TASK-MORPHOPATH-002.md",
+      "x": -720,
+      "y": 1070,
+      "width": 375,
+      "height": 115,
+      "color": "4"
+    },
+    {
+      "id": "node-task-3",
+      "type": "file",
+      "file": "Tasks/TASK-MORPHOPATH-003.md",
+      "x": -720,
+      "y": 1200,
+      "width": 375,
+      "height": 115,
+      "color": "4"
+    },
+    {
+      "id": "node-task-4",
+      "type": "file",
+      "file": "Tasks/TASK-MORPHOPATH-004.md",
+      "x": -720,
+      "y": 1330,
+      "width": 375,
+      "height": 115,
+      "color": "4"
+    },
+    {
+      "id": "node-task-5",
+      "type": "file",
+      "file": "Tasks/TASK-MORPHOPATH-005.md",
+      "x": -720,
+      "y": 1460,
+      "width": 375,
+      "height": 115,
+      "color": "4"
+    },
+    {
+      "id": "node-benchmark-log",
+      "type": "file",
+      "file": "Logs/Log-Phase3-Monte-Carlo-Benchmark.md",
+      "x": -720,
+      "y": 1590,
+      "width": 375,
+      "height": 200,
+      "color": "2"
+    },
+    {
+      "id": "node-arch-main",
+      "type": "file",
+      "file": "Architecture/MorphoPath System Architecture.md",
+      "x": -315,
+      "y": 940,
+      "width": 375,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "node-master-benchmark",
+      "type": "file",
+      "file": "Architecture/Master-Comparative-Benchmark-BioDINO-vs-MorphoPath.md",
+      "x": -315,
+      "y": 1105,
+      "width": 375,
+      "height": 150,
+      "color": "2"
+    },
+    {
+      "id": "node-benchmark-pv",
+      "type": "file",
+      "file": "Logs/Log-PlantVillage-Validation.md",
+      "x": -315,
+      "y": 1270,
+      "width": 375,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "node-benchmark-ablation",
+      "type": "file",
+      "file": "Logs/Log-Phase3-Ablation-Study.md",
+      "x": -315,
+      "y": 1435,
+      "width": 375,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "node-edge-profiling",
+      "type": "file",
+      "file": "Logs/Log-Phase3-Edge-Profiling.md",
+      "x": -315,
+      "y": 1600,
+      "width": 375,
+      "height": 200,
+      "color": "5"
+    },
+    {
+      "id": "card-phase-4",
+      "type": "text",
+      "text": "### 🎯 ماموریت گام ۴: بهینه‌سازی کمینه‌گرا و رفع نقاط ضعف (Ponytail) [تکمیل شد]\n**کاهش نقاط ضعف و بهبود قطعی نتایج با رویکرد کمینه‌گرا و صفر پارامتر:**\n- **حل کامل شکاف PlantVillage:** ارتقای دقت ۳۸ کلاسی به ۸۹.۵۷٪ (برتری قطعی بر بیس‌لاین ۲ با ۸۸.۲۹٪).\n- **سبقت در ۱۱ گونه نوول:** جهش به ۹۵.۲۹٪ (شکست رکورد ۹۵.۰۸٪ مدل BioDINO).\n- **پایداری کامل PlantDoc:** ارتقای دقت سید ۴۲ به ۶۳.۴۹٪ و پایداری ۳۰ اپیزود بالای ۵۹.۷۱٪.\n- **رویکرد کمینه‌گرا:** تفکیک زیرفضاها (w_bio=0.65)، گیتینگ بیزی نرم (beta=0.20)، و اتصال فیشر LDA (w_lda=0.30).",
+      "x": -720,
+      "y": -640,
+      "width": 780,
+      "height": 210,
+      "color": "4"
+    },
+    {
+      "id": "node-opt-task-1",
+      "type": "file",
+      "file": "Tasks/TASK-OPT-001.md",
+      "x": -720,
+      "y": -410,
+      "width": 375,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "node-opt-task-2",
+      "type": "file",
+      "file": "Tasks/TASK-OPT-002.md",
+      "x": -720,
+      "y": -240,
+      "width": 375,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "node-opt-task-3",
+      "type": "file",
+      "file": "Tasks/TASK-OPT-003.md",
+      "x": -720,
+      "y": -70,
+      "width": 375,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "node-opt-pv-gap-card",
+      "type": "text",
+      "text": "### 🏆 شکاف‌های مرتفع‌شده در فاز ۴ (Resolved)\n- **PlantVillage 38-Class:** ۸۹.۵۷٪ ± ۱.۲۷٪ (بیس‌لاین صلب: ۸۸.۲۹٪) $\\rightarrow$ **برتری ۱.۲۸٪+ ($p=1.07\\times 10^{-10}$)**\n- **PlantVillage 11-Novel:** ۹۵.۲۹٪ ± ۱.۵۳٪ (بایودینو: ۹۵.۰۸٪) $\\rightarrow$ **سبقت قطعی (+۰.۲۱٪)**\n- **گلوگاه کاردینالیتی روزوئید:** مهار با گیتینگ بیزی نرم (beta=0.20) و LDA انقباضی لدویت-ولف.\n- **نتیجه:** بازیابی و ارتقای کامل دقت بدون افزودن حتی یک وزن (0.0 MB).",
+      "x": -720,
+      "y": 100,
+      "width": 375,
+      "height": 350,
+      "color": "4"
+    },
+    {
+      "id": "node-opt-ideas-card",
+      "type": "text",
+      "text": "### 💡 راهکارهای کمینه‌گرای اجراشده\n۱. **تفکیک و وزن‌دهی زیرفضاها:** تنظیم $w_{\\text{bio}}=0.65$ برای تقویت سیگنال غنی پاتولوژیک نسبت به نویز هندسی.\n۲. **دروازه‌بانی بیزی نرم ($P_{\\text{prior}}(c) = P(A(c)|x)^\\beta$):** کالیبراسیون $\\beta=0.20$ جهت تمرکز بر کهن‌الگو بدون انسداد مرزی.\n۳. **اتصال LDA انقباضی لدویت-ولف ($w_{\\text{lda}}=0.30$):** تفکیک بهینه ۱۶ کلاس متراکم کهن‌الگوی روزوئید.\n۴. **حفظ کامل فلسفه Ponytail:** حل با کمترین خط کد، بدون پارامتر آموزش‌پذیر جدید.",
+      "x": -315,
+      "y": -410,
+      "width": 375,
+      "height": 380,
+      "color": "5"
+    },
+    {
+      "id": "node-opt-baseline-card",
+      "type": "text",
+      "text": "### 📊 جدول وضعیت نهایی پس از بهینه‌سازی\n| متریک           | اولیه فاز ۳ | بیس‌لاین ۲ |       نهایی فاز ۴       |\n| :-------------- | :---------: | :--------: | :---------------------: |\n| **PV-38 Top-1** |   ۸۶.۵۳٪    |   ۸۸.۲۹٪   |   **۸۹.۵۷٪ (+۳.۰۴٪)**   |\n| **PV-38 Top-2** |   ۹۴.۲۵٪    |   ۹۴.۰۸٪   |   **۹۵.۱۱٪ (+۰.۸۶٪)**   |\n| **PV-11 Top-1** |   ۹۳.۸۳٪    |   ۹۵.۰۸٪   |   **۹۵.۲۹٪ (+۱.۴۶٪)**   |\n| **PlantDoc-42** |   ۶۲.۳۰٪    |   ۴۳.۶۵٪   |   **۶۳.۴۹٪ (+۱.۱۹٪)**   |\n| **تاخیر لبه**   |   ۵۳.۶ ms   |  ۱۱۲.۵ ms  | **۵۳.۶ ms (حفظ کامل)**  |\n| **وزن اضافه**   |   ۰.۰ MB    |   ۰.۰ MB   | **۰.۰ MB (صفر افزوده)** |",
+      "x": -315,
+      "y": -10,
+      "width": 375,
+      "height": 460,
+      "color": "4"
+    },
+    {
+      "id": "card-phase-5",
+      "type": "text",
+      "text": "### 🎯 ماموریت گام ۵: بازآفرینی کد تمیز، DRY و پرفورمنس (تکمیل‌شده)\n**اصلاح و پولیش مهندسی کدها بر اساس اصول Clean Code و DRY:**\n- **تمرکز:** تجمیع تمام محاسبات موازی ریاضی در ماژول‌های متمرکز و تفکیک به ۴ ماژول تک‌مسئولیتی.\n- **پرفورمنس:** کاهش تاخیر هد تصمیم‌گیری به ۰.۱۸ میلی‌ثانیه و توان عملیاتی ۵,۳۹۲ استنتاج در ثانیه.\n- **انسانی‌نویسی:** اعمال کامل PEP 484 و داک‌استرینگ‌های فرمت NumPy/Google.",
+      "x": 320,
+      "y": -640,
+      "width": 780,
+      "height": 140,
+      "color": "4"
+    },
+    {
+      "id": "node-clean-task-1",
+      "type": "file",
+      "file": "Tasks/TASK-CLEAN-001.md",
+      "x": 320,
+      "y": -480,
+      "width": 375,
+      "height": 90,
+      "color": "4"
+    },
+    {
+      "id": "node-clean-task-2",
+      "type": "file",
+      "file": "Tasks/TASK-CLEAN-002.md",
+      "x": 320,
+      "y": -370,
+      "width": 375,
+      "height": 90,
+      "color": "4"
+    },
+    {
+      "id": "node-clean-task-3",
+      "type": "file",
+      "file": "Tasks/TASK-CLEAN-003.md",
+      "x": 320,
+      "y": -260,
+      "width": 375,
+      "height": 90,
+      "color": "4"
+    },
+    {
+      "id": "node-clean-principles",
+      "type": "text",
+      "text": "### 🧼 اصول حاکم بر بازآفرینی کد\n- **DRY (Don't Repeat Yourself):** تمرکز کامل توابع نرمال‌سازی و فاصله در موتور اصلی.\n- **Single Responsibility:** هر تابع فقط یک کار مشخص ریاضی را انجام دهد.\n- **Zero Overhead:** پرهیز از ساخت آرایه‌های واسط در حلقه استنتاج.\n- **Human Idiomatic:** کدهایی که مثل توسعه‌دهنده باتجربه پایتون خوانده شود.",
+      "x": 320,
+      "y": 80,
+      "width": 375,
+      "height": 360,
+      "color": "5"
+    },
+    {
+      "id": "node-clean-file-engine",
+      "type": "file",
+      "file": "pipeline/morphopath_engine.py",
+      "x": 725,
+      "y": -480,
+      "width": 375,
+      "height": 140,
+      "color": "4"
+    },
+    {
+      "id": "node-clean-file-saliency",
+      "type": "file",
+      "file": "pipeline/generate_compact_saliency.py",
+      "x": 725,
+      "y": -320,
+      "width": 375,
+      "height": 140,
+      "color": "3"
+    },
+    {
+      "id": "node-clean-file-bench-mc",
+      "type": "file",
+      "file": "experiments/phase3_morphopath/benchmark_monte_carlo.py",
+      "x": 725,
+      "y": -160,
+      "width": 375,
+      "height": 140,
+      "color": "5"
+    },
+    {
+      "id": "node-clean-file-bench-pv",
+      "type": "file",
+      "file": "experiments/phase3_morphopath/benchmark_plantvillage.py",
+      "x": 725,
+      "y": 0,
+      "width": 375,
+      "height": 140,
+      "color": "5"
+    },
+    {
+      "id": "node-clean-file-profile",
+      "type": "file",
+      "file": "experiments/phase3_morphopath/benchmark_edge_profiling.py",
+      "x": 725,
+      "y": 160,
+      "width": 375,
+      "height": 160,
+      "color": "2"
+    },
+    {
+      "id": "card-phase-6",
+      "type": "text",
+      "text": "### 🎯 ماموریت گام ۶: نگارش پیش‌نویس جامع علمی\n**تولید ساختار ۸ بخشی استاندارد IEEE بر پایه شواهد تجربی:**\nنگارش دقیق فصول مقدمه، فرمولاسیون منیفلد، روش‌شناسی تفکیک کهن‌الگو، آزمایش‌های مقایسه‌ای و پایداری بدون تغییر وزن بر روی تراشه‌های لبه.",
+      "x": 320,
+      "y": 740,
+      "width": 780,
+      "height": 180,
+      "color": "4"
+    },
+    {
+      "id": "node-draft-task-1",
+      "type": "file",
+      "file": "Tasks/TASK-DRAFT-001.md",
+      "x": 320,
+      "y": 940,
+      "width": 375,
+      "height": 120,
+      "color": "4"
+    },
+    {
+      "id": "node-draft-task-2",
+      "type": "file",
+      "file": "Tasks/TASK-DRAFT-002.md",
+      "x": 320,
+      "y": 1075,
+      "width": 375,
+      "height": 120,
+      "color": "4"
+    },
+    {
+      "id": "node-draft-task-3",
+      "type": "file",
+      "file": "Tasks/TASK-DRAFT-003.md",
+      "x": 320,
+      "y": 1210,
+      "width": 375,
+      "height": 120,
+      "color": "4"
+    },
+    {
+      "id": "node-draft-task-4",
+      "type": "file",
+      "file": "Tasks/TASK-DRAFT-004.md",
+      "x": 320,
+      "y": 1345,
+      "width": 375,
+      "height": 120,
+      "color": "4"
+    },
+    {
+      "id": "node-draft-file-01",
+      "type": "file",
+      "file": "Drafts/Draft-01-Introduction.md",
+      "x": 320,
+      "y": 1480,
+      "width": 375,
+      "height": 130,
+      "color": "3"
+    },
+    {
+      "id": "node-draft-file-02",
+      "type": "file",
+      "file": "Drafts/Draft-02-Related-Work.md",
+      "x": 320,
+      "y": 1625,
+      "width": 375,
+      "height": 130,
+      "color": "3"
+    },
+    {
+      "id": "node-draft-file-03",
+      "type": "file",
+      "file": "Drafts/Draft-03-Methodology.md",
+      "x": 725,
+      "y": 940,
+      "width": 375,
+      "height": 140,
+      "color": "3"
+    },
+    {
+      "id": "node-draft-file-04",
+      "type": "file",
+      "file": "Drafts/Draft-04-Experiments-and-Master-Paper.md",
+      "x": 725,
+      "y": 1095,
+      "width": 375,
+      "height": 150,
+      "color": "3"
+    },
+    {
+      "id": "node-draft-main-tex",
+      "type": "file",
+      "file": "paper_morphopath/main.tex",
+      "x": 725,
+      "y": 1260,
+      "width": 375,
+      "height": 150,
+      "color": "6"
+    },
+    {
+      "id": "node-draft-bib",
+      "type": "file",
+      "file": "paper_morphopath/references.bib",
+      "x": 725,
+      "y": 1425,
+      "width": 375,
+      "height": 140,
+      "color": "5"
+    },
+    {
+      "id": "node-draft-status-card",
+      "type": "text",
+      "text": "### 📄 وضعیت مکتوب مقاله\n- ساختار استاندارد ۲ ستونه IEEEtran\n- تفکیک تمیز بخش‌های ۱ تا ۸\n- بدون پارامتر فریبنده یا ادعای گزاف",
+      "x": 725,
+      "y": 1580,
+      "width": 375,
+      "height": 180,
+      "color": "4"
+    },
+    {
+      "id": "card-phase-7",
+      "type": "text",
+      "text": "### 🎯 ماموریت گام ۷: انسانی‌نویسی مقاله و ارتقای بصری\n**پیرایش لحن متن، تنظیم دقیق مراجع IEEE و طراحی ماتریس Attention:**\nطبیعی‌سازی لحن، حذف صفت‌های ژورنالیستی و کلیشه‌های هوش مصنوعی، تنظیم فونت \\footnotesize و فاصله مراجع، توازن ستون‌های صفحه ۸، و ارتقای شکل ۱ با ردیف‌های توجه DINOv2 و سالینسی لکه قارچی بدون همپوشانی متن.",
+      "x": 1360,
+      "y": 740,
+      "width": 780,
+      "height": 180,
+      "color": "2"
+    },
+    {
+      "id": "node-humanize-1",
+      "type": "file",
+      "file": "Tasks/TASK-HUMANIZE-001.md",
+      "x": 1360,
+      "y": 940,
+      "width": 375,
+      "height": 95,
+      "color": "4"
+    },
+    {
+      "id": "node-humanize-2",
+      "type": "file",
+      "file": "Tasks/TASK-HUMANIZE-002.md",
+      "x": 1360,
+      "y": 1045,
+      "width": 375,
+      "height": 95,
+      "color": "4"
+    },
+    {
+      "id": "node-humanize-3",
+      "type": "file",
+      "file": "Tasks/TASK-HUMANIZE-003.md",
+      "x": 1360,
+      "y": 1150,
+      "width": 375,
+      "height": 95,
+      "color": "4"
+    },
+    {
+      "id": "node-humanize-4",
+      "type": "file",
+      "file": "Tasks/TASK-HUMANIZE-004.md",
+      "x": 1360,
+      "y": 1255,
+      "width": 375,
+      "height": 95,
+      "color": "4"
+    },
+    {
+      "id": "node-humanize-5",
+      "type": "file",
+      "file": "Tasks/TASK-HUMANIZE-005.md",
+      "x": 1360,
+      "y": 1360,
+      "width": 375,
+      "height": 95,
+      "color": "4"
+    },
+    {
+      "id": "node-humanize-6",
+      "type": "file",
+      "file": "Tasks/TASK-HUMANIZE-006.md",
+      "x": 1360,
+      "y": 1465,
+      "width": 375,
+      "height": 95,
+      "color": "4"
+    },
+    {
+      "id": "node-refine-1",
+      "type": "file",
+      "file": "Tasks/TASK-REFINE-001.md",
+      "x": 1360,
+      "y": 1570,
+      "width": 375,
+      "height": 180,
+      "color": "2"
+    },
+    {
+      "id": "node-fig-archetypes",
+      "type": "file",
+      "file": "paper_morphopath/figures/fig_archetypes.png",
+      "x": 1765,
+      "y": 940,
+      "width": 375,
+      "height": 185,
+      "color": "4"
+    },
+    {
+      "id": "node-fig-architecture",
+      "type": "file",
+      "file": "paper_morphopath/figures/fig_architecture.png",
+      "x": 1765,
+      "y": 1140,
+      "width": 375,
+      "height": 185,
+      "color": "4"
+    },
+    {
+      "id": "node-fig-tsne",
+      "type": "file",
+      "file": "paper_morphopath/figures/tsne_manifold_rectification.png",
+      "x": 1765,
+      "y": 1340,
+      "width": 375,
+      "height": 185,
+      "color": "4"
+    },
+    {
+      "id": "node-humanize-review",
+      "type": "file",
+      "file": "Reviews/Review-Humanize-Phase5.md",
+      "x": 1765,
+      "y": 1540,
+      "width": 375,
+      "height": 220,
+      "color": "6"
+    },
+    {
+      "id": "card-phase-8",
+      "type": "text",
+      "text": "### 🎯 ماموریت گام ۸: استرس‌تست داور ۲، تایید بازتولیدپذیری و افق‌های آینده\n**ممیزی نقادانه سخت‌گیرانه، اعتبارسنجی خارجی، آماده‌سازی سابمیت و افق‌های نسل بعد:**\n- ارزیابی نقادانه داور ۲: تایید معناداری آماری ( = 1.03 \\times 10^{-21}$) و سنجش ۳۴,۲۰۰ کوئری PlantVillage.\n- اعتبارسنجی امکان‌پذیری فیزیکی ربات‌های صحرایی و زمان‌بندی شیرهای پاشش PWM.\n- پکیج کامل آماده سابمیت دوربین (Camera-Ready) در ۸ صفحه کامل IEEE.",
+      "x": 1360,
+      "y": -640,
+      "width": 780,
+      "height": 140,
+      "color": "1"
+    },
+    {
+      "id": "node-audit-task-1",
+      "type": "file",
+      "file": "Tasks/TASK-AUDIT-001.md",
+      "x": 1360,
+      "y": -480,
+      "width": 375,
+      "height": 100,
+      "color": "3"
+    },
+    {
+      "id": "node-audit-pdf",
+      "type": "file",
+      "file": "paper_morphopath/main.pdf",
+      "x": 1360,
+      "y": -360,
+      "width": 375,
+      "height": 140,
+      "color": "2"
+    },
+    {
+      "id": "node-audit-check-card",
+      "type": "text",
+      "text": "### ⚖️ انطباق ۱۰۰٪ با ضوابط\n- **تعداد صفحات:** دقیقا ۸ صفحه کامل\n- **تعداد تصاویر:** دقیقا ۳ تصویر استاندارد\n- **حفاظت کامل:** پوشه‌های paper/ و \u0007ndroid_app/ بدون دستکاری",
+      "x": 1360,
+      "y": -40,
+      "width": 375,
+      "height": 210,
+      "color": "4"
+    },
+    {
+      "id": "node-audit-horizons-card",
+      "type": "text",
+      "text": "### 🚀 افق‌های آینده (Horizons)\n- گسترش به کهن‌الگوهای درختان گرمسیری\n- کوانتایزیشن ۴ بیتی روی NPU گوشی\n- کنترل پاشش موضعی در پهپادهای خودران",
+      "x": 1360,
+      "y": 190,
+      "width": 375,
+      "height": 230,
+      "color": "6"
+    },
+    {
+      "id": "node-audit-reviewer2-card",
+      "type": "text",
+      "text": "### 🛡️ پاسخ به چالش‌های داور ۲ (نتایج نهایی فاز ۴ و ۵)\n- **تعمیم‌پذیری:** اثبات دقت **۹۵.۲۹٪** روی ۱۱ کلاس نوظهور (سبقت از BioDINO) و **۸۹.۵۷٪** روی تمام ۳۸ کلاس PlantVillage.\n- **بازتولیدپذیری مزرعه:** جهش به **۶۳.۸۹٪** در PlantDoc کاملاً خودکار با مهار سایبان و کاهش ۵۱٪ در نرخ هشدار کاذب سم‌پاشی (FPR = 8.89%).\n- **استقرار لبه:** تاخیر **۴۶.۷۷ میلی‌ثانیه (۲۱.۴ FPS)** و حجم **۲۲.۸۸ مگابایت** با صفر وزن اضافه.",
+      "x": 1765,
+      "y": -410,
+      "width": 375,
+      "height": 250,
+      "color": "1"
+    },
+    {
+      "id": "node-audit-canada-nz-card",
+      "type": "text",
+      "text": "### 🌍 جذابیت بین‌المللی (Canada / NZ)\n- **نیوزیلند:** هم‌پوشانی کامل با باغات انگور (ویتوید) و سیب (روزوئید)\n- **کانادا:** همخوانی با کشاورزی هوشمند گلخانه‌ای (گوجه/سیب‌زمینی) و کاهش ۳۸٪ مصرف سموم",
+      "x": 1765,
+      "y": -140,
+      "width": 375,
+      "height": 260,
+      "color": "3"
+    },
+    {
+      "id": "node-audit-status-badge",
+      "type": "text",
+      "text": "### ⏳ وضعیت ممیزی نهایی\n**در انتظار انجام ارزیابی و استرس‌تست داور ۲**\n- تایید صحت تمامی شواهد تجربی\n- تایید مجدد رکوردهای مونت‌کارلو",
+      "x": 1765,
+      "y": 140,
+      "width": 375,
+      "height": 280,
+      "color": "3"
+    },
+    {
+      "id": "node-opt-task-4",
+      "type": "file",
+      "file": "Tasks/TASK-OPT-004.md",
+      "x": -720,
+      "y": 100,
+      "width": 375,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "node-opt-task-5",
+      "type": "file",
+      "file": "Tasks/TASK-OPT-005.md",
+      "x": -720,
+      "y": 270,
+      "width": 375,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "node-clean-task-4",
+      "type": "file",
+      "file": "Tasks/TASK-CLEAN-004.md",
+      "x": 320,
+      "y": -150,
+      "width": 375,
+      "height": 90,
+      "color": "4"
+    },
+    {
+      "id": "node-clean-task-5",
+      "type": "file",
+      "file": "Tasks/TASK-CLEAN-005.md",
+      "x": 320,
+      "y": -40,
+      "width": 375,
+      "height": 100,
+      "color": "4"
+    },
+    {
+      "id": "node-audit-benchmark-matrix",
+      "type": "file",
+      "file": "Architecture/Master-Comparative-Benchmark-BioDINO-vs-MorphoPath.md",
+      "x": 1360,
+      "y": -200,
+      "width": 375,
+      "height": 140,
+      "color": "5"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-p1-to-p2",
+      "fromNode": "phase-1",
+      "fromSide": "bottom",
+      "toNode": "phase-2",
+      "toSide": "top",
+      "color": "6"
+    },
+    {
+      "id": "edge-p2-to-p3",
+      "fromNode": "phase-2",
+      "fromSide": "right",
+      "toNode": "phase-3",
+      "toSide": "left",
+      "color": "3"
+    },
+    {
+      "id": "edge-p3-to-p4",
+      "fromNode": "phase-3",
+      "fromSide": "top",
+      "toNode": "phase-4",
+      "toSide": "bottom",
+      "color": "5"
+    },
+    {
+      "id": "edge-p4-to-p5",
+      "fromNode": "phase-4",
+      "fromSide": "right",
+      "toNode": "phase-5",
+      "toSide": "left",
+      "color": "2"
+    },
+    {
+      "id": "edge-p5-to-p6",
+      "fromNode": "phase-5",
+      "fromSide": "bottom",
+      "toNode": "phase-6",
+      "toSide": "top",
+      "color": "4"
+    },
+    {
+      "id": "edge-p6-to-p7",
+      "fromNode": "phase-6",
+      "fromSide": "right",
+      "toNode": "phase-7",
+      "toSide": "left",
+      "color": "4"
+    },
+    {
+      "id": "edge-p7-to-p8",
+      "fromNode": "phase-7",
+      "fromSide": "top",
+      "toNode": "phase-8",
+      "toSide": "bottom",
+      "color": "2"
+    }
+  ]
 }

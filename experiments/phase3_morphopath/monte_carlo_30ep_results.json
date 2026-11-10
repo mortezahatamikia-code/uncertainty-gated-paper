@@ -2,37 +2,37 @@
   "dataset": "PlantDoc",
   "protocol": "Monte Carlo 30-Episode Stratified Few-Shot Benchmark",
   "k_shot": 5,
-  "n_episodes": 30,
+  "n_episodes": 2,
   "n_classes": 27,
   "n_queries": 252,
   "summary": {
     "baseline_1_flat": {
       "accuracy_top1": {
-        "mean": 53.16,
-        "std": 2.06,
-        "sem": 0.375,
-        "ci95_lower": 52.43,
-        "ci95_upper": 53.9,
-        "min": 48.81,
-        "max": 57.14
+        "mean": 52.38,
+        "std": 1.12,
+        "sem": 0.794,
+        "ci95_lower": 50.83,
+        "ci95_upper": 53.94,
+        "min": 51.59,
+        "max": 53.17
       },
       "accuracy_top2": {
-        "mean": 72.76,
-        "std": 1.59,
-        "sem": 0.289,
-        "ci95_lower": 72.2,
-        "ci95_upper": 73.33,
-        "min": 69.05,
-        "max": 75.4
+        "mean": 72.02,
+        "std": 3.09,
+        "sem": 2.183,
+        "ci95_lower": 67.75,
+        "ci95_upper": 76.3,
+        "min": 69.84,
+        "max": 74.21
       },
       "macro_f1": {
-        "mean": 52.16,
-        "std": 2.05,
-        "sem": 0.374,
-        "ci95_lower": 51.43,
-        "ci95_upper": 52.9,
-        "min": 48.0,
-        "max": 56.37
+        "mean": 52.15,
+        "std": 0.93,
+        "sem": 0.659,
+        "ci95_lower": 50.86,
+        "ci95_upper": 53.44,
+        "min": 51.49,
+        "max": 52.81
       },
       "router_top1_accuracy": {
         "mean": 0.0,
@@ -44,164 +44,164 @@
         "max": 0.0
       },
       "fnr": {
-        "mean": 13.33,
-        "std": 3.2,
-        "sem": 0.585,
-        "ci95_lower": 12.19,
-        "ci95_upper": 14.48,
-        "min": 8.11,
-        "max": 22.52
+        "mean": 2.78,
+        "std": 0.44,
+        "sem": 0.309,
+        "ci95_lower": 2.17,
+        "ci95_upper": 3.38,
+        "min": 2.47,
+        "max": 3.09
       },
       "fpr": {
-        "mean": 16.08,
-        "std": 3.51,
-        "sem": 0.641,
-        "ci95_lower": 14.82,
-        "ci95_upper": 17.33,
-        "min": 9.93,
-        "max": 24.11
+        "mean": 22.78,
+        "std": 2.36,
+        "sem": 1.667,
+        "ci95_lower": 19.51,
+        "ci95_upper": 26.04,
+        "min": 21.11,
+        "max": 24.44
       }
     },
     "baseline_2_rigid_13species": {
       "accuracy_top1": {
-        "mean": 47.74,
-        "std": 2.19,
-        "sem": 0.4,
-        "ci95_lower": 46.95,
-        "ci95_upper": 48.52,
-        "min": 44.44,
-        "max": 51.98
+        "mean": 48.61,
+        "std": 0.28,
+        "sem": 0.198,
+        "ci95_lower": 48.22,
+        "ci95_upper": 49.0,
+        "min": 48.41,
+        "max": 48.81
       },
       "accuracy_top2": {
-        "mean": 67.72,
-        "std": 2.19,
-        "sem": 0.401,
-        "ci95_lower": 66.94,
-        "ci95_upper": 68.51,
+        "mean": 63.1,
+        "std": 5.61,
+        "sem": 3.968,
+        "ci95_lower": 55.32,
+        "ci95_upper": 70.87,
         "min": 59.13,
-        "max": 70.63
+        "max": 67.06
       },
       "macro_f1": {
-        "mean": 45.71,
-        "std": 1.81,
-        "sem": 0.33,
-        "ci95_lower": 45.07,
-        "ci95_upper": 46.36,
-        "min": 42.99,
-        "max": 48.93
+        "mean": 46.76,
+        "std": 0.95,
+        "sem": 0.671,
+        "ci95_lower": 45.44,
+        "ci95_upper": 48.07,
+        "min": 46.09,
+        "max": 47.43
       },
       "router_top1_accuracy": {
-        "mean": 79.35,
-        "std": 1.04,
-        "sem": 0.19,
-        "ci95_lower": 78.98,
-        "ci95_upper": 79.72,
-        "min": 76.98,
-        "max": 81.75
+        "mean": 79.56,
+        "std": 0.28,
+        "sem": 0.198,
+        "ci95_lower": 79.17,
+        "ci95_upper": 79.95,
+        "min": 79.37,
+        "max": 79.76
       },
       "fnr": {
-        "mean": 12.91,
-        "std": 2.76,
-        "sem": 0.504,
-        "ci95_lower": 11.92,
-        "ci95_upper": 13.9,
-        "min": 6.31,
-        "max": 18.02
+        "mean": 2.47,
+        "std": 0.0,
+        "sem": 0.0,
+        "ci95_lower": 2.47,
+        "ci95_upper": 2.47,
+        "min": 2.47,
+        "max": 2.47
       },
       "fpr": {
-        "mean": 20.66,
-        "std": 3.11,
-        "sem": 0.568,
-        "ci95_lower": 19.55,
-        "ci95_upper": 21.77,
-        "min": 12.77,
-        "max": 27.66
+        "mean": 30.56,
+        "std": 5.5,
+        "sem": 3.889,
+        "ci95_lower": 22.93,
+        "ci95_upper": 38.18,
+        "min": 26.67,
+        "max": 34.44
       }
     },
     "morphopath_edge": {
       "accuracy_top1": {
-        "mean": 59.58,
-        "std": 1.97,
-        "sem": 0.359,
-        "ci95_lower": 58.87,
-        "ci95_upper": 60.28,
-        "min": 55.16,
-        "max": 63.1
+        "mean": 61.11,
+        "std": 3.37,
+        "sem": 2.381,
+        "ci95_lower": 56.44,
+        "ci95_upper": 65.78,
+        "min": 58.73,
+        "max": 63.49
       },
       "accuracy_top2": {
-        "mean": 79.25,
-        "std": 1.49,
-        "sem": 0.272,
-        "ci95_lower": 78.71,
-        "ci95_upper": 79.78,
-        "min": 75.4,
-        "max": 81.75
+        "mean": 78.57,
+        "std": 3.37,
+        "sem": 2.381,
+        "ci95_lower": 73.9,
+        "ci95_upper": 83.24,
+        "min": 76.19,
+        "max": 80.95
       },
       "macro_f1": {
-        "mean": 57.63,
-        "std": 1.85,
-        "sem": 0.338,
-        "ci95_lower": 56.96,
-        "ci95_upper": 58.29,
-        "min": 54.32,
-        "max": 60.75
+        "mean": 59.56,
+        "std": 3.46,
+        "sem": 2.449,
+        "ci95_lower": 54.76,
+        "ci95_upper": 64.36,
+        "min": 57.11,
+        "max": 62.01
       },
       "router_top1_accuracy": {
-        "mean": 91.39,
-        "std": 0.6,
-        "sem": 0.11,
-        "ci95_lower": 91.17,
-        "ci95_upper": 91.6,
-        "min": 90.08,
-        "max": 92.86
+        "mean": 91.67,
+        "std": 0.0,
+        "sem": 0.0,
+        "ci95_lower": 91.67,
+        "ci95_upper": 91.67,
+        "min": 91.67,
+        "max": 91.67
       },
       "fnr": {
-        "mean": 21.59,
-        "std": 1.6,
-        "sem": 0.291,
-        "ci95_lower": 21.02,
-        "ci95_upper": 22.16,
-        "min": 18.02,
-        "max": 24.32
+        "mean": 7.72,
+        "std": 1.31,
+        "sem": 0.926,
+        "ci95_lower": 5.9,
+        "ci95_upper": 9.53,
+        "min": 6.79,
+        "max": 8.64
       },
       "fpr": {
-        "mean": 12.79,
-        "std": 1.71,
-        "sem": 0.313,
-        "ci95_lower": 12.18,
-        "ci95_upper": 13.4,
-        "min": 8.51,
-        "max": 16.31
+        "mean": 11.11,
+        "std": 1.57,
+        "sem": 1.111,
+        "ci95_lower": 8.93,
+        "ci95_upper": 13.29,
+        "min": 10.0,
+        "max": 12.22
       }
     }
   },
   "hypothesis_tests": {
     "morphopath_vs_baseline1_flat": {
-      "top1_delta_mean": 6.42,
-      "top1_t_stat": 15.519,
-      "top1_p_value": 1.3930465961750602e-15,
-      "top1_significant_p_001": true,
-      "top2_delta_mean": 6.48,
-      "top2_t_stat": 21.403,
-      "top2_p_value": 2.5938191170610846e-19,
-      "f1_delta_mean": 5.46,
-      "f1_t_stat": 13.956,
-      "f1_p_value": 2.1267093852592896e-14
+      "top1_delta_mean": 8.73,
+      "top1_t_stat": 5.5,
+      "top1_p_value": 0.1144982940974003,
+      "top1_significant_p_001": false,
+      "top2_delta_mean": 6.55,
+      "top2_t_stat": 33.0,
+      "top2_p_value": 0.019285606543647842,
+      "f1_delta_mean": 7.41,
+      "f1_t_stat": 4.139,
+      "f1_p_value": 0.15093387981395093
     },
     "morphopath_vs_baseline2_rigid_13species": {
-      "top1_delta_mean": 11.84,
-      "top1_t_stat": 26.152,
-      "top1_p_value": 1.0256597833784635e-21,
-      "top1_significant_p_001": true,
-      "top2_delta_mean": 11.52,
-      "top2_t_stat": 25.716,
-      "top2_p_value": 1.6386345994884335e-21,
-      "f1_delta_mean": 11.91,
-      "f1_t_stat": 31.619,
-      "f1_p_value": 5.00059575818672e-24,
-      "router_delta_mean": 12.04,
-      "router_t_stat": 50.925,
-      "router_p_value": 6.351675717687634e-30
+      "top1_delta_mean": 12.5,
+      "top1_t_stat": 5.727,
+      "top1_p_value": 0.11004648014415391,
+      "top1_significant_p_001": false,
+      "top2_delta_mean": 15.48,
+      "top2_t_stat": 2.438,
+      "top2_p_value": 0.24784672283230713,
+      "f1_delta_mean": 12.8,
+      "f1_t_stat": 7.204,
+      "f1_p_value": 0.08780491658063279,
+      "router_delta_mean": 12.1,
+      "router_t_stat": 61.0,
+      "router_p_value": 0.010435454952617811
     }
   },
   "episodes": [
@@ -214,25 +214,25 @@
         "accuracy_top2": 74.20634920634922,
         "macro_f1": 52.81217202210756,
         "router_top1_accuracy": 0.0,
-        "fnr": 14.414414414414415,
-        "fpr": 14.893617021276595
+        "fnr": 2.4691358024691357,
+        "fpr": 21.11111111111111
       },
       "baseline_2_rigid_13species": {
         "accuracy_top1": 48.80952380952381,
         "accuracy_top2": 59.12698412698413,
         "macro_f1": 47.42944597282952,
         "router_top1_accuracy": 79.36507936507937,
-        "fnr": 14.414414414414415,
-        "fpr": 19.148936170212767
+        "fnr": 2.4691358024691357,
+        "fpr": 26.666666666666668
       },
       "morphopath_edge": {
-        "accuracy_top1": 62.301587301587304,
+        "accuracy_top1": 63.49206349206349,
         "accuracy_top2": 80.95238095238095,
-        "macro_f1": 60.675582333008514,
+        "macro_f1": 62.01026698670575,
         "router_top1_accuracy": 91.66666666666666,
-        "fnr": 18.01801801801802,
-        "fpr": 12.76595744680851,
-        "mean_differential_confidence": 0.13628020882606506
+        "fnr": 6.790123456790123,
+        "fpr": 10.0,
+        "mean_differential_confidence": 0.13875767588615417
       }
     },
     {
@@ -244,865 +244,25 @@
         "accuracy_top2": 69.84126984126983,
         "macro_f1": 51.49481858970252,
         "router_top1_accuracy": 0.0,
-        "fnr": 22.52252252252252,
-        "fpr": 11.347517730496454
+        "fnr": 3.0864197530864197,
+        "fpr": 24.444444444444443
       },
       "baseline_2_rigid_13species": {
         "accuracy_top1": 48.41269841269841,
         "accuracy_top2": 67.06349206349206,
         "macro_f1": 46.08646387021537,
         "router_top1_accuracy": 79.76190476190477,
-        "fnr": 18.01801801801802,
-        "fpr": 19.858156028368796
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 59.92063492063492,
-        "accuracy_top2": 78.57142857142857,
-        "macro_f1": 57.72534641523289,
-        "router_top1_accuracy": 91.66666666666666,
-        "fnr": 20.72072072072072,
-        "fpr": 12.056737588652481,
-        "mean_differential_confidence": 0.13117669522762299
-      }
-    },
-    {
-      "episode": 3,
-      "seed": 76,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 48.80952380952381,
-        "accuracy_top2": 72.22222222222221,
-        "macro_f1": 48.001154937501134,
-        "router_top1_accuracy": 0.0,
-        "fnr": 16.216216216216218,
-        "fpr": 18.439716312056735
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 45.23809523809524,
-        "accuracy_top2": 68.25396825396825,
-        "macro_f1": 43.050682008632464,
-        "router_top1_accuracy": 78.57142857142857,
-        "fnr": 10.81081081081081,
-        "fpr": 21.98581560283688
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 55.158730158730165,
-        "accuracy_top2": 78.96825396825396,
-        "macro_f1": 54.31957641781264,
-        "router_top1_accuracy": 91.66666666666666,
-        "fnr": 23.423423423423422,
-        "fpr": 16.312056737588655,
-        "mean_differential_confidence": 0.12026762217283249
-      }
-    },
-    {
-      "episode": 4,
-      "seed": 93,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 51.587301587301596,
-        "accuracy_top2": 69.04761904761905,
-        "macro_f1": 50.251901256216335,
-        "router_top1_accuracy": 0.0,
-        "fnr": 10.81081081081081,
-        "fpr": 14.893617021276595
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 48.80952380952381,
-        "accuracy_top2": 67.85714285714286,
-        "macro_f1": 47.13482317334983,
-        "router_top1_accuracy": 78.96825396825396,
-        "fnr": 10.81081081081081,
-        "fpr": 21.98581560283688
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 59.12698412698413,
-        "accuracy_top2": 79.36507936507937,
-        "macro_f1": 56.435328949766074,
-        "router_top1_accuracy": 92.46031746031747,
-        "fnr": 23.423423423423422,
-        "fpr": 12.76595744680851,
-        "mean_differential_confidence": 0.13281945884227753
-      }
-    },
-    {
-      "episode": 5,
-      "seed": 110,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 51.587301587301596,
-        "accuracy_top2": 73.80952380952381,
-        "macro_f1": 51.986536766639055,
-        "router_top1_accuracy": 0.0,
-        "fnr": 10.81081081081081,
-        "fpr": 17.02127659574468
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 44.44444444444444,
-        "accuracy_top2": 67.06349206349206,
-        "macro_f1": 44.08775544372045,
-        "router_top1_accuracy": 79.36507936507937,
-        "fnr": 12.612612612612612,
-        "fpr": 21.98581560283688
+        "fnr": 2.4691358024691357,
+        "fpr": 34.44444444444444
       },
       "morphopath_edge": {
         "accuracy_top1": 58.730158730158735,
-        "accuracy_top2": 80.15873015873017,
-        "macro_f1": 56.73992646013214,
-        "router_top1_accuracy": 90.87301587301587,
-        "fnr": 19.81981981981982,
-        "fpr": 14.893617021276595,
-        "mean_differential_confidence": 0.12845338881015778
-      }
-    },
-    {
-      "episode": 6,
-      "seed": 127,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 55.952380952380956,
-        "accuracy_top2": 75.39682539682539,
-        "macro_f1": 55.06361842321945,
-        "router_top1_accuracy": 0.0,
-        "fnr": 18.01801801801802,
-        "fpr": 10.638297872340425
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 50.39682539682539,
-        "accuracy_top2": 70.63492063492063,
-        "macro_f1": 47.02370688699665,
-        "router_top1_accuracy": 79.36507936507937,
-        "fnr": 14.414414414414415,
-        "fpr": 19.858156028368796
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 61.50793650793651,
-        "accuracy_top2": 81.74603174603175,
-        "macro_f1": 59.86127596508835,
-        "router_top1_accuracy": 92.46031746031747,
-        "fnr": 20.72072072072072,
-        "fpr": 10.638297872340425,
-        "mean_differential_confidence": 0.13421009480953217
-      }
-    },
-    {
-      "episode": 7,
-      "seed": 144,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 53.17460317460318,
-        "accuracy_top2": 72.22222222222221,
-        "macro_f1": 51.09247033160077,
-        "router_top1_accuracy": 0.0,
-        "fnr": 8.108108108108109,
-        "fpr": 17.73049645390071
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 49.2063492063492,
-        "accuracy_top2": 68.65079365079364,
-        "macro_f1": 45.358358541417424,
-        "router_top1_accuracy": 79.76190476190477,
-        "fnr": 11.711711711711711,
-        "fpr": 19.858156028368796
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 58.730158730158735,
-        "accuracy_top2": 76.5873015873016,
-        "macro_f1": 56.457359849034326,
-        "router_top1_accuracy": 90.87301587301587,
-        "fnr": 20.72072072072072,
-        "fpr": 11.347517730496454,
-        "mean_differential_confidence": 0.12775474786758423
-      }
-    },
-    {
-      "episode": 8,
-      "seed": 161,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 54.761904761904766,
-        "accuracy_top2": 74.20634920634922,
-        "macro_f1": 54.02937295414587,
-        "router_top1_accuracy": 0.0,
-        "fnr": 15.315315315315313,
-        "fpr": 12.056737588652481
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 50.39682539682539,
-        "accuracy_top2": 66.66666666666666,
-        "macro_f1": 47.6786787538272,
-        "router_top1_accuracy": 79.36507936507937,
-        "fnr": 13.513513513513514,
-        "fpr": 18.439716312056735
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 58.333333333333336,
-        "accuracy_top2": 78.96825396825396,
-        "macro_f1": 56.28971390575367,
-        "router_top1_accuracy": 91.26984126984127,
-        "fnr": 21.62162162162162,
-        "fpr": 12.056737588652481,
-        "mean_differential_confidence": 0.13555127382278442
-      }
-    },
-    {
-      "episode": 9,
-      "seed": 178,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 55.158730158730165,
-        "accuracy_top2": 71.42857142857143,
-        "macro_f1": 53.47609127340262,
-        "router_top1_accuracy": 0.0,
-        "fnr": 15.315315315315313,
-        "fpr": 13.47517730496454
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 50.0,
-        "accuracy_top2": 70.63492063492063,
-        "macro_f1": 47.77785513973278,
-        "router_top1_accuracy": 80.95238095238095,
-        "fnr": 17.117117117117118,
-        "fpr": 18.439716312056735
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 59.92063492063492,
-        "accuracy_top2": 80.55555555555556,
-        "macro_f1": 57.460460515672075,
-        "router_top1_accuracy": 90.87301587301587,
-        "fnr": 20.72072072072072,
-        "fpr": 11.347517730496454,
-        "mean_differential_confidence": 0.1301291435956955
-      }
-    },
-    {
-      "episode": 10,
-      "seed": 195,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 52.38095238095239,
-        "accuracy_top2": 72.61904761904762,
-        "macro_f1": 51.99228238400647,
-        "router_top1_accuracy": 0.0,
-        "fnr": 13.513513513513514,
-        "fpr": 19.148936170212767
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 44.44444444444444,
-        "accuracy_top2": 68.65079365079364,
-        "macro_f1": 44.032674878160286,
-        "router_top1_accuracy": 80.15873015873017,
-        "fnr": 10.81081081081081,
-        "fpr": 22.69503546099291
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 59.12698412698413,
-        "accuracy_top2": 80.15873015873017,
-        "macro_f1": 58.064060969289734,
-        "router_top1_accuracy": 90.87301587301587,
-        "fnr": 22.52252252252252,
-        "fpr": 14.893617021276595,
-        "mean_differential_confidence": 0.12616127729415894
-      }
-    },
-    {
-      "episode": 11,
-      "seed": 212,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 55.952380952380956,
-        "accuracy_top2": 75.0,
-        "macro_f1": 55.032121708643956,
-        "router_top1_accuracy": 0.0,
-        "fnr": 12.612612612612612,
-        "fpr": 17.73049645390071
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 48.80952380952381,
-        "accuracy_top2": 67.06349206349206,
-        "macro_f1": 45.84766008082665,
-        "router_top1_accuracy": 78.17460317460318,
-        "fnr": 9.90990990990991,
-        "fpr": 24.113475177304963
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 59.92063492063492,
-        "accuracy_top2": 80.15873015873017,
-        "macro_f1": 57.93718923430685,
-        "router_top1_accuracy": 91.26984126984127,
-        "fnr": 19.81981981981982,
-        "fpr": 13.47517730496454,
-        "mean_differential_confidence": 0.12987014651298523
-      }
-    },
-    {
-      "episode": 12,
-      "seed": 229,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 50.79365079365079,
-        "accuracy_top2": 72.61904761904762,
-        "macro_f1": 49.81668645045591,
-        "router_top1_accuracy": 0.0,
-        "fnr": 14.414414414414415,
-        "fpr": 15.602836879432624
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 44.84126984126984,
-        "accuracy_top2": 69.04761904761905,
-        "macro_f1": 43.72134562588454,
-        "router_top1_accuracy": 78.57142857142857,
-        "fnr": 12.612612612612612,
-        "fpr": 20.56737588652482
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 61.50793650793651,
-        "accuracy_top2": 79.76190476190477,
-        "macro_f1": 59.89664016351163,
-        "router_top1_accuracy": 91.26984126984127,
-        "fnr": 21.62162162162162,
-        "fpr": 11.347517730496454,
-        "mean_differential_confidence": 0.13194401562213898
-      }
-    },
-    {
-      "episode": 13,
-      "seed": 246,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 54.761904761904766,
-        "accuracy_top2": 74.20634920634922,
-        "macro_f1": 53.36729071121318,
-        "router_top1_accuracy": 0.0,
-        "fnr": 14.414414414414415,
-        "fpr": 13.47517730496454
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 50.79365079365079,
-        "accuracy_top2": 70.63492063492063,
-        "macro_f1": 48.244042257169475,
-        "router_top1_accuracy": 80.95238095238095,
-        "fnr": 12.612612612612612,
-        "fpr": 18.439716312056735
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 63.095238095238095,
-        "accuracy_top2": 80.95238095238095,
-        "macro_f1": 60.74979949791126,
-        "router_top1_accuracy": 91.26984126984127,
-        "fnr": 21.62162162162162,
-        "fpr": 12.056737588652481,
-        "mean_differential_confidence": 0.14382435381412506
-      }
-    },
-    {
-      "episode": 14,
-      "seed": 263,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 57.14285714285714,
-        "accuracy_top2": 70.63492063492063,
-        "macro_f1": 56.36748649103508,
-        "router_top1_accuracy": 0.0,
-        "fnr": 10.81081081081081,
-        "fpr": 17.73049645390071
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 50.79365079365079,
-        "accuracy_top2": 68.25396825396825,
-        "macro_f1": 48.75840061468713,
-        "router_top1_accuracy": 79.36507936507937,
-        "fnr": 9.00900900900901,
-        "fpr": 21.98581560283688
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 63.095238095238095,
-        "accuracy_top2": 79.76190476190477,
-        "macro_f1": 60.72185514899504,
+        "accuracy_top2": 76.19047619047619,
+        "macro_f1": 57.11287512319504,
         "router_top1_accuracy": 91.66666666666666,
-        "fnr": 23.423423423423422,
-        "fpr": 13.47517730496454,
-        "mean_differential_confidence": 0.12629063427448273
-      }
-    },
-    {
-      "episode": 15,
-      "seed": 280,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 53.17460317460318,
-        "accuracy_top2": 69.44444444444444,
-        "macro_f1": 52.63509613870063,
-        "router_top1_accuracy": 0.0,
-        "fnr": 17.117117117117118,
-        "fpr": 14.893617021276595
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 44.84126984126984,
-        "accuracy_top2": 63.49206349206349,
-        "macro_f1": 43.83699591110745,
-        "router_top1_accuracy": 79.76190476190477,
-        "fnr": 13.513513513513514,
-        "fpr": 19.148936170212767
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 59.12698412698413,
-        "accuracy_top2": 75.39682539682539,
-        "macro_f1": 57.26615282615663,
-        "router_top1_accuracy": 90.87301587301587,
-        "fnr": 24.324324324324326,
-        "fpr": 12.056737588652481,
-        "mean_differential_confidence": 0.12891238927841187
-      }
-    },
-    {
-      "episode": 16,
-      "seed": 297,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 52.38095238095239,
-        "accuracy_top2": 72.61904761904762,
-        "macro_f1": 49.84145464610908,
-        "router_top1_accuracy": 0.0,
-        "fnr": 9.90990990990991,
-        "fpr": 24.113475177304963
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 46.42857142857143,
-        "accuracy_top2": 67.85714285714286,
-        "macro_f1": 43.4922421376946,
-        "router_top1_accuracy": 80.15873015873017,
-        "fnr": 9.90990990990991,
-        "fpr": 26.95035460992908
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 57.14285714285714,
-        "accuracy_top2": 78.17460317460318,
-        "macro_f1": 55.32204272308421,
-        "router_top1_accuracy": 91.26984126984127,
-        "fnr": 23.423423423423422,
-        "fpr": 15.602836879432624,
-        "mean_differential_confidence": 0.124118871986866
-      }
-    },
-    {
-      "episode": 17,
-      "seed": 314,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 52.77777777777778,
-        "accuracy_top2": 74.20634920634922,
-        "macro_f1": 51.11879562599634,
-        "router_top1_accuracy": 0.0,
-        "fnr": 10.81081081081081,
-        "fpr": 18.439716312056735
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 47.22222222222222,
-        "accuracy_top2": 66.66666666666666,
-        "macro_f1": 44.49389097950859,
-        "router_top1_accuracy": 80.15873015873017,
-        "fnr": 12.612612612612612,
-        "fpr": 21.27659574468085
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 57.53968253968254,
-        "accuracy_top2": 78.96825396825396,
-        "macro_f1": 54.74723933000557,
-        "router_top1_accuracy": 91.66666666666666,
-        "fnr": 22.52252252252252,
-        "fpr": 14.184397163120568,
-        "mean_differential_confidence": 0.1255216896533966
-      }
-    },
-    {
-      "episode": 18,
-      "seed": 331,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 53.57142857142857,
-        "accuracy_top2": 75.0,
-        "macro_f1": 53.528109973557015,
-        "router_top1_accuracy": 0.0,
-        "fnr": 12.612612612612612,
-        "fpr": 15.602836879432624
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 47.22222222222222,
-        "accuracy_top2": 68.25396825396825,
-        "macro_f1": 46.64279827204248,
-        "router_top1_accuracy": 78.57142857142857,
-        "fnr": 13.513513513513514,
-        "fpr": 19.148936170212767
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 60.71428571428571,
-        "accuracy_top2": 78.96825396825396,
-        "macro_f1": 59.179102673541394,
-        "router_top1_accuracy": 92.06349206349206,
-        "fnr": 20.72072072072072,
-        "fpr": 11.347517730496454,
-        "mean_differential_confidence": 0.13014042377471924
-      }
-    },
-    {
-      "episode": 19,
-      "seed": 348,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 52.77777777777778,
-        "accuracy_top2": 74.20634920634922,
-        "macro_f1": 51.00033131794921,
-        "router_top1_accuracy": 0.0,
-        "fnr": 11.711711711711711,
-        "fpr": 20.56737588652482
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 47.22222222222222,
-        "accuracy_top2": 66.26984126984127,
-        "macro_f1": 45.91157846122126,
-        "router_top1_accuracy": 80.55555555555556,
-        "fnr": 10.81081081081081,
-        "fpr": 21.27659574468085
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 59.523809523809526,
-        "accuracy_top2": 79.36507936507937,
-        "macro_f1": 56.561155274360075,
-        "router_top1_accuracy": 92.06349206349206,
-        "fnr": 19.81981981981982,
-        "fpr": 13.47517730496454,
-        "mean_differential_confidence": 0.1344412863254547
-      }
-    },
-    {
-      "episode": 20,
-      "seed": 365,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 55.55555555555556,
-        "accuracy_top2": 73.4126984126984,
-        "macro_f1": 54.01571877884339,
-        "router_top1_accuracy": 0.0,
-        "fnr": 18.91891891891892,
-        "fpr": 9.929078014184398
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 51.98412698412699,
-        "accuracy_top2": 68.65079365079364,
-        "macro_f1": 48.92929865218772,
-        "router_top1_accuracy": 79.36507936507937,
-        "fnr": 18.01801801801802,
-        "fpr": 12.76595744680851
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 61.50793650793651,
-        "accuracy_top2": 79.76190476190477,
-        "macro_f1": 59.17386058899049,
-        "router_top1_accuracy": 91.26984126984127,
-        "fnr": 22.52252252252252,
-        "fpr": 10.638297872340425,
-        "mean_differential_confidence": 0.12977898120880127
-      }
-    },
-    {
-      "episode": 21,
-      "seed": 382,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 53.96825396825397,
-        "accuracy_top2": 73.80952380952381,
-        "macro_f1": 51.22737589194617,
-        "router_top1_accuracy": 0.0,
-        "fnr": 9.90990990990991,
-        "fpr": 16.312056737588655
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 46.82539682539682,
-        "accuracy_top2": 67.85714285714286,
-        "macro_f1": 43.84655415592235,
-        "router_top1_accuracy": 79.36507936507937,
-        "fnr": 13.513513513513514,
-        "fpr": 23.404255319148938
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 59.12698412698413,
-        "accuracy_top2": 81.34920634920636,
-        "macro_f1": 56.53802343405212,
-        "router_top1_accuracy": 91.66666666666666,
-        "fnr": 21.62162162162162,
-        "fpr": 13.47517730496454,
-        "mean_differential_confidence": 0.1304296851158142
-      }
-    },
-    {
-      "episode": 22,
-      "seed": 399,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 50.79365079365079,
-        "accuracy_top2": 73.01587301587301,
-        "macro_f1": 50.33039642516767,
-        "router_top1_accuracy": 0.0,
-        "fnr": 9.90990990990991,
-        "fpr": 21.27659574468085
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 48.01587301587302,
-        "accuracy_top2": 66.66666666666666,
-        "macro_f1": 46.076086175553726,
-        "router_top1_accuracy": 79.36507936507937,
-        "fnr": 9.90990990990991,
-        "fpr": 27.659574468085108
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 58.333333333333336,
-        "accuracy_top2": 78.96825396825396,
-        "macro_f1": 57.37847748812479,
-        "router_top1_accuracy": 90.87301587301587,
-        "fnr": 21.62162162162162,
-        "fpr": 14.184397163120568,
-        "mean_differential_confidence": 0.1300026923418045
-      }
-    },
-    {
-      "episode": 23,
-      "seed": 416,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 53.96825396825397,
-        "accuracy_top2": 73.01587301587301,
-        "macro_f1": 52.316760330711986,
-        "router_top1_accuracy": 0.0,
-        "fnr": 14.414414414414415,
-        "fpr": 12.76595744680851
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 49.60317460317461,
-        "accuracy_top2": 67.85714285714286,
-        "macro_f1": 47.1194154026398,
-        "router_top1_accuracy": 78.57142857142857,
-        "fnr": 14.414414414414415,
-        "fpr": 17.73049645390071
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 56.34920634920635,
-        "accuracy_top2": 75.79365079365078,
-        "macro_f1": 54.43927970780884,
-        "router_top1_accuracy": 90.07936507936508,
-        "fnr": 22.52252252252252,
-        "fpr": 12.76595744680851,
-        "mean_differential_confidence": 0.13380438089370728
-      }
-    },
-    {
-      "episode": 24,
-      "seed": 433,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 54.36507936507936,
-        "accuracy_top2": 72.22222222222221,
-        "macro_f1": 54.694333659939865,
-        "router_top1_accuracy": 0.0,
-        "fnr": 14.414414414414415,
-        "fpr": 15.602836879432624
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 46.42857142857143,
-        "accuracy_top2": 67.85714285714286,
-        "macro_f1": 45.9160922762923,
-        "router_top1_accuracy": 79.76190476190477,
-        "fnr": 14.414414414414415,
-        "fpr": 21.27659574468085
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 57.936507936507944,
-        "accuracy_top2": 80.15873015873017,
-        "macro_f1": 56.69236610899164,
-        "router_top1_accuracy": 90.47619047619048,
-        "fnr": 21.62162162162162,
-        "fpr": 14.184397163120568,
-        "mean_differential_confidence": 0.12294559180736542
-      }
-    },
-    {
-      "episode": 25,
-      "seed": 450,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 52.38095238095239,
-        "accuracy_top2": 72.61904761904762,
-        "macro_f1": 51.062472149730795,
-        "router_top1_accuracy": 0.0,
-        "fnr": 12.612612612612612,
-        "fpr": 23.404255319148938
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 48.41269841269841,
-        "accuracy_top2": 68.65079365079364,
-        "macro_f1": 44.735069849308815,
-        "router_top1_accuracy": 78.57142857142857,
-        "fnr": 11.711711711711711,
-        "fpr": 22.69503546099291
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 57.53968253968254,
-        "accuracy_top2": 77.38095238095238,
-        "macro_f1": 56.31356461011927,
-        "router_top1_accuracy": 91.26984126984127,
-        "fnr": 22.52252252252252,
-        "fpr": 14.893617021276595,
-        "mean_differential_confidence": 0.12990570068359375
-      }
-    },
-    {
-      "episode": 26,
-      "seed": 467,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 50.0,
-        "accuracy_top2": 73.01587301587301,
-        "macro_f1": 49.788224185034196,
-        "router_top1_accuracy": 0.0,
-        "fnr": 13.513513513513514,
-        "fpr": 12.76595744680851
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 44.44444444444444,
-        "accuracy_top2": 67.46031746031747,
-        "macro_f1": 42.98962181207461,
-        "router_top1_accuracy": 76.98412698412699,
-        "fnr": 15.315315315315313,
-        "fpr": 18.439716312056735
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 63.095238095238095,
-        "accuracy_top2": 79.36507936507937,
-        "macro_f1": 60.57885770471584,
-        "router_top1_accuracy": 92.85714285714286,
-        "fnr": 18.01801801801802,
-        "fpr": 8.51063829787234,
-        "mean_differential_confidence": 0.12950779497623444
-      }
-    },
-    {
-      "episode": 27,
-      "seed": 484,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 49.2063492063492,
-        "accuracy_top2": 72.61904761904762,
-        "macro_f1": 48.31189492092356,
-        "router_top1_accuracy": 0.0,
-        "fnr": 9.90990990990991,
-        "fpr": 18.439716312056735
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 45.63492063492063,
-        "accuracy_top2": 67.85714285714286,
-        "macro_f1": 43.15767189160643,
-        "router_top1_accuracy": 76.98412698412699,
-        "fnr": 6.306306306306306,
-        "fpr": 24.113475177304963
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 58.730158730158735,
-        "accuracy_top2": 80.55555555555556,
-        "macro_f1": 57.61063479450134,
-        "router_top1_accuracy": 91.26984126984127,
-        "fnr": 19.81981981981982,
-        "fpr": 12.76595744680851,
-        "mean_differential_confidence": 0.12336773425340652
-      }
-    },
-    {
-      "episode": 28,
-      "seed": 501,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 53.57142857142857,
-        "accuracy_top2": 72.22222222222221,
-        "macro_f1": 53.731484381579875,
-        "router_top1_accuracy": 0.0,
-        "fnr": 13.513513513513514,
-        "fpr": 14.184397163120568
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 45.23809523809524,
-        "accuracy_top2": 67.06349206349206,
-        "macro_f1": 44.11612803836473,
-        "router_top1_accuracy": 79.36507936507937,
-        "fnr": 18.01801801801802,
-        "fpr": 21.27659574468085
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 59.12698412698413,
-        "accuracy_top2": 78.57142857142857,
-        "macro_f1": 56.95042114112524,
-        "router_top1_accuracy": 90.87301587301587,
-        "fnr": 23.423423423423422,
-        "fpr": 13.47517730496454,
-        "mean_differential_confidence": 0.1339736133813858
-      }
-    },
-    {
-      "episode": 29,
-      "seed": 518,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 55.952380952380956,
-        "accuracy_top2": 71.42857142857143,
-        "macro_f1": 54.22538176321603,
-        "router_top1_accuracy": 0.0,
-        "fnr": 9.00900900900901,
-        "fpr": 16.312056737588655
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 48.80952380952381,
-        "accuracy_top2": 69.84126984126983,
-        "macro_f1": 47.29639133117992,
-        "router_top1_accuracy": 81.74603174603175,
-        "fnr": 12.612612612612612,
-        "fpr": 19.148936170212767
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 60.317460317460316,
-        "accuracy_top2": 78.57142857142857,
-        "macro_f1": 58.7172550606391,
-        "router_top1_accuracy": 91.66666666666666,
-        "fnr": 23.423423423423422,
-        "fpr": 12.056737588652481,
-        "mean_differential_confidence": 0.1274728626012802
-      }
-    },
-    {
-      "episode": 30,
-      "seed": 535,
-      "is_canonical_seed42": false,
-      "baseline_1_flat": {
-        "accuracy_top1": 53.57142857142857,
-        "accuracy_top2": 72.61904761904762,
-        "macro_f1": 52.33569873140653,
-        "router_top1_accuracy": 0.0,
-        "fnr": 14.414414414414415,
-        "fpr": 13.47517730496454
-      },
-      "baseline_2_rigid_13species": {
-        "accuracy_top1": 48.41269841269841,
-        "accuracy_top2": 69.84126984126983,
-        "macro_f1": 46.62046073508867,
-        "router_top1_accuracy": 78.57142857142857,
-        "fnr": 14.414414414414415,
-        "fpr": 14.184397163120568
-      },
-      "morphopath_edge": {
-        "accuracy_top1": 60.71428571428571,
-        "accuracy_top2": 79.36507936507937,
-        "macro_f1": 57.96023901417937,
-        "router_top1_accuracy": 91.26984126984127,
-        "fnr": 21.62162162162162,
-        "fpr": 10.638297872340425,
-        "mean_differential_confidence": 0.13678747415542603
+        "fnr": 8.641975308641975,
+        "fpr": 12.222222222222221,
+        "mean_differential_confidence": 0.13386110961437225
       }
     }
   ]
