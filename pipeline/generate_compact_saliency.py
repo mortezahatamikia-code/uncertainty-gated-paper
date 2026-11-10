@@ -240,9 +240,9 @@ def build_compact_saliency():
     cb.set_label("Normalized Pathological Saliency Density [0, 1]", fontsize=7.6, fontweight="bold", labelpad=2)
     cb.ax.tick_params(labelsize=6.8)
 
-    pdf_path = PAPER_DIR / "fig_saliency.pdf"
-    png_path = PAPER_DIR / "fig_saliency.png"
-    docs_png = DOCS_ASSETS / "fig_saliency.png"
+    pdf_path = PAPER_DIR / "fig_saliency_compact.pdf"
+    png_path = PAPER_DIR / "fig_saliency_compact.png"
+    docs_png = DOCS_ASSETS / "fig_saliency_compact.png"
 
     plt.savefig(pdf_path, bbox_inches="tight", dpi=300)
     plt.savefig(png_path, bbox_inches="tight", dpi=300)
