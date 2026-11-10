@@ -15,9 +15,9 @@
               "state": {
                 "file": "Project Board.canvas",
                 "viewState": {
-                  "x": 1869.8280422079174,
-                  "y": -154.3367208655407,
-                  "zoom": -0.3333333333333334
+                  "x": 190,
+                  "y": 610,
+                  "zoom": -1.5728134180550402
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -176,6 +176,7 @@
   },
   "active": "92954bf8fbd856bf",
   "lastOpenFiles": [
+    "Project Board.canvas",
     "Tasks/TASK-CLEAN-005.md",
     "Logs/Log-Phase5-CleanCode-Refactoring.md",
     "Tasks/TASK-CLEAN-004.md",
@@ -193,7 +194,6 @@
     "Tasks/TASK-CLEANCODE-001.md",
     "Tasks/TASK-OPTIMIZE-001.md",
     "Untitled.base",
-    "Project Board.canvas",
     "Tasks/TASK-REFINE-001.md",
     "Reviews/Review-Humanize-Phase5.md",
     "00 - Dashboard.md",
@@ -204,7 +204,6 @@
     "Tasks/TASK-HUMANIZE-003.md",
     "Tasks/TASK-HUMANIZE-002.md",
     "Tasks/TASK-HUMANIZE-001.md",
-    "Drafts/Draft-04-Experiments-and-Master-Paper.md",
     "Reviews",
     "Drafts",
     "Architecture/ADR",
