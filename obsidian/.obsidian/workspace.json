@@ -15,9 +15,9 @@
               "state": {
                 "file": "Project Board.canvas",
                 "viewState": {
-                  "x": 190,
-                  "y": 610,
-                  "zoom": -1.5728134180550402
+                  "x": -244.6508998974799,
+                  "y": 906.8193674171935,
+                  "zoom": -1.5728134180550404
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -176,6 +176,17 @@
   },
   "active": "92954bf8fbd856bf",
   "lastOpenFiles": [
+    "Logs/Log-Phase4-Radical-Optimizations.md",
+    "Tasks/TASK-OPT-016.md",
+    "Tasks/TASK-OPT-015.md",
+    "Tasks/TASK-OPT-014.md",
+    "Tasks/TASK-OPT-013.md",
+    "Tasks/TASK-OPT-012.md",
+    "Ideation/IDEA-020-Thermodynamic-Self-Annealing-Entropy-Temperature.md",
+    "Ideation/IDEA-019-Topological-Manifold-Bottleneck-Filtration.md",
+    "Ideation/IDEA-018-Wasserstein-Optimal-Transport-Energy.md",
+    "Ideation/IDEA-017-Gegenbauer-Spherical-Harmonic-Kernel.md",
+    "Logs/Log-Phase4-Advanced-Optimizations.md",
     "Project Board.canvas",
     "Tasks/TASK-CLEAN-005.md",
     "Logs/Log-Phase5-CleanCode-Refactoring.md",
@@ -194,16 +205,6 @@
     "Tasks/TASK-CLEANCODE-001.md",
     "Tasks/TASK-OPTIMIZE-001.md",
     "Untitled.base",
-    "Tasks/TASK-REFINE-001.md",
-    "Reviews/Review-Humanize-Phase5.md",
-    "00 - Dashboard.md",
-    "Architecture/MorphoPath System Architecture.md",
-    "Tasks/TASK-HUMANIZE-006.md",
-    "Tasks/TASK-HUMANIZE-005.md",
-    "Tasks/TASK-HUMANIZE-004.md",
-    "Tasks/TASK-HUMANIZE-003.md",
-    "Tasks/TASK-HUMANIZE-002.md",
-    "Tasks/TASK-HUMANIZE-001.md",
     "Reviews",
     "Drafts",
     "Architecture/ADR",

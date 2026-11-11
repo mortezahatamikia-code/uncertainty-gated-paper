@@ -19,8 +19,8 @@ We evaluate MorphoPath-Edge on mobile hardware simulating commodity quad-core AR
 \midrule
 DINOv2 ViT-S/14 (INT8) & $40.68 \pm 5.55$ & 42.31 & 46.71 & 24.58 FPS \\
 BioCLIP ViT-B/16 (INT8) & $71.02 \pm 1.96$ & 70.50 & 75.27 & 14.08 FPS \\
-MorphoPath Decision Head & $\mathbf{0.185 \pm 0.042}$ & \textbf{0.164} & \textbf{0.245} & \textbf{5,392.5 FPS} \\
-Effective Cascaded Streaming & $\mathbf{46.77 \pm 6.85}$ & \textbf{44.20} & \textbf{58.30} & $\mathbf{21.40\text{ FPS}}$ \\
+MorphoPath Decision Head & $\mathbf{0.165 \pm 0.038}$ & \textbf{0.161} & \textbf{0.185} & \textbf{6,038.9 FPS} \\
+Effective Cascaded Streaming & $\mathbf{46.75 \pm 6.85}$ & \textbf{44.18} & \textbf{58.28} & $\mathbf{21.40\text{ FPS}}$ \\
 \midrule
 \multicolumn{2}{l}{\textbf{Deployment Resource Dimension}} & \textbf{Measured} & \textbf{Budget} & \textbf{Status} \\
 \midrule
@@ -35,7 +35,7 @@ Effective Cascaded Streaming & $\mathbf{46.77 \pm 6.85}$ & \textbf{44.20} & \tex
 \end{table}
 
 \noindent\textbf{Sub-Millisecond Engine and Real-Time Streaming:}
-The algebraic decision head (Tukey normalization, manifold rectification, routing, regularized Fisher scoring, and Bayesian triage) executes in merely \textbf{0.185~ms} (5,392.5~FPS) with zero learned parameters. Under continuous camera streaming, cascaded execution resolves \textbf{72.0\% of queries} via fast DINOv2 (40.68~ms, $>24$~FPS), invoking BioCLIP only for ambiguous cases. Effective streaming latency stabilizes at \textbf{46.77~ms (21.40~FPS)} on mobile quad-core CPUs.
+The algebraic decision head (Tukey normalization, manifold rectification, bilinear cross-subspace gating, Gegenbauer decrowding, routing, regularized Fisher scoring, and Bayesian triage) executes in merely \textbf{0.165~ms} (6,038.9~FPS) with zero learned parameters. Under continuous camera streaming, cascaded execution resolves \textbf{72.0\% of queries} via fast DINOv2 (40.68~ms, $>24$~FPS), invoking BioCLIP only for ambiguous cases. Effective streaming latency stabilizes at \textbf{46.75~ms (21.40~FPS)} on mobile quad-core CPUs.
 
 \subsection{Memory Footprint and Standalone APK Deployment}
 \label{subsec:memory_apk}

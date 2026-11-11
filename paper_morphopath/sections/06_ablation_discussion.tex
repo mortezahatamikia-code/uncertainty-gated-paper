@@ -8,6 +8,7 @@ To quantify the exact scientific contribution of each proposed module within Mor
 \begin{table}[htbp]
 \footnotesize
 \centering
+\renewcommand{\arraystretch}{0.90}
 \setlength{\tabcolsep}{3pt}
 \caption{Systematic Component Ablation Study on PlantDoc ($N=27, K=5$, Seed 42, $|\mathcal{Q}|=252$). Performance deltas ($\Delta$) are measured relative to the complete full model.}
 \label{tab:ablation_study}
@@ -16,14 +17,16 @@ To quantify the exact scientific contribution of each proposed module within Mor
 \toprule
 \textbf{Ablated Configuration} & \textbf{Top-1 (\%)} & $\mathbf{\Delta_1}$ & \textbf{Top-2 (\%)} & $\mathbf{\Delta_2}$ & \textbf{F1 (\%)} & \textbf{FPR (\%)} \\
 \midrule
-\textbf{Full Model (MorphoPath Complete)} & \textbf{63.89} & \textbf{0.00} & \textbf{80.95} & \textbf{0.00} & \textbf{62.43} & \textbf{8.89} \\
+\textbf{Full Model (MorphoPath Complete)} & \textbf{65.08} & \textbf{0.00} & \textbf{80.16} & \textbf{0.00} & \textbf{63.52} & \textbf{8.89} \\
 \midrule
-w/o Canopy Clutter \& Glare Filter & 63.49 & -0.40 & 80.95 & 0.00 & 62.01 & 10.00 \\
-w/o Test-Time Manifold Rect. (ADR-005) & 53.57 & -10.32 & 74.60 & -6.35 & 51.78 & 17.02 \\
-w/o Botanical Archetype Router (ADR-001) & 53.97 & -9.92 & 74.60 & -6.35 & 53.19 & 15.60 \\
-w/o Covariance Shrinkage ($\lambda \to 0$) (ADR-002) & 51.59 & -12.30 & 61.11 & -19.84 & 51.00 & 17.73 \\
-w/o Micro-Symptom Prompts (ADR-004) & 61.90 & -1.99 & 80.95 & 0.00 & 60.10 & 13.48 \\
-w/o Bayesian Cardinality Gating (ADR-003) & 59.52 & -4.37 & 75.79 & -5.16 & 58.20 & 12.06 \\
+w/o Gegenbauer Decrowding Kernel & 64.68 & -0.40 & 80.16 & 0.00 & 63.32 & 8.89 \\
+w/o Cross-Subspace Bilinear Gating & 63.89 & -1.19 & 80.95 & +0.79 & 62.43 & 8.89 \\
+w/o Canopy Clutter \& Glare Filter & 63.49 & -1.59 & 80.95 & +0.79 & 62.01 & 10.00 \\
+w/o Test-Time Manifold Rect. (ADR-005) & 53.57 & -11.51 & 74.60 & -5.56 & 51.78 & 17.02 \\
+w/o Botanical Archetype Router (ADR-001) & 53.97 & -11.11 & 74.60 & -5.56 & 53.19 & 15.60 \\
+w/o Covariance Shrinkage ($\lambda \to 0$) (ADR-002) & 51.59 & -13.49 & 61.11 & -19.05 & 51.00 & 17.73 \\
+w/o Micro-Symptom Prompts (ADR-004) & 61.90 & -3.18 & 80.95 & +0.79 & 60.10 & 13.48 \\
+w/o Bayesian Cardinality Gating (ADR-003) & 59.52 & -5.56 & 75.79 & -4.37 & 58.20 & 12.06 \\
 \bottomrule
 \end{tabular}
 }
@@ -53,4 +56,4 @@ A detailed examination of diagnostic confusion across the four foliar macro-arch
 \label{subsec:discussion_phenotypic_overlap}
 In precision agriculture, false alarms (FPR) trigger unwarranted chemical fungicide sprays, inflating operational costs and accelerating pathogen resistance. MorphoPath-Edge achieves an FPR of \textbf{8.89\%} on PlantDoc (and \textbf{1.32\%} on PlantVillage), suppressing unneeded agrochemical sprays by over 51\% compared to traditional baselines ($p = 1.135 \times 10^{-3}$).
 
-Crucially, MorphoPath-Edge eliminates the ``human-in-the-loop'' operational bottleneck. In prior pipelines (e.g., BioDINO-Edge~\cite{alsaadi2026biodino}), autonomous operation collapsed to 43.65\%--47.74\%, requiring growers to manually specify crop species to sustain 56.35\% oracle accuracy. Demanding human taxonomic inputs is untenable for autonomous spray booms and UAV scouts surveying hundreds of hectares. By achieving 91.39\%--93.25\% routing accuracy autonomously and delivering \textbf{63.89\% Top-1} (59.76\% Monte Carlo mean) and \textbf{80.95\% Top-2} field accuracy, MorphoPath-Edge provides the first truly autonomous, human-independent edge vision system for unconstrained crop pathology.
+Crucially, MorphoPath-Edge eliminates the ``human-in-the-loop'' operational bottleneck. In prior pipelines (e.g., BioDINO-Edge~\cite{alsaadi2026biodino}), autonomous operation collapsed to 43.65\%--47.74\%, requiring growers to manually specify crop species to sustain 56.35\% oracle accuracy. Demanding human taxonomic inputs is untenable for autonomous spray booms and UAV scouts surveying hundreds of hectares. By achieving 91.39\%--93.25\% routing accuracy autonomously and delivering \textbf{65.08\% Top-1} (59.76\% Monte Carlo mean) and \textbf{80.16\% Top-2} field accuracy (peaking at \textbf{81.75\%}), MorphoPath-Edge provides the first truly autonomous, human-independent edge vision system for unconstrained crop pathology.

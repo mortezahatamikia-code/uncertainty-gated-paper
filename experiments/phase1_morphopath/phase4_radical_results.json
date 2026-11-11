@@ -1,0 +1,16 @@
+{
+  "baseline_top1": 64.68253968253968,
+  "baseline_top2": 80.15873015873017,
+  "baseline_f1": 63.31619156576416,
+  "opt012_gegenbauer_top1": 65.07936507936508,
+  "opt012_gegenbauer_top2": 80.15873015873017,
+  "opt012_gegenbauer_f1": 63.51558291302686,
+  "opt012_gegenbauer_fpr": 8.88888888888889,
+  "opt012_gegenbauer_fnr": 6.790123456790123,
+  "opt013_wasserstein_top1": 63.49206349206349,
+  "opt014_persistent_top1": 52.77777777777778,
+  "opt015_thermodynamic_top1": 64.68253968253968,
+  "decision_head_latency_ms": 0.14629999986937037,
+  "decision_head_fps": 6835.269999267866,
+  "added_weights_mb": 0.0
+}
