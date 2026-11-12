@@ -11,9 +11,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -140,37 +144,60 @@ fun ScanScreen(
         ) {
             if (state.isCameraPermissionGranted) {
                 if (state.galleryBitmap != null) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Image(
-                            bitmap = state.galleryBitmap!!.asImageBitmap(),
-                            contentDescription = "Imported foliage",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.50f)
+                            .align(Alignment.TopCenter)
+                            .padding(bottom = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Spacing below the status bar and TopBar
+                        Spacer(
+                            modifier = Modifier
+                                .statusBarsPadding()
+                                .height(56.dp)
                         )
 
-                        // Back to camera
+                        // Back to camera pill
                         Box(
                             modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .statusBarsPadding()
-                                .padding(top = 70.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(ForestSurfaceGlass)
                                 .border(1.dp, EmeraldNeon, RoundedCornerShape(20.dp))
                                 .clickable { viewModel.clearGalleryImage() }
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Close, contentDescription = null, tint = EmeraldNeon, modifier = Modifier.size(16.dp))
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = null,
+                                    tint = EmeraldNeon,
+                                    modifier = Modifier.size(14.dp)
+                                )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = strings.galleryModeReturnHint,
                                     color = TextPrimary,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Leaf photo rendered strictly within top 50% of the screen
+                        Image(
+                            bitmap = state.galleryBitmap!!.asImageBitmap(),
+                            contentDescription = "Imported foliage",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(horizontal = 12.dp),
+                            contentScale = ContentScale.Fit,
+                            alignment = Alignment.Center
+                        )
                     }
                 } else {
                     if (state.isCameraActive) {
