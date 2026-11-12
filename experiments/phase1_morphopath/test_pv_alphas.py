@@ -12,7 +12,7 @@ import numpy as np
 import scipy.stats as stats
 from sklearn.metrics import accuracy_score
 
-from pipeline.morphopath_engine import (
+from pipeline_morphopath.morphopath_engine import (
     MorphoPathEngine,
     l2_normalize,
     tukey_power_transform,

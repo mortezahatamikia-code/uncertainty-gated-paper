@@ -43,7 +43,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from pipeline.morphopath_engine import (
+from pipeline_morphopath.morphopath_engine import (
     ARCHETYPE_NAMES,
     DEFAULT_ARCHETYPE_MAP,
     MorphoPathEngine,

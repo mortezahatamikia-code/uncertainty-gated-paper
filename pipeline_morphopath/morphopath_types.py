@@ -40,7 +40,7 @@ def build_morphopath_output(
     glare_scores: Optional[np.ndarray] = None,
 ) -> MorphoPathOutput:
     """Vectorized assembly of Top-1/Top-2 triage hypotheses and confidence metrics."""
-    from pipeline.morphopath_math import calculate_differential_confidence
+    from pipeline_morphopath.morphopath_math import calculate_differential_confidence
 
     n_queries = len(p_comb)
     top1_preds = p_comb.argmax(axis=-1)

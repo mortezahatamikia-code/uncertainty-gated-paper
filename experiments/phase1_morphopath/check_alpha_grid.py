@@ -6,7 +6,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 import torch
 import numpy as np
-from pipeline.morphopath_engine import MorphoPathEngine
+from pipeline_morphopath.morphopath_engine import MorphoPathEngine
 
 data = torch.load(_PROJECT_ROOT / "experiments" / "phase1_morphopath" / "plantdoc_features_seed42.pt", map_location="cpu")
 micro = torch.load(_PROJECT_ROOT / "experiments" / "phase1_morphopath" / "micro_symptom_prototypes.pt", map_location="cpu")

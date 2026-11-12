@@ -17,14 +17,14 @@ _PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-from pipeline.morphopath_types import MorphoPathOutput, build_morphopath_output
-from pipeline.morphopath_archetypes import ARCHETYPE_NAMES, DEFAULT_ARCHETYPE_MAP, infer_archetype_for_class, is_healthy_leaf_name
-from pipeline.morphopath_math import (
+from pipeline_morphopath.morphopath_types import MorphoPathOutput, build_morphopath_output
+from pipeline_morphopath.morphopath_archetypes import ARCHETYPE_NAMES, DEFAULT_ARCHETYPE_MAP, infer_archetype_for_class, is_healthy_leaf_name
+from pipeline_morphopath.morphopath_math import (
     l2_normalize, tukey_power_transform, center_and_normalize, softmax_prob,
     calculate_differential_confidence, fit_shrunk_lda, compute_prototypes,
     gegenbauer_decrowd_kernel,
 )
-from pipeline.morphopath_eval import evaluate_engine, compute_clinical_metrics, compute_archetype_metrics
+from pipeline_morphopath.morphopath_eval import evaluate_engine, compute_clinical_metrics, compute_archetype_metrics
 
 
 class MorphoPathEngine:
@@ -57,7 +57,7 @@ class MorphoPathEngine:
 
         if enable_clutter_suppression or negative_prototypes is not None:
             try:
-                from pipeline.canopy_suppressor import CanopyClutterGlareSuppressor
+                from pipeline_morphopath.canopy_suppressor import CanopyClutterGlareSuppressor
             except (ImportError, ModuleNotFoundError):
                 from canopy_suppressor import CanopyClutterGlareSuppressor  # type: ignore[no-redef]
             self.suppressor = CanopyClutterGlareSuppressor(
@@ -236,5 +236,5 @@ __all__ = [
 ]
 
 if __name__ == "__main__":
-    from tests.test_morphopath_engine import run_all_tests
+    from tests_morphopath.test_morphopath_engine import run_all_tests
     run_all_tests()

@@ -28,7 +28,7 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from pipeline.morphopath_engine import (
+from pipeline_morphopath.morphopath_engine import (
     MorphoPathEngine,
     ARCHETYPE_NAMES,
     DEFAULT_ARCHETYPE_MAP,
@@ -40,7 +40,7 @@ from pipeline.morphopath_engine import (
     compute_prototypes,
     build_morphopath_output,
 )
-from pipeline.canopy_suppressor import CanopyClutterGlareSuppressor
+from pipeline_morphopath.canopy_suppressor import CanopyClutterGlareSuppressor
 from experiments.phase1_morphopath.benchmark_phase4_advanced import (
     load_plantdoc_seed42,
     load_plantvillage_pool,
