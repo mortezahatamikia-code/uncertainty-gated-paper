@@ -1,6 +1,7 @@
 package com.biodino.edge.data.engine
 
 import android.graphics.Bitmap
+import com.biodino.edge.data.image.BitmapUtils
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -38,10 +39,13 @@ class PreallocatedTensor(
             bitmap
         }
 
-        val scaled = if (safeBmp.width == width && safeBmp.height == height) {
-            safeBmp
+        // Center-crop to square first to avoid geometric stretching and preserve leaf proportions
+        val squareBmp = BitmapUtils.centerCropToSquare(safeBmp)
+
+        val scaled = if (squareBmp.width == width && squareBmp.height == height) {
+            squareBmp
         } else {
-            Bitmap.createScaledBitmap(safeBmp, width, height, true)
+            Bitmap.createScaledBitmap(squareBmp, width, height, true)
         }
 
         val finalBmp = if (scaled.config == Bitmap.Config.HARDWARE) {

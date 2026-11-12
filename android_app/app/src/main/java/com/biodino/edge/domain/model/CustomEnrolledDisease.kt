@@ -32,11 +32,11 @@ data class CustomEnrolledDisease(
         return DiseaseInfo(
             id = syntheticId,
             rawKey = "Custom___${commonName.replace(' ', '_')}",
-            commonName = "$commonName [Custom 5-Shot]",
+            commonName = commonName,
             latinTaxonomy = latinTaxonomy.ifBlank { "Custom In-Field Prototype" },
             hostPlant = hostPlant.ifBlank { "Field Host" },
             isHealthy = isHealthy,
-            primarySymptom = primarySymptom.ifBlank { "Identified by calibrated 5-shot visual prototype." },
+            primarySymptom = primarySymptom.ifBlank { "Identified by calibrated in-field prototype." },
             actionableAdvice = actionableAdvice.ifBlank { "Custom protocol registered in the field." }
         )
     }
