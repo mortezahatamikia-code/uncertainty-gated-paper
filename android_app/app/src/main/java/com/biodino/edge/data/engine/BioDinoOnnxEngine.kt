@@ -21,9 +21,11 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
 
     private val appContext = context.applicationContext
     private val ortEnv: OrtEnvironment = OrtEnvironment.getEnvironment("BioDINO-Mobile")
-    private var session: OrtSession
     private val preallocatedTensor = PreallocatedTensor()
-    private var modelBytes: ByteArray
+
+    private var baseSession: OrtSession
+    private var baseModelBytes: ByteArray
+    private var customSession: OrtSession? = null
 
     var isNnapiActive: Boolean = false
         private set
@@ -32,30 +34,34 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
         private set
 
     init {
-        val (bytes, isCustom) = loadActiveModelBytes()
-        modelBytes = bytes
-        isUsingCustomModel = isCustom
-        val (sess, nnapi) = initSession(modelBytes)
-        session = sess
+        baseModelBytes = appContext.assets.open("biodino_mobile_int8.onnx").use { input: InputStream ->
+            input.readBytes()
+        }
+        val (bSess, nnapi) = initSession(baseModelBytes)
+        baseSession = bSess
         isNnapiActive = nnapi
+
+        initCustomSessionIfAvailable()
     }
 
-    private fun loadActiveModelBytes(): Pair<ByteArray, Boolean> {
+    private fun initCustomSessionIfAvailable() {
         if (ModelDownloadManager.isCustomModelActive(appContext)) {
             try {
                 val customFile = ModelDownloadManager.getCustomModelFile(appContext)
                 val bytes = customFile.readBytes()
                 if (bytes.size >= 5 * 1024 * 1024) {
-                    return Pair(bytes, true)
+                    val (cSess, _) = initSession(bytes)
+                    customSession = cSess
+                    isUsingCustomModel = true
+                    return
                 }
-            } catch (e: Exception) {
-                // Fallback to default asset if custom file read fails
+            } catch (_: Exception) {
+                customSession = null
+                isUsingCustomModel = false
             }
         }
-        val defaultBytes = appContext.assets.open("biodino_mobile_int8.onnx").use { input: InputStream ->
-            input.readBytes()
-        }
-        return Pair(defaultBytes, false)
+        customSession = null
+        isUsingCustomModel = false
     }
 
     /**
@@ -112,44 +118,41 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
 
     /**
      * Dynamically reloads the ONNX model from storage (swapping between default asset
-     * and downloaded deep model) without restarting the application.
+     * and downloaded companion model) without restarting the application.
      */
     @Synchronized
     fun reloadModel(): Boolean {
         return try {
-            val (bytes, isCustom) = loadActiveModelBytes()
-            val (newSession, nnapi) = initSession(bytes)
             try {
-                session.close()
+                customSession?.close()
             } catch (_: Exception) {}
+            customSession = null
+            isUsingCustomModel = false
 
-            session = newSession
-            modelBytes = bytes
-            isNnapiActive = nnapi
-            isUsingCustomModel = isCustom
-            true
-        } catch (e: Exception) {
-            // Safe fallback to asset if custom model fails to load into ONNX runtime
-            if (isUsingCustomModel) {
-                ModelDownloadManager.deleteCustomModel(appContext)
-                val defaultBytes = appContext.assets.open("biodino_mobile_int8.onnx").use { input: InputStream ->
-                    input.readBytes()
+            if (ModelDownloadManager.isCustomModelActive(appContext)) {
+                val customFile = ModelDownloadManager.getCustomModelFile(appContext)
+                val bytes = customFile.readBytes()
+                if (bytes.size >= 5 * 1024 * 1024) {
+                    val (cSess, _) = initSession(bytes)
+                    customSession = cSess
+                    isUsingCustomModel = true
+                    return true
                 }
-                val (fallbackSession, nnapi) = initSession(defaultBytes)
-                try { session.close() } catch (_: Exception) {}
-                session = fallbackSession
-                modelBytes = defaultBytes
-                isNnapiActive = nnapi
-                isUsingCustomModel = false
             }
+            true
+        } catch (_: Exception) {
+            ModelDownloadManager.deleteCustomModel(appContext)
+            try { customSession?.close() } catch (_: Exception) {}
+            customSession = null
+            isUsingCustomModel = false
             false
         }
     }
 
-    private fun runSession(tensor: OnnxTensor): OrtSession.Result {
-        val inputName = if (session.inputNames.contains("input_leaf")) "input_leaf" else session.inputNames.first()
+    private fun runBaseSession(tensor: OnnxTensor): OrtSession.Result {
+        val inputName = if (baseSession.inputNames.contains("input_leaf")) "input_leaf" else baseSession.inputNames.first()
         return try {
-            session.run(mapOf(inputName to tensor))
+            baseSession.run(mapOf(inputName to tensor))
         } catch (e: OrtException) {
             if (isNnapiActive) {
                 // NNAPI runtime kernel failure - seamlessly fallback to CPU execution
@@ -159,9 +162,9 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
                     setIntraOpNumThreads(4)
                     setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
                 }
-                session.close()
-                session = ortEnv.createSession(modelBytes, cpuOptions)
-                session.run(mapOf(inputName to tensor))
+                baseSession.close()
+                baseSession = ortEnv.createSession(baseModelBytes, cpuOptions)
+                baseSession.run(mapOf(inputName to tensor))
             } else {
                 throw e
             }
@@ -178,7 +181,7 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
         val inputTensor = OnnxTensor.createTensor(ortEnv, buffer, inputShape)
 
         inputTensor.use { tensor ->
-            runSession(tensor).use { results ->
+            runBaseSession(tensor).use { results ->
                 @Suppress("UNCHECKED_CAST")
                 val features = (results[2].value as Array<FloatArray>)[0]
                 return features.copyOf()
@@ -203,12 +206,15 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
         val inputTensor = OnnxTensor.createTensor(ortEnv, buffer, inputShape)
 
         inputTensor.use { tensor ->
-            runSession(tensor).use { results ->
+            runBaseSession(tensor).use { results ->
                 @Suppress("UNCHECKED_CAST")
-                val baseProbabilities = (results[0].value as Array<FloatArray>)[0]
+                var activeProbabilities = (results[0].value as Array<FloatArray>)[0]
 
                 @Suppress("UNCHECKED_CAST")
                 val baseConfidence = (results[1].value as Array<FloatArray>)[0][0]
+
+                @Suppress("UNCHECKED_CAST")
+                val queryFeatures = (results[2].value as Array<FloatArray>)[0]
 
                 val latencyMs = (System.nanoTime() - t0) / 1_000_000.0f
 
@@ -221,16 +227,45 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
 
                 val isDark = ImageQualityEvaluator.isTooDark(bitmap)
 
+                // If companion model is active, run it with input_leaf + dino_features
+                val currentCustomSession = customSession
+                if (currentCustomSession != null) {
+                    try {
+                        val inputMap = mutableMapOf<String, OnnxTensor>()
+                        val leafName = if (currentCustomSession.inputNames.contains("input_leaf")) "input_leaf" else currentCustomSession.inputNames.first()
+                        inputMap[leafName] = tensor
+
+                        var dinoTensor: OnnxTensor? = null
+                        if (currentCustomSession.inputNames.contains("dino_features")) {
+                            dinoTensor = OnnxTensor.createTensor(
+                                ortEnv,
+                                java.nio.FloatBuffer.wrap(queryFeatures),
+                                longArrayOf(1, queryFeatures.size.toLong())
+                            )
+                            inputMap["dino_features"] = dinoTensor
+                        }
+
+                        try {
+                            currentCustomSession.run(inputMap).use { companionResults ->
+                                @Suppress("UNCHECKED_CAST")
+                                activeProbabilities = (companionResults[0].value as Array<FloatArray>)[0]
+                            }
+                        } finally {
+                            dinoTensor?.close()
+                        }
+                    } catch (e: Exception) {
+                        // Safe fallback to base model if companion model evaluation fails
+                        android.util.Log.w("BioDinoEngine", "Companion inference fallback to base: ${e.message}")
+                    }
+                }
+
                 if (customPrototypes.isEmpty()) {
-                    return PathologyCatalog.buildDiagnosis(baseProbabilities, baseConfidence, latencyMs, foliageScore, isDark)
+                    return PathologyCatalog.buildDiagnosis(activeProbabilities, baseConfidence, latencyMs, foliageScore, isDark)
                 }
 
                 // If custom classes exist, evaluate similarity against custom support vectors
-                @Suppress("UNCHECKED_CAST")
-                val queryFeatures = (results[2].value as Array<FloatArray>)[0]
-
                 return InferenceMath.fuseCustomPrototypes(
-                    baseProbabilities = baseProbabilities,
+                    baseProbabilities = activeProbabilities,
                     baseConfidence = baseConfidence,
                     queryFeatures = queryFeatures,
                     customPrototypes = customPrototypes,
@@ -243,7 +278,8 @@ class BioDinoOnnxEngine(context: Context) : AutoCloseable {
     }
 
     override fun close() {
-        session.close()
+        try { customSession?.close() } catch (_: Exception) {}
+        try { baseSession.close() } catch (_: Exception) {}
         ortEnv.close()
     }
 }

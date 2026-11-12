@@ -93,6 +93,7 @@ interface AppStrings {
     val filterPotato: String
     val filterPathologies: String
     val filterHealthy: String
+    val filterCustom: String get() = "Custom"
     val noDiseasesMatch: String
 
     // Dosage & Weather

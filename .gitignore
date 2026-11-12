@@ -35,6 +35,7 @@ stage1_lora_adapter/
 *.bin
 *.onnx
 !biodino_companion_int8.onnx
+!android_app/app/src/main/assets/*.onnx
 *.safetensors
 *.ckpt
 edge_fp32.pt
@@ -97,4 +98,8 @@ scratch/
 *.jks
 keystore.properties
 web/*
-android_app/*
+android_app/build/
+android_app/app/build/
+android_app/.gradle/
+android_app/release_outputs/
+android_app/local.properties

@@ -1,0 +1,90 @@
+name: Build & Publish Release APKs
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build Multi-ABI APKs & Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x android_app/gradlew
+
+      - name: Setup Keystore & Signing Config (Optional from GitHub Secrets)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > android_app/app/biodino-release-key.jks
+            printf "storeFile=biodino-release-key.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n" \
+              "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android_app/app/keystore.properties
+            echo "Successfully loaded release keystore from GitHub Secrets."
+          else
+            echo "No keystore secret detected. Gradle will build using fallback debug signing."
+          fi
+
+      - name: Build arm64-v8a Release APK
+        run: |
+          cd android_app
+          ./gradlew assembleRelease -PtargetAbi=arm64-v8a --no-daemon
+          mkdir -p ../release_artifacts
+          cp app/build/outputs/apk/release/app-release.apk ../release_artifacts/BioDINO-Edge-${{ github.ref_name }}-arm64-v8a.apk
+
+      - name: Build armeabi-v7a Release APK
+        run: |
+          cd android_app
+          ./gradlew assembleRelease -PtargetAbi=armeabi-v7a --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk ../release_artifacts/BioDINO-Edge-${{ github.ref_name }}-armeabi-v7a.apk
+
+      - name: Build Universal Multi-Arch APK
+        run: |
+          cd android_app
+          ./gradlew assembleRelease -PallAbis --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk ../release_artifacts/BioDINO-Edge-${{ github.ref_name }}-universal.apk
+
+      - name: Copy Tier-2 Companion Model
+        run: |
+          if [ -f "biodino_companion_int8.onnx" ]; then
+            cp biodino_companion_int8.onnx release_artifacts/
+          fi
+
+      - name: Generate SHA256 Checksums
+        run: |
+          cd release_artifacts
+          sha256sum * > checksums_sha256.txt
+
+      - name: Create GitHub Release & Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "BioDINO-Edge Release ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            release_artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
