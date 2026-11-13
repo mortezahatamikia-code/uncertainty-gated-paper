@@ -7,7 +7,7 @@
         "-y",
         "@playwright/mcp@0.0.75",
         "--config",
-        "C:\\Users\\reyhan\\.perch\\playwright-mcp-browser.json"
+        "C:\\Users\\mhata\\.perch\\playwright-mcp-browser.json"
       ]
     }
   }
