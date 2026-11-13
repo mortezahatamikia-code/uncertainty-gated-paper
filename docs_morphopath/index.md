@@ -1,88 +1,130 @@
-# 🌿 MorphoPath-Edge: Autonomous Zero-Parameter Dual Foliar Inference Documentation
+# 🌿 دانشنامه و نقشه راه جامع مستندات فنی و علمی MorphoPath-Edge
+### (Master Documentation Index & Architectural Curriculum — Paper 2)
 
-Welcome to the official technical documentation for **MorphoPath-Edge** (Paper 2):  
-*“MorphoPath-Edge: Autonomous Foliar Pathology Routing via Decoupled Macro-Archetypes and Zero-Parameter Test-Time Manifold Rectification for Real-Time Edge Diagnostics.”*
+> **خوش آمدید!**  
+> این سند، **نقشه راه مرکزی و درگاه جامع مستندات (Master Index)** فریم‌ورک پژوهشی **MorphoPath-Edge** (مقاله دوم) است:  
+> *«MorphoPath-Edge: Decoupled Foliar-Morphology and Pathological-Symptom Reasoning atop Frozen Vision Foundation Models for Autonomous Edge Precision Agriculture»*  
+> تمامی اسناد موجود در این پوشه به صورت **۱۰۰٪ فارسی، علمی و دقیق** نگاشته شده‌اند تا پژوهشگران، مهندسان سیستم‌های تعبیه‌شده، داوران ژورنال‌های معتبر و توسعه‌دهندگان بتوانند به عمیق‌ترین لایه‌های ریاضی، کد و شواهد تجربی دست یابند.
+> 
+> **ارجاع به مقاله اول (BioDINO-Edge):**  
+> تمامی مفاهیم مشترک با مقاله اول (نظیر استخراج ویژگی خام با انکودرهای DINOv2 و BioCLIP، رژیم ۵-شات و فشرده‌سازی پایه) در اینجا صرفاً اشاره کوتاه شده‌اند و جزئیات پایه آن‌ها در [دانشنامه مقاله اول](file:///e:/work/research-few-shot/docs/index.md) و [راهنمای ریاضیات پایه BioDINO-Edge](file:///e:/work/research-few-shot/docs/mathematics_foundation_guide.md) در دسترس است. این مجموعه مستندات منحصراً به **تفاوت‌ها، نوآوری‌های فرم بسته، اثبات‌های جدید و رکوردهای مقاله دوم** اختصاص دارد.
 
 ---
 
-## 📌 Executive Summary
+## 📌 معماری کلان فریم‌ورک MorphoPath-Edge
 
-MorphoPath-Edge is an autonomous, biologically grounded, zero-parameter few-shot foliar diagnostic framework engineered for unconstrained field conditions and extreme resource-constrained mobile hardware. It addresses the catastrophic vulnerability of prior botanical few-shot classifiers—namely, their reliance on error-prone cultigen-level routing or grower species identification, uncalibrated domain shift under field lighting, and intra-host pathological feature collapse.
-
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   معماری استنتاج بلادرنگ فریم‌ورک MorphoPath-Edge                      │
+├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                        │
+│   تصویر ورودی دوربین در مزرعه (Live Field Query x)                                                    │
+│          │                                                                                             │
+│          ├────────────────────────────────────────┬────────────────────────────────────────┐           │
+│          ▼                                        ▼                                        ▼           │
+│   DINOv2 ViT-S/14                         BioCLIP ViT-B/16                      سرکوب‌گر آشغال تاج‌پوشش │
+│   (ویژگی هندسی ۳۸۴ بعدی)                   (ویژگی پاتولوژی ۵۱۲ بعدی)             (Zero-Parameter Canopy)  │
+│          │                                        │                                        │           │
+│          ▼                                        ▼                                        ▼           │
+│   تبدیل توانی علامت‌دار تاکی              تبدیل توانی علامت‌دار تاکی               پروتوتایپ‌های غیرزیستی   │
+│   z = sign(x) * |x|^0.5                   z = sign(x) * |x|^0.5                   (بازتاب خورشید، خاک) │
+│          │                                        │                                        │           │
+│          ▼                                        ▼                                        │           │
+│   روتر نرم ۴ آرکیتایپ ماکرو                وزن‌دهی تفکیک‌شده (w=0.65)              │           │
+│   (سولانوئید، ویتوئید، پوئید، رزوئید)      دروازه دوخطی هادامارد (α=0.20)          │           │
+│   P(A_k | x)                              دیکراودینگ کروی گگنباور (γ=-0.20)        │           │
+│          │                                        │                                        │           │
+│          └────────────────────────┬───────────────┴────────────────────────────────────────┘           │
+│                                   ▼                                                                    │
+│                     تریاژ بیزی با برابرسازی کاردینالیتی                                                │
+│                     P(c | x) = P(A_k | x) * [K_A * P_comb(c | x, A_k)]^1.0                             │
+│                                   │                                                                    │
+│                                   ▼                                                                    │
+│     خروجی تشخیصی Top-1 (۶۵٫۰۸٪) + گزینه‌های افتراقی بالینی Top-2 (۸۰٫۱۶٪، اوج ۸۱٫۷۵٪)                  │
+│     تاخیر کل هد جبری: ۰٫۱۶۸ میلی‌ثانیه | وزن‌های اضافه یادگیری‌شده: ۰٫۰ مگابایت (Zero-Parameter)       │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
-+---------------------------------------------------------------------------------------------------+
-|                                 MORPHOPATH-EDGE ARCHITECTURE                                      |
-+---------------------------------------------------------------------------------------------------+
-|                                                                                                   |
-|  Live Field Image                                                                                 |
-|         │                                                                                         |
-|         ├───────────────────────────────┬───────────────────────────────┐                         |
-|         ▼                               ▼                               ▼                         |
-|  DINOv2 ViT-S/14               BioCLIP ViT-B/16             Canopy Clutter & Glare                |
-|  (384-d Geometry)              (512-d Pathology)            Suppressor (Zero-Param)               |
-|         │                               │                               │                         |
-|         ▼                               ▼                               ▼                         |
-|  Tukey Power Rectification     Tukey Power Rectification     Negative Abiotic Protos              |
-|  (z = sign(x)*|x|^0.5)         (z = sign(x)*|x|^0.5)         (Solar Flare, Void, Mulch)           |
-|         │                               │                               │                         |
-|         ▼                               ▼                               │                         |
-|  Macro-Archetype Router        Decoupled Weighting ($w=0.65$)           │                         |
-|  (Solanoid, Vitoid,            Cross-Subspace Bilinear Gating           │                         |
-|   Pooid, Rosoid)               Gegenbauer Spherical Decrowding          │                         |
-|         │                               │                               │                         |
-|         └───────────────────────┬───────┴───────────────────────────────┘                         |
-|                                 ▼                                                                 |
-|                 Cardinality-Equalized Bayesian Triage                                             |
-|                                 │                                                                 |
-|                                 ▼                                                                 |
-|         Top-1 Prediction (65.08%) + Top-2 Differential Candidates (80.16%)                        |
-|         Decision Head Latency: 0.168 ms | Added Neural Weights: 0.0 MB                            |
-+---------------------------------------------------------------------------------------------------+
-```
 
 ---
 
-## 📚 Documentation Index
+## ۱. جدول اطلس اسناد موجود در پوشه `docs_morphopath/`
 
-1. [**Algorithm Architecture & Operational Guide**](file:///e:/work/research-few-shot/docs_morphopath/algorithm_guide.md)  
-   Complete walkthrough of the dual inference engine: Macro-Botanical Foliar Archetypes, Test-Time Centroid Translation Cancellation, Decoupled Vision-Bio Subspaces, Canopy Glare Gating, and Bayesian Differential Triage.
+تمامی فایل‌های این پوشه بازنگری، اصلاح و لینک‌دهی دقیق شده‌اند:
 
-2. [**Mathematical Foundations & Proofs**](file:///e:/work/research-few-shot/docs_morphopath/mathematical_foundations.md)  
-   Rigorous closed-form formulations: Centroid Cancellation Theorem ($\|\Delta\|_2 \approx 0.30 \to 0$), Ledoit-Wolf Covariance Conditioning for $N \ll D$, Gegenbauer Spherical Harmonic Decrowding on $\mathbb{S}^{895}$, Bilinear Cross-Subspace Gating, and Shannon Margin Entropy.
-
-3. [**Master Empirical Benchmarks & Ablations**](file:///e:/work/research-few-shot/docs_morphopath/empirical_benchmarks.md)  
-   Comprehensive evaluation across 30-episode Monte Carlo runs on PlantDoc (65.08% Top-1, 80.16% Top-2) and PlantVillage (89.57% across 38 classes), ablation breakdown of each component, and exhaustive post-mortem of disproven hypotheses.
-
-4. [**Edge Hardware Deployment & Mobile Profiling**](file:///e:/work/research-few-shot/docs_morphopath/edge_hardware_guide.md)  
-   Android deployment benchmarks, INT8 quantization, real-time camera streaming performance (21.4 FPS, 46.77 ms end-to-end), algebraic decision head latency (0.168 ms / 5,965 FPS), RAM heap profiling (66.95 MB), and APK footprint (22.88 MB).
-
-5. [**Reviewer Rebuttal & FAQ Playbook**](file:///e:/work/research-few-shot/docs_morphopath/reviewer_rebuttal_playbook.md)  
-   Antifragile, mathematically backed responses to anticipated peer-review inquiries regarding non-parametric vs. parametric heads, biological generalizability, and dataset difficulty.
+| نام سند و لینک مستقیم | عنوان و حیطه تخصصی | مخاطب اصلی | طول تقریبی | محتوای کلیدی |
+| :--- | :--- | :---: | :---: | :--- |
+| **[`index.md`](file:///e:/work/research-few-shot/docs_morphopath/index.md)** | **نقشه راه و درگاه مرکزی مستندات** | تمامی پژوهشگران | ~ ۱۱۰ خط | معرفی اطلس اسناد، دیاگرام کلان، مقایسه دو مقاله و برنامه‌های مطالعاتی. |
+| **[`mathematics_foundation_guide.md`](file:///e:/work/research-few-shot/docs_morphopath/mathematics_foundation_guide.md)** | **کتابچه جامع ریاضیات، اثبات‌ها و فرمول‌ها** | محققان تئوری و داوران | **۱٬۶۴۰ خط** | اثبات قضیه حذف انتقال میانگین منیفولد، تاکی، انقباض لدویت-ولف، چندجمله‌ای گگنباور، دروازه دوخطی و تریاژ بیزی. |
+| **[`algorithm_guide.md`](file:///e:/work/research-few-shot/docs_morphopath/algorithm_guide.md)** | **راهنمای جامع الگوریتم و پیاده‌سازی** | مهندسان و توسعه‌دهندگان | **۸۹۰ خط** | تشریح ۶ مرحله محاسباتی استنتاج با کدهای پایتون، نگاشت خط‌به‌خط پکیج `pipeline_morphopath` و باگ‌های شناخته‌شده. |
+| **[`fa_differential_master_guide.md`](file:///e:/work/research-few-shot/docs_morphopath/fa_differential_master_guide.md)** | **سند تفاضلی تحلیلی نسبت به مقاله اول** | پژوهشگران ارشد و نویسندگان | **۱٬۸۲۰ خط** | کالبدشکافی جزءبه‌جزء تغییرات و موارد اضافه نسبت به `paper/main_v2.tex` همراه با حسابرسی عددی ۲۶ گانه. |
+| **[`empirical_benchmarks.md`](file:///e:/work/research-few-shot/docs_morphopath/empirical_benchmarks.md)** | **گزارش رسمی بنچمارک‌ها و ابلیشن** | ارزیابان و داوران ژورنال | **~ ۳۰۰ خط** | نتایج PlantDoc (۶۵٫۰۸٪) و PlantVillage (۸۹٫۵۷٪)، آزمون ۳۰ اپیزودی مونت‌کارلو ($p \ll 0.001$) و کالبدشکافی ۶ فرضیه ردشده. |
+| **[`edge_hardware_guide.md`](file:///e:/work/research-few-shot/docs_morphopath/edge_hardware_guide.md)** | **راهنمای استقرار لبه و پروفایلینگ** | مهندسان سخت‌افزار و IoT | **~ ۲۵۰ خط** | تحلیل تاخیر ۴۶٫۷۷ میلی‌ثانیه‌ای (۲۱٫۴ FPS)، تاخیر ۰٫۱۶۸ میلی‌ثانیه‌ای هد تصمیم‌گیری، کوانتیزاسیون INT8 و بیلان حافظه APK. |
+| **[`reviewer_rebuttal_playbook.md`](file:///e:/work/research-few-shot/docs_morphopath/reviewer_rebuttal_playbook.md)** | **کتابچه پاسخگویی مقتدرانه به داوران** | نویسندگان مقاله و ارائه‌دهندگان | **~ ۲۵۰ خط** | پاسخ قاطع و مستدل به ۷ چالش بزرگ داوران (چرایی ۴ آرکیتایپ، رد هدهای پارامتریک، توجیه بالینی ۶۵٪ در مزرعه و کاهش FPR). |
 
 ---
 
-## ⚡ Quick Reference: Verified SOTA Milestones
+## ۲. جدول مقایسه بنیادین نوآوری‌ها (BioDINO-Edge در برابر MorphoPath-Edge)
 
-| Metric / Parameter | Canonical Baseline | MorphoPath-Edge (Phase 4.3 SOTA) | Relative Improvement |
+| محور مقایسه | مقاله اول: BioDINO-Edge (`paper/main_v2.tex`) | مقاله دوم: MorphoPath-Edge (`paper_morphopath/`) | ارجاع به سند تفصیلی |
+| :--- | :--- | :--- | :--- |
+| **رویکرد سلسله‌مراتبی** | متکی بر مداخله انسان یا روتر صلب گونه‌محور (افت دقت به ۴۳٫۶۵٪) | **۴ آرکیتایپ ماکروی گیاهی نرم** (دقت روتر ۹۳٫۲۵٪، بازخوانی ۱۰۰٪) | [`fa_differential_master_guide.md`](file:///e:/work/research-few-shot/docs_morphopath/fa_differential_master_guide.md#۴-نوآوری-۱-چهار-آرکیتایپ-ماکرو-گیاهی) |
+| **اصلاح جابه‌جایی دامنه** | نیازمند بافر لنگرهای پویا (Anchor Buffer) با وزن ۳ برابر | **اصلاح جبری انتقال سنتروید منیفولد ($\|\Delta\|_2 \to 0$ در ۰٫۰۴ms)** | [`mathematics_foundation_guide.md`](file:///e:/work/research-few-shot/docs_morphopath/mathematics_foundation_guide.md#فصل-۱۳-اصلاح-منیفولد-آزمون-و-اثبات-آن) |
+| **تلفیق چندوجهی** | الحاق ساده نامتقارن (تحمیل وزن پنهان ۵۰٪/۵۰٪) | **زیرفضاهای تفکیک‌شده ($w=0.65$) + دروازه دوخطی متقاطع هادامارد** | [`mathematics_foundation_guide.md`](file:///e:/work/research-few-shot/docs_morphopath/mathematics_foundation_guide.md#فصل-۱۱-دروازهٔ-دوخطی-بین-زیرفضایی) |
+| **توزیع ویژگی‌ها** | استفاده مستقیم از ویژگی‌های فوق‌گوسی کشیده | **تبدیل توانی علامت‌دار تاکی ($p=0.5$) برای مهار ابعاد غالب** | [`mathematics_foundation_guide.md`](file:///e:/work/research-few-shot/docs_morphopath/mathematics_foundation_guide.md#فصل-۴-تبدیل-توانی-علامت‌دار-تاکی) |
+| **ازدحام ابعاد بالا** | فاقد مکانیزم تنظیم زاویه‌ای روی ابرکره $\mathbb{S}^{895}$ | **هسته دیکراودینگ کروی هارمونیک چندجمله‌ای گگنباور درجه ۲** | [`mathematics_foundation_guide.md`](file:///e:/work/research-few-shot/docs_morphopath/mathematics_foundation_guide.md#فصل-۱۰-چندجمله‌ای-گگنباور-و-دیکراودینگ-کروی) |
+| **اثرات محیطی مزرعه** | حساس به نور مستقیم خورشید و بازتاب شاخ و برگ | **ماژول سرکوب آشغال و تابش خورشید با پروتوتایپ‌های غیرزیستی** | [`algorithm_guide.md`](file:///e:/work/research-few-shot/docs_morphopath/algorithm_guide.md#۸-مرحلهٔ-۵-سرکوب-گلیر) |
+| **ماتریس پراکندگی فیشر** | تشکیل ماتریس سراسری $896 \times 896$ روی کل کلاس‌ها | **۴ ماتریس شرطی‌شده درون-آرکیتایپ با انقباض لدویت-ولف $\lambda=0.60$** | [`mathematics_foundation_guide.md`](file:///e:/work/research-few-shot/docs_morphopath/mathematics_foundation_guide.md#فصل-۷-انقباض-کوواریانس-لدویت-ولف) |
+| **خروجی تشخیصی** | تصمیم قطعی تک‌کلاسه با گیت آنتروپی شانون | **تریاژ بیزی دیفرانسیل با برابرسازی کاردینالیتی (Top-1 + Top-2)** | [`mathematics_foundation_guide.md`](file:///e:/work/research-few-shot/docs_morphopath/mathematics_foundation_guide.md#فصل-۱۲-تریاژ-بیزی-و-برابرسازی-کاردینالیتی) |
+| **عملکرد در PlantDoc** | ۶۲٫۳۰٪ Top-1 (با مداخله گونه) / ۵۲٫۳۸٪ (خودکار) | **۶۵٫۰۸٪ Top-1 و ۸۰٫۱۶٪ Top-2 (کاملاً مستقل و خودکار)** | [`empirical_benchmarks.md`](file:///e:/work/research-few-shot/docs_morphopath/empirical_benchmarks.md#۱-بنچمارک‌های-مرجع-و-رسمی-plantdoc-و-plantvillage) |
+| **نرخ مثبت کاذب (FPR)** | ۱۲٫۲۲٪ تا ۲۰٫۶۷٪ | **۸٫۸۹٪ (۵۷٫۰٪ کاهش خطر سم‌پاشی بی‌مورد)** | [`empirical_benchmarks.md`](file:///e:/work/research-few-shot/docs_morphopath/empirical_benchmarks.md#۵-تحلیل-ماتریس-درهم‌ریختگی-و-نرخ-خطاهای-بالینی-fpr-و-fnr) |
+
+---
+
+## ۳. شاخص‌های رسمی و تاییدشده SOTA در فاز ۴
+
+| سنجه ارزیابی | خط پایه بدون مداخله (Baseline) | دستاورد فریم‌ورک MorphoPath-Edge | میزان بهبود خالص |
 | :--- | :---: | :---: | :---: |
-| **PlantDoc Top-1 Accuracy** | 52.38% (Hierarchical) / 62.30% (Flat) | **65.08%** | **+12.70% / +2.78%** |
-| **PlantDoc Top-2 Differential Accuracy** | 69.84% | **80.16%** (Peaking at **81.75%**) | **+10.32%** |
-| **Macro F1-Score** | 50.12% | **63.52%** | **+13.40%** |
-| **Clinical False Positive Rate (FPR)** | 20.67% | **8.89%** | **57.0% Relative Reduction** |
-| **Clinical False Negative Rate (FNR)** | 12.35% | **6.79%** | **45.0% Relative Reduction** |
-| **PlantVillage 38-Class Accuracy** | 85.20% | **89.57% – 89.80%** | **+4.37%** |
-| **Decision Head Latency (CPU)** | 0.146 ms | **0.168 ms (5,965 FPS)** | Negligible (+0.022 ms) |
-| **End-to-End Streaming Throughput** | 18.2 FPS | **21.4 FPS (46.77 ms)** | Exceeds 20 FPS Mandate |
-| **Added Model Weight Budget** | 0.0 MB | **0.0 MB (Zero-Parameter)** | Zero Bloat |
-| **APK Footprint** | 22.88 MB | **22.88 MB** | Fits Edge Budget (<25 MB) |
+| **دقت Top-1 در PlantDoc مزرعه** | ۵۲٫۳۸٪ (سلسله‌مراتبی) / ۶۲٫۳۰٪ (مسطح) | **۶۵٫۰۸٪** | **+۱۲٫۷۰٪ / +۲٫۷۸٪** |
+| **دقت تریاژ بالینی Top-2 در PlantDoc** | ۶۹٫۸۴٪ | **۸۰٫۱۶٪ (اوج ۸۱٫۷۵٪)** | **+۱۰٫۳۲٪** |
+| **شاخص کلان اف‌وان (Macro F1)** | ۵۰٫۱۲٪ | **۶۳٫۵۲٪** | **+۱۳٫۴۰٪** |
+| **نرخ مثبت کاذب بالینی (FPR)** | ۲۰٫۶۷٪ | **۸٫۸۹٪** | **کاهش نسبی ۵۷٫۰٪** |
+| **نرخ منفی کاذب بالینی (FNR)** | ۱۲٫۳۵٪ | **۶٫۷۹٪** | **کاهش نسبی ۴۵٫۰٪** |
+| **دقت ۳۸ کلاس هم‌زمان PlantVillage** | ۸۵٫۲۰٪ | **۸۹٫۵۷٪ – ۸۹٫۸۰٪** | **+۴٫۳۷٪** |
+| **تاخیر هد تصمیم‌گیری جبری (CPU)** | ۰٫۱۴۶ میلی‌ثانیه | **۰٫۱۶۸ میلی‌ثانیه (۵٬۹۶۵ FPS)** | ناچیز (+۰٫۰۲۲ ms) |
+| **نرخ فریم استنتاج پیوسته دوربین** | ۱۸٫۲ FPS | **۲۱٫۴ FPS (۴۶٫۷۷ ms)** | عبور از کف ۲۰ FPS |
+| **حجم وزن‌های یادگیری‌شده اضافه** | ۰٫۰ مگابایت | **۰٫۰ مگابایت (Zero-Parameter)** | صفر مطلق |
+| **حجم بسته نصبی موبایل (APK)** | ۲۲٫۷۳ مگابایت | **۲۲٫۸۸ مگابایت** | زیر بودجه ۲۵MB |
 
 ---
 
-## 📂 Source Code Repository Layout
+## ۴. اطلس فایل‌های سورس کد و پیاده‌سازی
 
-- **LaTeX Manuscript:** [`paper_morphopath/`](file:///e:/work/research-few-shot/paper_morphopath/) (Compiled to strictly 8 pages and 3 figures).
-- **Inference Pipeline:** [`pipeline_morphopath/`](file:///e:/work/research-few-shot/pipeline_morphopath/) (All modules strictly under 250 lines).
-- **Unit & Benchmark Tests:** [`tests_morphopath/`](file:///e:/work/research-few-shot/tests_morphopath/) (`test_morphopath_engine.py` passes with exit code 0).
-- **Empirical Experiments:** [`experiments/phase1_morphopath/`](file:///e:/work/research-few-shot/experiments/phase1_morphopath/) and [`experiments/phase3_morphopath/`](file:///e:/work/research-few-shot/experiments/phase3_morphopath/).
-- **Knowledge Base & Tasks:** [`obsidian/`](file:///e:/work/research-few-shot/obsidian/).
+* **سورس کدهای ماژولار استنتاج:** در پوشه [`pipeline_morphopath/`](file:///e:/work/research-few-shot/pipeline_morphopath/) (شامل ۶ فایل پایتون که طبق استاندارد سخت‌گیرانه پروژه، همگی زیر ۲۵۰ خط کد هستند).
+* **کدهای آزمون واحد و بنچمارک:** در پوشه [`tests_morphopath/`](file:///e:/work/research-few-shot/tests_morphopath/) (اسکریپت `test_morphopath_engine.py` با کد خروج ۰ تمامی مراحل را اعتبارسنجی می‌کند).
+* **سورس لاتک و اسناد کنفرانس:** در پوشه [`paper_morphopath/`](file:///e:/work/research-few-shot/paper_morphopath/) (مقاله دوربین‌خوان دقیقاً ۸ صفحه و ۳ شکل رسمی).
+* **نتایج خام و لاگ‌های تجربی:** در پوشه [`experiments/`](file:///e:/work/research-few-shot/experiments/) و یادداشت‌های گرافی [`obsidian/`](file:///e:/work/research-few-shot/obsidian/).
 
+---
+
+## ۵. مسیرهای پیشنهادی مطالعه بر اساس تخصص (Recommended Study Tracks)
+
+```text
+  ┌────────────────────────────────────────────────────────────────────────────────────────┐
+  │ مسیر ۱: توسعه‌دهندگان سیستم و استقرار لبه (Edge Deployment & Code Track)               │
+  │ [algorithm_guide.md] ──> [edge_hardware_guide.md] ──> [pipeline_morphopath/]           │
+  └────────────────────────────────────────────────────────────────────────────────────────┘
+                                              │
+                                              ▼
+  ┌────────────────────────────────────────────────────────────────────────────────────────┐
+  │ مسیر ۲: پژوهشگران تئوریک و داوران ریاضی (Theoretical & Mathematical Deep-Dive)        │
+  │ [fa_differential_master_guide.md] ──> [mathematics_foundation_guide.md]                │
+  │ ──> [empirical_benchmarks.md]                                                          │
+  └────────────────────────────────────────────────────────────────────────────────────────┘
+                                              │
+                                              ▼
+  ┌────────────────────────────────────────────────────────────────────────────────────────┐
+  │ مسیر ۳: دفاعیه، نگارش مقاله و پاسخ به داور (Reviewer Defense & Publication Track)     │
+  │ [reviewer_rebuttal_playbook.md] ──> [empirical_benchmarks.md]                          │
+  │ ──> بررسی سورس مقاله در [paper_morphopath/main.tex]                                    │
+  └────────────────────────────────────────────────────────────────────────────────────────┘
+```

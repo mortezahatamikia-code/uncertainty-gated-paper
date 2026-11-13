@@ -1,120 +1,911 @@
-# 🧬 MorphoPath-Edge: Algorithm Architecture & Operational Guide
+# راهنمای جامع الگوریتم MorphoPath-Edge
+## معماری، جریان داده، پیاده‌سازی و تفاوت‌های عملیاتی با BioDINO-Edge
 
-This document provides a comprehensive operational breakdown of the algorithms powering **MorphoPath-Edge** in `pipeline_morphopath/`.
+> **این سند چه می‌کند؟**
+> `docs/algorithm_guide.md` برای مقالهٔ اول توضیح می‌داد که هر مرحله **چگونه** کار می‌کند.
+> این سند همان کار را برای MorphoPath-Edge می‌کند، اما با تمرکز بر **تفاوت‌ها** و
+> **جریان دادهٔ واقعی در کد**. ریاضیات کامل در `mathematics_foundation_guide.md` است؛
+> اینجا الگوریتم و پیاده‌سازی است.
+>
+> **منابع:** `pipeline_morphopath/` (کد)، `experiments/` (JSON)، `obsidian/Logs/` (لاگ‌ها)،
+> `paper_morphopath/sections/` (مقاله).
 
 ---
 
-## 1. Architectural Philosophy: The Decoupled Dual-Stream Model
+## فهرست مطالب
 
-Standard foliar pathology models couple macroscopic plant identity with microscopic lesion texture into a single monolithic classifier. This creates two catastrophic failure modes:
-1. **Species-Routing Cascades:** If the model confuses a tomato leaf with a potato leaf, disease triage immediately fails even if the lesion morphology (e.g., late blight caused by *Phytophthora infestans*) is identical.
-2. **Feature Space Crowding:** On the unit hypersphere, natural leaf venation patterns dominate 80–90% of the vector norm, pushing dissimilar pathologies on the same host plant into acute angular proximity (cosine similarity > 0.90).
+| بخش | عنوان و پیوند مستقیم | حیطه تخصصی |
+| :---: | :--- | :---: |
+| **۱** | [**فلسفهٔ معماری: چرا مقالهٔ دوم لازم شد**](#sec-1) | تئوری و انگیزه |
+| **۲** | [**نمودار جریان کامل سرتاسری**](#sec-2) | معماری سیستم |
+| **۳** | [**مرحلهٔ ۰: آماده‌سازی آفلاین**](#sec-3) | پردازش داده |
+| **۴** | [**مرحلهٔ ۱: مسیریاب آرکیتایپ ماکرو**](#sec-4) | الگوریتم |
+| **۵** | [**مرحلهٔ ۲: تبدیل تاکی و اصلاح منیفولد**](#sec-5) | هندسه منیفولد |
+| **۶** | [**مرحلهٔ ۳: زیرفضاهای تفکیک‌شده**](#sec-6) | تلفیق چندوجهی |
+| **۷** | [**مرحلهٔ ۴: دروازهٔ دوخطی و گگنباور**](#sec-7) | جبر برداری |
+| **۸** | [**مرحلهٔ ۵: سرکوب بازتاب نور و آشغال تاج‌پوشش**](#sec-8) | فیلتر غیرزیستی |
+| **۹** | [**مرحلهٔ ۶: تریاژ بیزی دیفرانسیل**](#sec-9) | تصمیم‌گیری بالینی |
+| **۱۰** | [**نقشهٔ فایل‌به‌فایل سورس کدها**](#sec-10) | مهندسی نرم‌افزار |
+| **۱۱** | [**جدول کامل ابرپارامترها**](#sec-11) | پیکربندی |
+| **۱۲** | [**چک‌لیست بازتولید تجربی**](#sec-12) | آزمایشگاهی |
+| **۱۳** | [**تفاوت‌های عملیاتی با BioDINO-Edge**](#sec-13) | تحلیل تطبیقی |
+| **۱۴** | [**باگ‌ها و ناسازگاری‌های شناخته‌شده**](#sec-14) | کالبدشکافی کد |
+| **۱۵** | [**فرضیه‌های ردشده (خلاصه تحلیل)**](#sec-15) | تحلیل شکست |
+| **۱۶** | [**بنچمارک‌ها و رکوردهای دقت**](#sec-16) | ارزیابی تجربی |
+| **۱۷** | [**پروفایل سخت‌افزاری لبه**](#sec-17) | مهندسی سخت‌افزار |
 
-MorphoPath-Edge resolves this by decoupling leaf geometry from microscopic lesion pathology atop frozen vision foundation models:
+---
+
+<a id="sec-1"></a>
+# ۱. فلسفهٔ معماری: چرا مقالهٔ دوم لازم شد
+
+## ۱.۱ پاشنهٔ آشیل مقالهٔ اول
+
+`Master-Comparative-Benchmark-BioDINO-vs-MorphoPath.md` این را صریح می‌گوید:
+
+> مقالهٔ اول در عمل با یک پاشنهٔ آشیل بنیادین روبرو شد: **وابستگی اجباری به مداخلهٔ
+> انسان (کشاورز)**.
+
+سناریوی واقعی:
+
+| حالت | دقت PlantDoc |
+| :--- | :---: |
+| روتر خودکار ۱۳ گونه | **۴۳٫۶۵٪** (فروپاشی) |
+| با oracle انسانی (کشاورز گونه را می‌گوید) | ۵۶٫۳۵٪ |
+
+یعنی مقالهٔ اول فقط با فرض «کشاورز گونه را دستی انتخاب می‌کند» قابل دفاع بود. برای
+پهپاد و بازوی سم‌پاش خودکار، این فرض باطل است.
+
+## ۱.۲ چرا مسیریابی گونه‌محور می‌شکند
+
+خطای آبشاری:
+
+$$
+P(\hat{y} = y) = P(\hat{s} = s)\cdot P(\hat{y} = y\mid\hat{s} = s)
+$$
+
+با $P(\hat{s}=s) = 0.7937$ (عدد واقعی از `ADR-001`)، حتی تشخیص بی‌نقص هم سقف ۷۹٪
+می‌خورد. در عمل بدتر شد چون خطاهای مسیریابی روی نمونه‌های سخت متمرکز بودند.
+
+## ۱.۳ راه‌حل: چهار آرکیتایپ
+
+به‌جای «کدام گونه؟»، می‌پرسیم «کدام ریخت‌شناسی برگ؟»:
+
+$$
+\pi: \mathcal{Y} \to \mathcal{A},\qquad \mathcal{A} = \{A_0, A_1, A_2, A_3\}
+$$
+
+و تصمیم به زنجیرهٔ بیزی نرم تبدیل می‌شود:
+
+$$
+P(c\mid x) = P(\pi(c)\mid x)\cdot P_{\text{loc}}(c\mid x, \pi(c))
+$$
+
+**تفاوت حیاتی:** $P(\pi(c)\mid x)$ یک احتمال نرم است، نه برچسب قطعی. اگر مسیریاب
+۹۱٪ مطمئن باشد، ۹٪ به سه آرکیتایپ دیگر می‌رود. پس خطا آبشاری نمی‌شود.
+
+---
+
+<a id="sec-2"></a>
+# ۲. نمودار جریان کامل
 
 ```
-Input Image (Field)
-       │
-       ├─────────────────────────────────┬─────────────────────────────────┐
-       ▼                                 ▼                                 ▼
-DINOv2 ViT-S/14                   BioCLIP ViT-B/16                 Canopy Suppressor
-(384-d Geometry)                  (512-d Pathology)                (Zero-Shot Rejector)
-       │                                 │                                 │
-       ▼                                 ▼                                 │
-Tukey Transform (p=0.5)           Tukey Transform (p=0.5)                  │
-       │                                 │                                 │
-       ▼                                 ▼                                 │
-Test-Time Manifold Centering      Test-Time Manifold Centering             │
-       │                                 │                                 │
-       ▼                                 ▼                                 │
-Archetype Router (Pooid,          Decoupled Prototype Scoring              │
-Solanoid, Vitoid, Rosoid)         (w_bio=0.65, w_dino=0.35)                │
-       │                                 │                                 │
-       │                                 ▼                                 │
-       │                          Cross-Subspace Bilinear Gating           │
-       │                          (alpha=0.20)                             │
-       │                                 │                                 │
-       │                                 ▼                                 │
-       │                          Gegenbauer Decrowding Kernel             │
-       │                          (gamma=-0.20)                            │
-       │                                 │                                 │
-       └────────────────────────┬────────┴─────────────────────────────────┘
-                                ▼
-               Negative Glare & Clutter Margin Modulation
-                                │
-                                ▼
-               Cardinality-Equalized Bayesian Triage
-                                │
-                                ▼
-           Top-1 Prediction & Top-2 Differential Hypotheses
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    PHASE 0 — آماده‌سازی آفلاین (یک‌بار)                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  تصاویر پشتیبان (K=5 در هر کلاس)                                            │
+│         │                                                                    │
+│         ├── ۸ نمای افزوده (flip, rotate ±15°, jitter 0.2)                  │
+│         │   → ۴۰ نمونه در هر کلاس → N = 40·C                               │
+│         ▼                                                                    │
+│  DINOv2 ViT-S/14 ──→ f_dino (384) ─┐                                       │
+│  BioCLIP ViT-B/16 ─→ f_bio  (512) ─┴─→ z_joint (896)                      │
+│         │                                                                    │
+│         ├──→ Tukey (p=0.5) + L2                                             │
+│         ├──→ مرکزسازی با μ_s                                                │
+│         ├──→ پروتوتایپ کلاس‌ها P_c                                          │
+│         ├──→ پروتوتایپ آرکیتایپ‌ها μ_Ak (فقط DINOv2)                       │
+│         ├──→ ماتریس‌های انقباضی Σ_shrunk^(k) (λ=0.60)                      │
+│         └──→ پروتوتایپ‌های متنی منفی (glare/void/clutter)                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    استنتاج آنلاین (هر فریم)                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  تصویر برگ کوئری x                                                          │
+│         │                                                                    │
+│         ▼                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐              │
+│  │ گام ۱: مسیریاب آرکیتایپ (فقط DINOv2)                     │              │
+│  │   p_arch = softmax(12 · cos(f_dino, μ_Ak))               │              │
+│  └──────────────────────────────────────────────────────────┘              │
+│         │                                                                    │
+│         ▼                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐              │
+│  │ گام ۲: تاکی + اصلاح منیفولد                              │              │
+│  │   z_tukey = sign(z)·|z|^0.5  →  L2                       │              │
+│  │   z_cent  = L2(z_tukey − μ_q)                            │              │
+│  └──────────────────────────────────────────────────────────┘              │
+│         │                                                                    │
+│         ▼                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐              │
+│  │ گام ۳: زیرفضاهای تفکیک‌شده                               │              │
+│  │   S_bio  = q_bio · P_bio^T    (512 بعد)                  │              │
+│  │   S_dino = q_dino · P_dino^T  (384 بعد)                  │              │
+│  │   S_base = 0.65·S_bio + 0.35·S_dino                      │              │
+│  └──────────────────────────────────────────────────────────┘              │
+│         │                                                                    │
+│         ▼                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐              │
+│  │ گام ۴: دروازهٔ دوخطی + گگنباور                           │              │
+│  │   S_gated = S_base + 0.20·(S_bio ⊙ S_dino)              │              │
+│  │   K(S) = S − 0.20·(D/(D−1)·S² − 1/(D−1))                │              │
+│  └──────────────────────────────────────────────────────────┘              │
+│         │                                                                    │
+│         ▼                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐              │
+│  │ گام ۵: سافت‌مکس + سرکوب گلیر                              │              │
+│  │   p_vis = softmax(15 · K(S))                             │              │
+│  │   p_c ← max(p_c − penalty, 1e−8)  برای کلاس‌های مستعد     │              │
+│  └──────────────────────────────────────────────────────────┘              │
+│         │                                                                    │
+│         ▼                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐              │
+│  │ گام ۶: تریاژ بیزی + برابرسازی کاردینالیتی                │              │
+│  │   Score(c) = P(A_k|x) · [K_Ak · p_comb(c)]^1.0           │              │
+│  │   top1, top2 = argsort(−Score)[:2]                       │              │
+│  │   C_diff = (p1 − p2)·(1 − H/ln C)                        │              │
+│  └──────────────────────────────────────────────────────────┘              │
+│         │                                                                    │
+│         ▼                                                                    │
+│  خروجی: Top-1 + Top-2 تفاضلی + امتیاز اطمینان                              │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Component Walkthrough
+<a id="sec-3"></a>
+# ۳. مرحلهٔ ۰: آماده‌سازی آفلاین
 
-### Step 1: Four Macro-Botanical Foliar Archetypes (`morphopath_archetypes.py`)
-Rather than forcing 14–38 fragile species decisions, MorphoPath clusters plants into four broad phylogenetically and morphologically coherent foliar macro-archetypes:
-* **Archetype 0 (Solanoid):** Compound leaves with reticulate venation and glandular hairs (*Solanaceae* - Tomato, Potato, Eggplant).
-* **Archetype 1 (Vitoid / Cucurbit):** Palmate, lobed, cordate leaves with actinodromous venation (*Vitaceae*, *Cucurbitaceae* - Grape, Squash).
-* **Archetype 2 (Pooid):** Linear leaves with parallel venation and continuous vascular bundles (*Poaceae* - Corn, Wheat, Grasses).
-* **Archetype 3 (Rosoid / Deciduous):** Serrated, pinnate or simple ovate blades with camptodromous venation (*Rosaceae*, *Fabaceae* - Apple, Peach, Cherry, Strawberry, Soybean, Pepper).
+> [!NOTE] ارجاع به مقاله اول (مفاهیم مشترک)
+> خط لوله افزونگی چندنمایی (Multi-View Support Augmentation با ۸ نما) و استخراج ویژگی‌های خام ۳۸۴ بعدی DINOv2 و ۵۱۲ بعدی BioCLIP کاملاً منطبق بر پروتکل مقاله اول است که در [راهنمای جامع الگوریتم BioDINO-Edge](file:///e:/work/research-few-shot/docs/algorithm_guide.md) شرح داده شده است. در مقاله دوم، صرفاً محاسبات پروتوتایپ‌های آرکیتایپی و زیرفضاهای تفکیک‌شده به این فاز آفلاین اضافه شده است.
 
-**Empirical Impact:** Autonomous field routing accuracy jumps from 79.35% (rigid species) to **93.25%** with **100.0% Top-2 recall**, eliminating cascading botanical errors.
+## ۳.۱ افزونگی چندنمایی
+
+برای هر کلاس $c$، ۵ نمونهٔ پشتیبان انتخاب می‌شود. هر نمونه ۸ بار از یک خط لولهٔ
+افزونگی تصادفی می‌گذرد:
+
+```python
+# flip افقی و عمودی، چرخش ±15°، jitter رنگ (روشنایی، کنتراست، اشباع) با ضریب 0.2
+```
+
+نتیجه: $|\tilde{\mathcal{S}}_c| = 8 \times 5 = 40$ نمونه در هر کلاس، و
+$N = 40C$ در کل.
+
+**برای PlantDoc (۲۷ کلاس):** $N = 1080$.
+**برای PlantVillage (۳۸ کلاس):** $N = 1520$.
+
+**چرا ۸ نما؟** از `main_v2.tex` § ۲.۲: مطالعهٔ مقدماتی نشان داد این تعداد $N$ را به
+$d/2$ نزدیک می‌کند و تخمین کوواریانس را پایدار می‌کند. در MorphoPath این نسبت
+بهتر هم هست چون ماتریس‌ها درون-آرکیتایپ کوچک‌ترند.
+
+## ۳.۲ استخراج ویژگی
+
+```python
+f_dino = l2_normalize(dino_model(x))   # (N, 384)
+f_bio  = l2_normalize(bioclip_model(x)) # (N, 512)
+z_joint = concat([f_bio, f_dino])       # (N, 896)  ← ترتیب مهم است
+```
+
+## ۳.۳ محاسبات آفلاین
+
+```python
+# 1. تاکی + مرکزسازی
+sup_joint = tukey_power_transform(z_joint)          # (N, 896)
+sup_cent, mu_s = center_and_normalize(sup_joint)     # mu_s: (1, 896)
+
+# 2. پروتوتایپ کلاس‌ها
+protos_rect = compute_prototypes(sup_cent, labels, n_classes)
+
+# 3. پروتوتایپ آرکیتایپ‌ها (فقط DINOv2!)
+arch_protos = [f_dino[arch == a].mean(0) for a in range(4)]
+arch_protos_dino = l2_normalize(stack(arch_protos))  # (4, 384)
+
+# 4. زیرفضاهای تفکیک‌شده
+sb = tukey_power_transform(f_bio);  sbc, mu_s_bio  = center_and_normalize(sb)
+sd = tukey_power_transform(f_dino); sdc, mu_s_dino = center_and_normalize(sd)
+protos_bio_rect  = compute_prototypes(sbc, labels, n_classes)
+protos_dino_rect = compute_prototypes(sdc, labels, n_classes)
+
+# 5. LDA درون-آرکیتایپ (ساخته می‌شود، اما در SOTA استفاده نمی‌شود)
+for a in range(4):
+    cands = where(class_to_arch == a)
+    lda_clfs[a] = fit_shrunk_lda(sup_cent[mask_a], y_local, shrinkage=0.60)
+```
+
+**نکتهٔ مهم:** پروتوتایپ آرکیتایپ از **DINOv2 خام** ساخته می‌شود، نه از نسخهٔ
+تاکی‌شده. این در کد صریح است:
+
+```python
+arch_protos = [sup_dino[sup_arch == a].mean(axis=0) ...]
+```
+
+که `sup_dino` همان `f_dino` خام است (پیش از تاکی).
 
 ---
 
-### Step 2: Zero-Parameter Test-Time Manifold Rectification (`morphopath_math.py`)
-In-the-wild field illumination, soil background, and sensor noise cause an algebraic translation of the feature manifold centroid between the lab support set $\mathcal{S}$ and test query set $\mathcal{Q}$:
-$$\mathbf{z}_i = \text{sign}(\mathbf{x}_i) \cdot |\mathbf{x}_i|^{0.5}$$
-$$\hat{\mathbf{z}} = \frac{\mathbf{z}_i - \boldsymbol{\mu}_{\mathcal{S}}}{\|\mathbf{z}_i - \boldsymbol{\mu}_{\mathcal{S}}\|_2}$$
+<a id="sec-4"></a>
+# ۴. مرحلهٔ ۱: مسیریاب آرکیتایپ
 
-* **Tukey Power Transform ($p=0.5$):** Reduces extreme dimensional kurtosis and normalizes tail distributions without learning parameters.
-* **Spherical Centering:** Translates support and query embeddings by the empirical support centroid $\boldsymbol{\mu}_{\mathcal{S}}$, algebraically eliminating domain drift ($\|\Delta\|_2 \approx 0.30 \to 0$) in **0.04 ms** on CPU.
+## ۴.۱ الگوریتم
+
+```python
+p_arch = softmax_prob(l2_normalize(qry_dino) @ arch_protos_dino.T, temp=12.0)
+pred_arch = p_arch.argmax(axis=-1)
+```
+
+## ۴.۲ چرا فقط DINOv2
+
+سه دلیل:
+
+1. **هندسه vs بافت.** DINOv2 شکل، لبه و رگ‌بندی را می‌گیرد — همان چیزی که
+   «کدام گیاه» را تعیین می‌کند. BioCLIP به نکروز و کلروز حساس است که برای
+   «کدام بیماری» مفید است، نه «کدام گیاه».
+2. **سرعت.** ۳۸۴ بُعد در برابر ۸۹۶. مسیریاب باید ارزان باشد.
+3. **پایداری.** در `Log-Phase4-Intermediate-Layer-Fusion.md` ثابت شد که
+   جایگزینی DINOv2 با لایه‌های میانی، مسیریابی را نابود می‌کند (افت ۱۳٪).
+
+## ۴.۳ توزیع کلاس‌ها (از کد)
+
+`DEFAULT_ARCHETYPE_MAP` در `morphopath_archetypes.py`:
+
+| آرکیتایپ | تعداد | کلاس‌ها |
+| :---: | :---: | :--- |
+| $A_0$ Solanoid | **۱۰** | ۸ گوجه + ۲ سیب‌زمینی |
+| $A_1$ Vitoid | **۳** | ۲ انگور + ۱ کدو |
+| $A_2$ Pooid | **۳** | ۳ ذرت |
+| $A_3$ Rosoid | **۱۱** | سیب (۳)، فلفل (۲)، بلوبری، گیلاس، هلو، تمشک، سویا، توت‌فرنگی |
+| **جمع** | **۲۷** | |
+
+**توجه:** این اعداد برای PlantDoc است. برای PlantVillage ۳۸ کلاسه، اعداد متفاوت‌اند
+(۱۳، ۵، ۴، ۱۶) طبق `Log-PlantVillage-Validation.md`.
+
+## ۴.۴ نتیجه
+
+| سنجه | مسیریاب ۱۳-گونه | مسیریاب ۴-آرکیتایپ |
+| :--- | :---: | :---: |
+| Top-1 (seed 42) | ۷۹٫۳۷٪ | **۹۱٫۶۷٪** |
+| Top-1 (اوج) | — | **۹۳٫۲۵٪** |
+| Top-2 | — | **۱۰۰٪** |
+| انحراف معیار (۳۰ اپیزود) | ۱٫۰۴٪ | **۰٫۶۰٪** |
+
+انحراف معیار ۰٫۶۰٪ یعنی مسیریاب تقریباً مستقل از انتخاب تصادفی نمونه‌های پشتیبان
+است — یک ساختار طبیعی، نه یک برازش.
 
 ---
 
-### Step 3: Decoupled Multimodal Vision Subspaces
-Rather than naively concatenating 384-d DINOv2 and 512-d BioCLIP into an unweighted 896-d vector, MorphoPath decouples the similarity computation:
-$$\mathcal{S}_{\text{base}} = w_{\text{bio}} \cdot \mathcal{S}_{\text{bio}} + (1 - w_{\text{bio}}) \cdot \mathcal{S}_{\text{dino}}$$
-* Optimal parameter: $w_{\text{bio}} = 0.65$ (BioCLIP weighs 65% for fine-grained cellular pathology, DINOv2 weighs 35% for macro-lesion contour and spatial geometry).
-* **Gain:** Elevates PlantDoc Top-1 from 62.30% to **63.49%** (+1.19%).
+<a id="sec-5"></a>
+# ۵. مرحلهٔ ۲: تبدیل تاکی و اصلاح منیفولد
+
+## ۵.۱ ترتیب عملیات
+
+```python
+qry_jt = tukey_power_transform(qry_joint)          # تاکی + L2
+mu_q = qry_jt.mean(axis=0, keepdims=True)          # میانگین کوئری
+qry_cent = l2_normalize(qry_jt - mu_q)             # مرکزسازی + L2
+```
+
+**ترتیب حیاتی است:** تاکی **قبل** از مرکزسازی. اگر برعکس کنید، توزیع دُم‌سنگین
+مرکزسازی را خراب می‌کند.
+
+## ۵.۲ دو مسیر جداگانه برای زیرفضاها
+
+```python
+qb = tukey_power_transform(qry_bio);  qbc, _ = center_and_normalize(qb)
+qd = tukey_power_transform(qry_dino); qdc, _ = center_and_normalize(qd)
+```
+
+**توجه:** این‌ها با `mu_s_bio` و `mu_s_dino` (میانگین پشتیبان) مرکز می‌شوند، نه با
+میانگین کوئری. این تفاوت مهم است:
+
+- مسیر ۸۹۶ بعدی: با `mu_q` (میانگین کوئری) مرکز می‌شود
+- مسیرهای ۵۱۲ و ۳۸۴ بعدی: با `mu_s_bio` و `mu_s_dino` (میانگین پشتیبان) مرکز می‌شوند
+
+این ناسازگاری در کد هست. دلیلش احتمالاً این است که `center_and_normalize` بدون
+آرگومان `center`، میانگین **همان آرایه** را می‌گیرد — که برای کوئری‌های دسته‌ای
+یعنی میانگین کوئری. پس در عمل هر دو مسیر با میانگین کوئری مرکز می‌شوند.
+
+## ۵.۳ باگ تک‌فریم
+
+در استنتاج تک‌فریم، `qry_jt.mean(axis=0)` روی یک نمونه، خودِ آن نمونه است. پس:
+
+$$
+\mathbf{z} - \boldsymbol\mu_q = \mathbf{z} - \mathbf{z} = \mathbf{0}
+$$
+
+و `l2_normalize(0)` بردار صفر می‌دهد. **مرکزسازی در تک‌فریم کاملاً بی‌اثر است.**
+
+پارامتر `field_running_mean` وجود دارد اما هیچ‌جا به‌روزرسانی نمی‌شود. راه‌حل در
+بخش ۱۴.
 
 ---
 
-### Step 4: Cross-Subspace Bilinear Gating (`IDEA-015`)
-Captures high-order interactive agreement between biological semantics and geometric surface texture:
-$$\mathcal{S}_{\text{gated}} = \mathcal{S}_{\text{base}} + \alpha_{\text{bilinear}} \cdot (\mathcal{S}_{\text{bio}} \odot \mathcal{S}_{\text{dino}})$$
-* When both BioCLIP and DINOv2 simultaneously agree on a candidate class, the multiplicative bilinear term provides a confident super-linear boost. When one channel is corrupted by glare or soil background, the product attenuates the deceptive similarity.
-* Optimal parameter: $\alpha_{\text{bilinear}} = 0.20$.
-* **Gain:** Elevates PlantDoc Top-1 to **64.68%**, Macro F1 to **63.32%**.
+<a id="sec-6"></a>
+# ۶. مرحلهٔ ۳: زیرفضاهای تفکیک‌شده
+
+## ۶.۱ تفاوت با مقالهٔ اول
+
+| مقالهٔ اول | مقالهٔ دوم |
+| :--- | :--- |
+| یک بردار ۸۹۶ بعدی | دو بردار جدا (۵۱۲ + ۳۸۴) |
+| یک شباهت کسینوسی | دو شباهت، وزن‌دار |
+| وزن ۰٫۵/۰٫۵ تحمیلی | وزن ۰٫۶۵/۰٫۳۵ انتخابی |
+
+## ۶.۲ الگوریتم
+
+```python
+sb_sim = qbc @ protos_bio_rect.T    # (n_q, C)
+sd_sim = qdc @ protos_dino_rect.T   # (n_q, C)
+sims_rect = 0.65 * sb_sim + 0.35 * sd_sim
+```
+
+## ۶.۳ چرا ۰٫۶۵
+
+از `Log-Phase4-Minimalist-Optimization.md`: در PlantVillage، دقت خالص هر زیرفضا:
+
+| زیرفضا | دقت خالص |
+| :--- | :---: |
+| BioCLIP تنها | **۸۷٫۷۲٪** |
+| DINOv2 تنها | ۷۹٫۸۲٪ |
+
+BioCLIP بهتر است، پس وزن بیشتر می‌گیرد. اما DINOv2 کاملاً حذف نمی‌شود چون برای
+هندسهٔ برگ (که مسیریاب لازم دارد) حیاتی است.
+
+## ۶.۴ اثر
+
+| پیکربندی | PlantDoc Top-1 |
+| :--- | :---: |
+| الحاق ساده | ۶۲٫۳۰٪ |
+| وزن‌دهی ۰٫۶۵/۰٫۳۵ | **۶۳٫۴۹٪** |
 
 ---
 
-### Step 5: Gegenbauer Spherical Harmonic Decrowding Kernel (`IDEA-017`)
-Addresses the Cohn–Elkies hypersphere packing limit on $\mathbb{S}^{895}$:
-$$\mathcal{K}(S) = S + \gamma \cdot \left( \frac{D}{D-1} S^2 - \frac{1}{D-1} \right)$$
-* In high dimensions ($D=896$), points on the hypersphere concentrate around the equator. Degree-2 Gegenbauer orthogonal polynomials dynamically push moderately similar vectors apart while preserving near-identical genuine matches.
-* Optimal parameter: $\gamma_{\text{gegenbauer}} = -0.20$.
-* **Gain:** Elevates PlantDoc Top-1 to **65.08%** (Official SOTA Peak), Macro F1 to **63.52%**.
+<a id="sec-7"></a>
+# ۷. مرحلهٔ ۴: دروازهٔ دوخطی و گگنباور
+
+## ۷.۱ دروازهٔ دوخطی
+
+```python
+if self.alpha_bilinear != 0.0:
+    sims_rect = sims_rect + self.alpha_bilinear * (sb_sim * sd_sim)
+```
+
+با `alpha_bilinear = 0.20`.
+
+**شهود:** حاصل‌ضرب هادامارد یک «توافق درجه‌دوم» است. اگر هر دو کانال روی کلاس $k$
+امتیاز بالا بدهند، حاصل‌ضرب بزرگ می‌شود (تقویت فوق-خطی). اگر یکی بالا و یکی پایین،
+حاصل‌ضرب کوچک (تضعیف).
+
+## ۷.۲ گگنباور
+
+```python
+if self.gamma_gegenbauer != 0.0:
+    sims_rect = gegenbauer_decrowd_kernel(sims_rect, dim=self.joint_dim,
+                                          gamma=self.gamma_gegenbauer)
+```
+
+با `gamma_gegenbauer = -0.20`.
+
+```python
+def gegenbauer_decrowd_kernel(sims, dim=896, gamma=-0.20):
+    if gamma == 0.0:
+        return sims
+    d = float(dim)
+    return sims + gamma * ((d / (d - 1.0)) * (sims ** 2) - (1.0 / (d - 1.0)))
+```
+
+## ۷.۳ هشدار بازتولیدپذیری
+
+**هر دو پارامتر پیش‌فرض صفر دارند:**
+
+```python
+alpha_bilinear: float = 0.0,
+gamma_gegenbauer: float = 0.0,
+```
+
+اگر کد را با پیش‌فرض اجرا کنید، **۶۲٫۳۰٪** می‌گیرید، نه ۶۵٫۰۸٪. باید صریحاً تنظیم
+کنید.
+
+## ۷.۴ اثر ترکیبی
+
+| پیکربندی | Top-1 |
+| :--- | :---: |
+| پایه (بدون هر دو) | ۶۳٫۴۹٪ |
+| + دوخطی | ۶۴٫۶۸٪ |
+| + دوخطی + گگنباور | **۶۵٫۰۸٪** |
 
 ---
 
-### Step 6: Zero-Parameter Canopy Clutter & Glare Gating (`canopy_suppressor.py`)
-Computes cosine projection against zero-shot abiotic negative text prompts:
-1. `glare`: Specular solar reflection, white saturated flare on waxy cuticle.
-2. `void`: Deep canopy gaps, black shadows, bare ground mulch.
-3. `clutter`: Distant secondary overlapping canopy leaves.
+<a id="sec-8"></a>
+# ۸. مرحلهٔ ۵: سرکوب گلیر
 
-$$\mathcal{P}_{\text{modulated}}(c) = \max\left( \mathcal{P}(c) - \gamma_{\text{glare}} \cdot \max(0, \mathcal{A}_{\text{max}} - \tau_{\text{glare}}), 10^{-8} \right)$$
-* Penalizes lesion-mimicking disease classes (e.g. rust, blight, spot) only when the image exhibits high alignment to abiotic glare.
-* **Gain:** Reduces clinical False Positive Rate (unnecessary fungicide spraying) from 12.22% to **8.89%** (a 57.0% relative reduction over rigid routing).
+## ۸.۱ مسئله
+
+در کشاورزی خرد، یک هشدار مثبت کاذب یعنی سم‌پاشی بی‌مورد. منبع اصلی: **گلیر خورشید**.
+بازتاب سفید اشباع‌شده روی کوتیکول مومی، از نظر بافتی شبیه لکهٔ سفید پودری است.
+
+## ۸.۲ سه دستهٔ پروتوتایپ منفی
+
+از `canopy_suppressor.py`:
+
+```python
+CANOPY_NEGATIVE_PROMPTS = {
+    "glare": [
+        "direct specular sunlight flare and blinding reflection on leaf surface",
+        "bright harsh overexposed solar glare artifact on foliage",
+        "white specular reflection of bright sun on waxy plant cuticle",
+    ],
+    "void": [
+        "empty sky and bare soil ground void through canopy gap",
+        "out of focus dark shadow and deep empty void behind canopy",
+        "background soil, dirt, mulch, and open sky with no leaf",
+    ],
+    "clutter": [
+        "blurry secondary background leaf clutter and overlapping foliage",
+        "distant out of focus foliage in background canopy clutter",
+        "overlapping secondary leaves creating foliar clutter and occlusion",
+    ],
+}
+```
+
+## ۸.۳ الگوریتم
+
+```python
+sims = l2_normalize(query_bioclip) @ negative_prototypes.T
+max_artifact = sims.max(axis=-1)
+
+glare_prone = [i for i, c in enumerate(class_names)
+               if any(kw in c.lower() for kw in ["rust","spot","mildew","scab","blight"])]
+
+penalty = gamma_glare * np.maximum(0.0, max_artifact - threshold_glare)
+for idx in glare_prone:
+    p_mod[:, idx] -= penalty
+
+p_mod = np.maximum(p_mod, 1e-8)
+p_mod = p_mod / p_mod.sum(axis=-1, keepdims=True)
+```
+
+با `gamma_glare = 0.15` و `threshold_glare = 0.06`.
+
+## ۸.۴ چرا آستانه ۰٫۰۶
+
+شباهت کسینوسی در ۵۱۲ بُعد معمولاً حول صفر است با انحراف معیار:
+
+$$
+\sigma = \frac{1}{\sqrt{512}} \approx 0.0442
+$$
+
+۰٫۰۶ حدود ۱٫۳۶ انحراف معیار است. هر چیزی بالاتر، سیگنال واقعی است نه نویز.
+
+## ۸.۵ اثر
+
+| پیکربندی | Top-1 | FPR |
+| :--- | :---: | :---: |
+| بدون سرکوب‌گر | ۶۳٫۴۹٪ | ۱۲٫۲۲٪ |
+| با سرکوب‌گر | ۶۳٫۸۹٪ | **۸٫۸۹٪** |
+
+کاهش FPR: **۲۷٫۳٪ نسبی**. سود Top-1: ۰٫۴۰ واحد.
 
 ---
 
-### Step 7: Cardinality-Equalized Bayesian Triage (`morphopath_math.py`)
-Calculates calibrated Top-2 differential candidates and clinical entropy confidence:
-$$\mathcal{H}(\mathbf{p}) = -\sum_{k=1}^K p_k \ln(p_k)$$
-$$\mathcal{C}_{\text{diff}} = (p_{\text{top1}} - p_{\text{top2}}) \cdot \left( 1 - \frac{\mathcal{H}(\mathbf{p})}{\ln K} \right)$$
-Provides field agronomists with an uncertainty score and an alternative secondary hypothesis, achieving **80.16% Top-2 recall** (peaking at **81.75%**).
+<a id="sec-9"></a>
+# ۹. مرحلهٔ ۶: تریاژ بیزی
 
+## ۹.۱ الگوریتم
+
+```python
+# گیت بیزی (اختیاری، beta_bayes > 0)
+if self.beta_bayes > 0.0 and self.enable_router:
+    p_comb = p_comb * (p_arch[:, self.class_to_arch] ** self.beta_bayes)
+    p_comb /= (p_comb.sum(axis=-1, keepdims=True) + 1e-12)
+
+# argmax سخت (اختیاری)
+if self.enable_hard_argmax and self.enable_router:
+    p_comb = np.where(self.class_to_arch[None, :] != pred_arch[:, None], 0.0, p_comb)
+    p_comb /= (p_comb.sum(axis=-1, keepdims=True) + 1e-12)
+```
+
+**توجه:** `beta_bayes` پیش‌فرض ۰٫۰ است، پس گیت بیزی در SOTA **خاموش** است. آنچه
+فعال است، برابرسازی کاردینالیتی در `build_morphopath_output` است.
+
+## ۹.۲ برابرسازی کاردینالیتی
+
+$$
+\text{Score}(c) = P(A_k\mid x)\cdot\left[K_{A_k}\cdot p_{\text{comb}}(c)\right]^{1.0}
+$$
+
+**اثبات اینکه چرا کار می‌کند:** اگر $p_{\text{comb}}$ یکنواخت باشد
+($1/K_{A_k}$)، آنگاه $K_{A_k}\cdot p_{\text{comb}} = 1$. امید پایهٔ همهٔ
+آرکیتایپ‌ها به ۱ نرمال می‌شود.
+
+## ۹.۳ خروجی
+
+```python
+top1_preds = p_comb.argmax(axis=-1)
+top2_ranked = np.argsort(-sims_rect, axis=-1)[:, :2]
+p2 = np.where(top2_ranked[:, 0] == top1_preds, top2_ranked[:, 1], top2_ranked[:, 0])
+
+prob_p1, prob_p2 = p_comb[row, top1_preds], p_comb[row, p2]
+sum_prob = prob_p1 + prob_p2 + 1e-12
+top2_probs = column_stack([prob_p1/sum_prob, prob_p2/sum_prob])
+
+diff_conf = calculate_differential_confidence(p_comb, top1_preds, p2, n_classes)
+```
+
+## ۹.۴ ناسازگاری
+
+`top1` از `p_comb` ولی `top2` از `sims_rect`. اگر `p_comb` بعد از جریمهٔ گلیر تغییر
+کرده باشد، این دو هم‌خوان نیستند. جزئیات در بخش ۱۴.
+
+## ۹.۵ اثر
+
+| سنجه | مقدار |
+| :--- | :---: |
+| Top-1 با گیت بیزی | ۶۳٫۴۹٪ |
+| Top-1 با argmax سخت | ۵۹٫۵۲٪ |
+| افت | **−۳٫۹۷ واحد** |
+| Top-2 تفاضلی | ۸۰٫۱۶٪ |
+| اوج Top-2 | ۸۱٫۷۵٪ |
+
+---
+
+<a id="sec-10"></a>
+# ۱۰. نقشهٔ فایل‌به‌فایل
+
+| فایل | خطوط | مسئولیت |
+| :--- | :---: | :--- |
+| `morphopath_math.py` | ۱۰۹ | ریاضیات جبری خالص |
+| `morphopath_archetypes.py` | ۱۰۴ | نگاشت آرکیتایپ |
+| `morphopath_engine.py` | ۲۴۰ | موتور اصلی |
+| `canopy_suppressor.py` | ۱۲۶ | سرکوب گلیر |
+| `morphopath_types.py` | ۷۴ | قراردادهای خروجی |
+| `morphopath_eval.py` | ۱۱۶ | سنجه‌های بالینی |
+
+## ۱۰.۱ توابع `morphopath_math.py`
+
+| تابع | کار |
+| :--- | :--- |
+| `l2_normalize(x, eps)` | نرمال‌سازی $\ell_2$ با محافظ عددی |
+| `tukey_power_transform(x, power)` | تبدیل تاکی + نرمال‌سازی |
+| `center_and_normalize(x, center)` | مرکزسازی + نرمال‌سازی |
+| `softmax_prob(logits, temp)` | سافت‌مکس پایدار (temp = ضریب) |
+| `calculate_differential_confidence(...)` | اطمینان تفاضلی |
+| `fit_shrunk_lda(features, labels, shrinkage)` | LDA با `solver="lsqr"` |
+| `compute_prototypes(features, labels, n_classes)` | میانگین کلاس + نرمال‌سازی |
+| `gegenbauer_decrowd_kernel(sims, dim, gamma)` | هستهٔ گگنباور |
+
+## ۱۰.۲ ترتیب اجرا در `forward()`
+
+```
+ 1. _split_features          → qry_bio (512), qry_dino (384)
+ 2. مسیریاب آرکیتایپ          → p_arch, pred_arch
+ 3. تاکی روی ۸۹۶              → qry_jt
+ 4. مرکزسازی با mu_q          → qry_cent
+ 5. تاکی + مرکزسازی زیرفضاها  → qbc, qdc
+ 6. شباهت + وزن‌دهی + دوخطی   → sims_rect
+ 7. گگنباور (اگر gamma≠0)     → sims_rect
+ 8. جریمهٔ مارجین              → sims_m
+ 9. سافت‌مکس (T=15)           → p_vis_m
+10. خروج سریع (IDEA-016)      → بازگشت زودهنگام
+11. ترکیب با متن              → p_comb
+12. گیت بیزی (اگر beta>0)     → p_comb
+13. LDA درون-آرکیتایپ (w>0)  → p_comb
+14. argmax سخت (اگر فعال)     → p_comb
+15. سرکوب گلیر                → p_comb
+16. ساخت خروجی                → MorphoPathOutput
+```
+
+**مراحل ۱۰، ۱۲، ۱۳، ۱۴ در SOTA خاموش‌اند.**
+
+---
+
+<a id="sec-11"></a>
+# ۱۱. جدول کامل ابرپارامترها
+
+عیناً از `MorphoPathEngine.__init__`:
+
+| پارامتر | پیش‌فرض | نقش | در SOTA |
+| :--- | :---: | :--- | :---: |
+| `bioclip_dim` | ۵۱۲ | بعد BioCLIP | ✓ |
+| `dinov2_dim` | ۳۸۴ | بعد DINOv2 | ✓ |
+| `shrinkage` | ۰٫۶۰ | ضریب انقباض | ✓ |
+| `router_temp` | ۱۲٫۰ | دمای مسیریاب | ✓ |
+| `vis_temp` | ۱۵٫۰ | دمای بصری | ✓ |
+| `text_temp` | ۳۰٫۰ | دمای متنی | ✓ |
+| `w_vis` | ۰٫۷۵ | وزن بصری | ✓ |
+| `margin_penalty` | ۰٫۰۵ | جریمهٔ کلاس پرخطر | ✓ |
+| `alpha_bayes` | ۱٫۰ | توان گیت بیزی | ✓ |
+| `w_bio` | ۰٫۶۵ | وزن BioCLIP | ✓ |
+| `beta_bayes` | ۰٫۰ | توان گیت آرکیتایپ | ✗ |
+| `w_lda` | ۰٫۰ | وزن LDA | ✗ |
+| `gamma_glare` | ۰٫۱۵ | شدت جریمهٔ گلیر | ✓ |
+| `threshold_glare` | ۰٫۰۶ | آستانهٔ گلیر | ✓ |
+| `alpha_bilinear` | **۰٫۰** | وزن دوخطی | **باید ۰٫۲۰** |
+| `gamma_gegenbauer` | **۰٫۰** | وزن گگنباور | **باید −۰٫۲۰** |
+| `enable_fast_exit` | `False` | خروج سریع | ✗ |
+| `fast_exit_conf` | ۰٫۹۵ | آستانهٔ خروج | — |
+| `fast_exit_margin` | ۰٫۶۰ | مارجین خروج | — |
+| `enable_rectification` | `True` | اصلاح منیفولد | ✓ |
+| `enable_router` | `True` | مسیریاب | ✓ |
+| `enable_hard_argmax` | `False` | argmax سخت | ✗ |
+| `enable_clutter_suppression` | **`False`** | سرکوب گلیر | **باید `True`** |
+
+---
+
+<a id="sec-12"></a>
+# ۱۲. چک‌لیست بازتولید
+
+برای رسیدن به ۶۵٫۰۸٪:
+
+```python
+engine = MorphoPathEngine(
+    shrinkage=0.60,
+    router_temp=12.0,
+    vis_temp=15.0,
+    text_temp=30.0,
+    w_vis=0.75,
+    margin_penalty=0.05,
+    alpha_bayes=1.0,
+    w_bio=0.65,
+    gamma_glare=0.15,
+    threshold_glare=0.06,
+    # ↓ این سه مورد پیش‌فرض خاموش‌اند و باید صریحاً فعال شوند
+    alpha_bilinear=0.20,
+    gamma_gegenbauer=-0.20,
+    enable_clutter_suppression=True,
+    # ↓ این‌ها باید خاموش بمانند
+    beta_bayes=0.0,
+    w_lda=0.0,
+    enable_fast_exit=False,
+    enable_hard_argmax=False,
+)
+```
+
+**بدون سه مورد میانی، عدد ۶۲٫۳۰٪ می‌گیرید.**
+
+---
+
+<a id="sec-13"></a>
+# ۱۳. تفاوت‌های عملیاتی با BioDINO-Edge
+
+| محور | BioDINO-Edge | MorphoPath-Edge |
+| :--- | :--- | :--- |
+| **مسیریابی** | گونهٔ زراعی (۱۳) | آرکیتایپ (۴) |
+| **گیت** | آنتروپی-مارجین، $\tau=0.35$ | سنجهٔ بالینی، بدون آستانهٔ مسیر |
+| **ماتریس کوواریانس** | یک سراسری $896\times896$ | چهار درون-آرکیتایپ |
+| **ضریب انقباض** | $\rho^*$ تحلیلی | $\lambda=0.60$ ثابت |
+| **حل‌کننده** | معکوس / Cholesky | `lsqr` |
+| **کالیبراسیون** | بافر لنگر، وزن $3\times$ | تفریق میانگین کوئری |
+| **ترکیب** | پسین ۰٫۷۵/۰٫۲۵ | شباهت ۰٫۶۵/۰٫۳۵ + دوخطی |
+| **دیکراودینگ** | ندارد | گگنباور |
+| **سرکوب گلیر** | ندارد | پروتوتایپ منفی |
+| **خروجی** | یک برچسب | Top-1 + Top-2 + اطمینان |
+| **استقرار** | APK ۲۲٫۷۳ + همراه ۸۵٫۳ | APK ۲۲٫۸۸ تنها |
+| **سر تصمیم** | ۰٫۰۰۳ ms | ۰٫۱۶۵ ms |
+| **PlantDoc 27-way** | ۵۶٫۳۵٪ (oracle) | ۶۵٫۰۸٪ (خودمختار) |
+
+---
+
+<a id="sec-14"></a>
+# ۱۴. باگ‌ها و ناسازگاری‌های شناخته‌شده
+
+این بخش را قبل از ارسال به داور بخوانید.
+
+## ۱۴.۱ `field_running_mean` هرگز به‌روزرسانی نمی‌شود
+
+**محل:** `morphopath_engine.py` خط ۱۴۹.
+
+**اثر:** در استنتاج تک‌فریم، مرکزسازی بردار صفر می‌دهد. یعنی اصلاح منیفولد — که
+بزرگ‌ترین مؤلفهٔ معماری است (۹٫۹۲ واحد) — در حالت جریانی **کار نمی‌کند**.
+
+**راه‌حل:**
+
+```python
+if self.mu_q_running is None:
+    self.mu_q_running = qry_jt.copy()
+else:
+    self.mu_q_running = 0.95 * self.mu_q_running + 0.05 * qry_jt
+qry_cent = l2_normalize(qry_jt - self.mu_q_running)
+```
+
+## ۱۴.۲ `np.all` در خروج سریع
+
+**محل:** `morphopath_engine.py` خط ۱۷۹.
+
+```python
+if np.all((p1 >= self.fast_exit_conf) & ((p1 - p2) >= self.fast_exit_margin)):
+```
+
+**اثر:** خروج سریع فقط وقتی رخ می‌دهد که **تمام** کوئری‌های دسته از آستانه رد شوند.
+در دستهٔ ۲۵۲ کوئری، احتمال این تقریباً صفر است. **این مؤلفه هرگز فعال نمی‌شود.**
+
+**راه‌حل:** `np.any` به‌جای `np.all`، یا اعمال ماسک به‌جای بازگشت کل دسته.
+
+## ۱۴.۳ ناسازگاری `top1` و `top2`
+
+**محل:** `morphopath_types.py` خطوط ۴۶–۴۸.
+
+```python
+top1_preds = p_comb.argmax(axis=-1)
+top2_ranked = np.argsort(-sims_rect, axis=-1)[:, :2]
+```
+
+**اثر:** `top1` از `p_comb` ولی `top2` از `sims_rect`. اگر جریمهٔ گلیر `p_comb` را
+تغییر داده باشد، رتبه‌بندی ناسازگار می‌شود. در بدترین حالت `top2` می‌تواند برندهٔ
+واقعی باشد.
+
+**راه‌حل:**
+
+```python
+ranked = np.argsort(-p_comb, axis=-1)
+top1_preds = ranked[:, 0]
+p2 = ranked[:, 1]
+```
+
+## ۱۴.۴ ضریب گگنباور با اشتقاق نمی‌خواند
+
+**محل:** `morphopath_math.py` خط ۹۴.
+
+کد $\frac{D}{D-1}s^2 - \frac{1}{D-1}$ دارد؛ اشتقاق هارمونیک
+$\frac{D+1}{D}s^2 - \frac{1}{D}$ می‌دهد. اختلاف $10^{-6}$ است — عددی بی‌اهمیت،
+ریاضی نادرست. جزئیات در `mathematics_foundation_guide.md` فصل ۱۰.۴.
+
+## ۱۴.۵ اعداد میانگین ۳۰ اپیزود
+
+**این مورد در نسخهٔ قبلی این سند اشتباه گزارش شده بود. تصحیح:**
+
+اعداد ۳۰ اپیزود **وجود دارند** — در `obsidian/Logs/Log-Phase3-Monte-Carlo-Benchmark.md`
+با جدول کامل ۳۰ ردیفی. اما فایل `experiments/phase3_morphopath/monte_carlo_30ep_results.json`
+فقط **۲ اپیزود** دارد (`"n_episodes": 2`).
+
+| منبع | Top-1 میانگین | $p$ |
+| :--- | :---: | :---: |
+| `Log-Phase3-Monte-Carlo-Benchmark.md` | ۵۹٫۵۸ ± ۱٫۹۷ | $1.39\times10^{-15}$ |
+| `Log-Phase4-Minimalist-Optimization.md` | ۵۹٫۷۶ ± ۲٫۱۳ | — |
+| `monte_carlo_30ep_results.json` (۲ اپیزود) | ۶۱٫۱۱ ± ۳٫۳۷ | ۰٫۱۱۰ |
+| `paper_morphopath/sections/05_experiments.tex` | ۵۹٫۷۶ ± ۲٫۱۳ | $3.55\times10^{-23}$ |
+
+**تفسیر:** لاگ‌ها اعداد ۳۰ اپیزود را ثبت کرده‌اند و قابل استنادند. مشکل این است که
+فایل JSON خام با آن‌ها نمی‌خواند — یعنی اسکریپت بنچمارک در نسخهٔ فعلی‌اش بازتولید
+نمی‌کند. برای دفاع، به لاگ استناد کنید و اسکریپت را دوباره اجرا کنید تا JSON
+هم‌خوان شود.
+
+---
+
+<a id="sec-15"></a>
+# ۱۵. فرضیه‌های ردشده (خلاصه)
+
+طبق درخواست، این‌ها فقط اشاره می‌شوند. جزئیات در `obsidian/Logs/`.
+
+## ۱۵.۱ ردشده در فاز ۴.۲
+
+| ایده | نتیجه | علت |
+| :--- | :---: | :--- |
+| تجمیع سافت چند-نمونه‌ای (IDEA-012) | ۵۶٫۳۵–۵۷٫۹۴٪ | میانگین $\ell_2$ یک فیلتر پایین‌گذر حیاتی است؛ Soft-NN آن را نابود می‌کند |
+| پرامپت کنتراستی نامتقارن (IDEA-013) | FNR به ۷٫۴۱٪ | برگ بیمار ۶۰–۹۰٪ بافت سالم دارد؛ جریمهٔ بافت سالم، خود بیماری را جریمه می‌کند |
+| انقباض پویای کاردینالیتی (IDEA-014) | ۶۱٫۹۰–۶۳٫۱۰٪ | $\rho^*$ تحلیلی روی $D \gg N$ فرو می‌پاشد |
+
+## ۱۵.۲ ردشده در فاز ۴.۳
+
+| ایده | نتیجه | علت |
+| :--- | :---: | :--- |
+| واسرشتاین ۲-نقطه‌ای (IDEA-018) | ۶۳٫۴۹٪ / ۴۴٫۰۵٪ | ناسازگاری هندسی دو زیرفضا؛ کرنل نمایی شباهت‌ها را فشرده می‌کند |
+| همولوژی پایدار ۰-D (IDEA-019) | ۵۲٫۷۸٪ | زنجیرشدن تک-همسایگی به خاک و گلیر |
+| دمای خود-تعدیل شانون (IDEA-020) | ۶۴٫۲۹–۶۴٫۶۸٪ | ضرب اسکالر مثبت، argmax را تغییر نمی‌دهد |
+
+## ۱۵.۳ ردشده در فاز ۴.۴
+
+| ایده | نتیجه | علت |
+| :--- | :---: | :--- |
+| آداپتر متعامد پاتوژن (IDEA-021) | ۵۹٫۹۲٪ | نکروز خطی نیست؛ تفریق میزبان لنگر تاکسونومیک را پاک می‌کند |
+| بطری‌گردن مفاهیم (IDEA-022) | ۶۲٫۳۰٪ | پرامپت متنی در تفکیک نویز نوری ضعیف است |
+| اسلایسینگ پچ فضایی (IDEA-023) | ۴۸٫۸۱٪، ۱۸۵ ms | پچ بدون کانتور برگ، سایه را با نکروز قاطی می‌کند |
+| هد ضد-فروپاشی (IDEA-024) | ۵۳٫۹۷٪ | بیش‌برازش شدید روی ۴۰ نمونه |
+
+## ۱۵.۴ ردشده در فاز ۴.۵
+
+| ایده | نتیجه | علت |
+| :--- | :---: | :--- |
+| ادغام لایه‌های میانی ViT (IDEA-025) | ۸٫۷۳٪ تا ۳۶٫۱۱٪ | معناشناسی پاتولوژی فقط در بلوک ۱۲؛ پرامپت متنی با لایهٔ ۱۲ هم‌تراز است |
+
+**نکتهٔ طلایی برای دفاع:** IDEA-023 (برش ضایعه) در مقالهٔ اول هم مستقل رد شد
+(۲۷-کلاسه از ۵۸٫۷۳٪ به ۵۷٫۱۴٪). **دو مقاله مستقل به یک نتیجه رسیدند.**
+
+---
+
+<a id="sec-16"></a>
+# ۱۶. بنچمارک‌ها
+
+## ۱۶.۱ PlantDoc — تک‌اپیزود (seed 42)
+
+از `ablation_study_results.json` و `phase4_breakthrough_results.json`:
+
+| معماری | Top-1 | Top-2 | Macro F1 | FPR | FNR |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Flat (B1) | ۵۳٫۱۷ | ۷۴٫۲۱ | ۵۲٫۸۱ | ۲۱٫۱۱ | ۲٫۴۷ |
+| Rigid 13-species (B2) | ۴۸٫۸۱ | ۵۹٫۱۳ | ۴۷٫۴۳ | ۲۶٫۶۷ | ۲٫۴۷ |
+| **MorphoPath-Edge** | **۶۵٫۰۸** | **۸۰٫۱۶** | **۶۳٫۵۲** | **۸٫۸۹** | ۶٫۷۹ |
+
+## ۱۶.۲ PlantDoc — ۳۰ اپیزود
+
+از `Log-Phase3-Monte-Carlo-Benchmark.md`:
+
+| معماری | Top-1 | Top-2 | Macro F1 | مسیریاب |
+| :--- | :---: | :---: | :---: | :---: |
+| Flat (B1) | ۵۳٫۱۶ ± ۲٫۰۶ | ۷۲٫۷۶ ± ۱٫۵۹ | ۵۲٫۱۶ ± ۲٫۰۵ | — |
+| Rigid 13-species (B2) | ۴۷٫۷۴ ± ۲٫۱۹ | ۶۷٫۷۲ ± ۲٫۱۹ | ۴۵٫۷۱ ± ۱٫۸۱ | ۷۹٫۳۵ ± ۱٫۰۴ |
+| **MorphoPath-Edge** | **۵۹٫۵۸ ± ۱٫۹۷** | **۷۹٫۲۵ ± ۱٫۴۹** | **۵۷٫۶۳ ± ۱٫۸۵** | **۹۱٫۳۹ ± ۰٫۶۰** |
+
+$p = 1.39\times10^{-15}$ در برابر B1، $p = 1.03\times10^{-21}$ در برابر B2.
+
+## ۱۶.۳ PlantVillage
+
+از `Log-Phase4-Minimalist-Optimization.md` (۳۰ اپیزود، ۳۴٬۲۰۰ کوئری):
+
+| پیکربندی | Top-1 | Top-2 | Macro F1 |
+| :--- | :---: | :---: | :---: |
+| Baseline 1 (Flat) | ۸۷٫۰۶ ± ۱٫۱۴ | ۹۴٫۴۶ ± ۰٫۶۹ | ۸۶٫۷۳ |
+| Baseline 2 (Rigid 14) | ۸۸٫۲۹ ± ۱٫۱۸ | ۹۴٫۰۸ ± ۰٫۹۰ | ۸۸٫۰۸ |
+| **MorphoPath-Edge (38)** | **۸۹٫۵۷ ± ۱٫۲۷** | **۹۵٫۱۱ ± ۰٫۶۷** | **۸۹٫۲۲** |
+
+و زیرمجموعهٔ ۱۱ کلاسه: **۹۵٫۲۹ ± ۱٫۵۳** (Top-1)، **۹۹٫۲۵ ± ۰٫۵۳** (Top-2).
+
+---
+
+<a id="sec-17"></a>
+# ۱۷. پروفایل لبه
+
+از `edge_profiling_results.json`:
+
+| ماژول | میانگین (ms) | میانه | P95 | FPS |
+| :--- | :---: | :---: | :---: | :---: |
+| DINOv2 INT8 | ۲۶٫۸۶ | ۲۲٫۲۴ | ۴۰٫۹۹ | ۳۷٫۲۴ |
+| BioCLIP INT8 | ۷۰٫۴۶ | ۶۸٫۷۸ | ۷۹٫۰۹ | ۱۴٫۱۹ |
+| سر تصمیم | **۰٫۱۸۵** | **۰٫۱۶۴** | ۰٫۳۳۸ | **۵٬۳۹۲** |
+| آبشار مؤثر | **۴۶٫۷۷** | ۴۴٫۱۸ | ۵۸٫۲۸ | **۲۱٫۳۸** |
+
+## ۱۷.۱ محاسبهٔ تأخیر مؤثر
+
+$$
+L_{\text{eff}} = 0.72 \times 27.04 + 0.28 \times 97.50 = 19.47 + 27.30 = 46.77\ \text{ms}
+$$
+
+که با `effective_latency_ms: 46.7695` دقیقاً می‌خواند.
+
+## ۱۷.۲ حافظه
+
+| سنجه | مقدار | بودجه | وضعیت |
+| :--- | :---: | :---: | :---: |
+| APK | ۲۲٫۸۸ MB | ≤ ۲۳٫۰ | PASS |
+| وزن عصبی افزوده | ۰٫۰۰ MB | ≤ ۱٫۰ | PASS |
+| حافظهٔ آماری | ۳۴۳٫۷۱ KB | ≤ ۵۰۰ | PASS |
+| اوج heap | ۶۶٫۹۵ MB | ≤ ۱۵۰ | PASS |
+
+**تفکیک ۳۴۳٫۷۱ KB** (از `Log-Phase3-Edge-Profiling.md`):
+
+| مؤلفه | اندازه |
+| :--- | ---: |
+| پروتوتایپ آرکیتایپ ($4 \times 384$) | ۶٫۰۰ KB |
+| پروتوتایپ متنی ($27 \times 512$) | ۵۴٫۰۰ KB |
+| سنتروئید کلاس ($27 \times 896$) | ۹۴٫۵۰ KB |
+| وزن فیشر آرکیتایپ | ۱۸۹٫۲۱ KB |
+| **جمع** | **۳۴۳٫۷۱ KB** |
+
+**نکته:** «صفر پارامتر» یعنی صفر پارامتر **یادگرفتنی**. ۳۴۳ KB دادهٔ آماری وجود
+دارد. این را دقیق بگویید.
+
+---
+
+*این سند بر پایهٔ `pipeline_morphopath/`، `experiments/`، `obsidian/` و
+`paper_morphopath/` نوشته شده.*

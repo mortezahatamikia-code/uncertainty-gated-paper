@@ -1,4 +1,4 @@
-# uncertainty-gated-paper - project-specific notes
+# research-few-shot - project-specific notes
 
 (blank by default - add project-specific context here)
 
