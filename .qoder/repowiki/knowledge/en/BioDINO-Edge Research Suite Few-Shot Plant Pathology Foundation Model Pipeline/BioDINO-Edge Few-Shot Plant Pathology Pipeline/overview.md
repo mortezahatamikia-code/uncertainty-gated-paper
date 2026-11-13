@@ -1,0 +1,1 @@
+End-to-end few-shot plant disease classification pipeline fusing DINOv2 and BioCLIP embeddings with Fisher-LDA alignment, Shannon confidence gating, and transductive prototype recalibration.

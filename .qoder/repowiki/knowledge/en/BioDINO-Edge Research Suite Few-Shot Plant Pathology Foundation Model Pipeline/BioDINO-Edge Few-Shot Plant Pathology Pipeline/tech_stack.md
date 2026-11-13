@@ -1,0 +1,1 @@
+PyTorch + torchvision for tensor ops and ImageFolder; timm (`vit_small_patch14_dinov2`) for the DINOv2-Small backbone; OpenCLIP (`hf-hub:imageomics/bioclip`) for the BioCLIP ViT-B backbone and tokenizer; scikit-learn `LinearDiscriminantAnalysis` (solver=`lsqr`, shrinkage=`auto`) for Fisher LDA; PIL for image I/O; Jupyter Notebook for the unified walkthrough.

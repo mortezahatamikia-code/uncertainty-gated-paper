@@ -1,0 +1,5 @@
+- Notes use YAML frontmatter with typed fields (`status`, `depends_on`, `blocks`, `priority`, `target_section`, etc.) rather than plain text metadata.
+- Phase-specific directories each carry an `Index.md` file that aggregates their contents, mirroring the dashboard's section layout.
+- Task and idea notes follow numbered naming conventions (`IDEA-NNN-*`, `TASK-PHASE-NNN-*`) that encode both phase and sequence.
+- Cross-references between phases are expressed as Obsidian wikilinks (e.g. `[[Tasks/TASK-OPT-012|...]]`) instead of relative paths or URLs.
+- Tags encode semantic type and lifecycle state (e.g. `#idea`, `#adr`, `#task`, `#task/backlog`, `#task/todo`, `#task/in-progress`, `#task/done`, `#task/blocked`, `#draft`, `#humanize`) for Dataview queries.

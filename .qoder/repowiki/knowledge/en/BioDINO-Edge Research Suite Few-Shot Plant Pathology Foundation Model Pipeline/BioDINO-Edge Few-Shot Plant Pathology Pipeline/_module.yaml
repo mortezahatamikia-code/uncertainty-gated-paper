@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: biodino_pipeline
+title: BioDINO-Edge Few-Shot Plant Pathology Pipeline
+scope:
+    - pipeline/
+source_files: []
+depends_on: []
+related_to: []

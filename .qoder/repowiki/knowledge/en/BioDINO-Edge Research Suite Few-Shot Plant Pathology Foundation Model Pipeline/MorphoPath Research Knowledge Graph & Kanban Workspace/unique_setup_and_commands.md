@@ -1,0 +1,1 @@
+Open `Project Board.canvas` to view the 8-phase spiral research board; press `Ctrl + G` for the global Graph View. Agent execution follows the `obsidian-graph-flow` skill: tasks are created as `TASK-<phase>-NNN.md` under `Tasks/`, moved through Backlog/To Do/Doing/Done columns on the Canvas, and linked via wikilinks so the graph stays synchronized.

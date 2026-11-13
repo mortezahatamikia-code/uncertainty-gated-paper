@@ -1,0 +1,1 @@
+Obsidian vault with community plugins (Dataview for query tables, Canvas for the Trello-style board); YAML frontmatter fields (`status`, `depends_on`, `blocks`, `derived_from`, `priority`) drive the agent workflow.

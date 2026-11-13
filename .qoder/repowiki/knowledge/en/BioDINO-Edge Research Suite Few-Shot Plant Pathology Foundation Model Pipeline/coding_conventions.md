@@ -1,0 +1,2 @@
+- Benchmark outcomes are persisted as top-level JSON artifacts (e.g. `biodino_edge_results.json`, `biodino_hierarchical_results.json`) consumed by README badges and the Android app rather than printed only to stdout.
+- Foundation models are exported once to ONNX INT8 (`biodino_companion_int8.onnx`, `biodino_mobile_int8.onnx`) and all downstream consumers (Android app, edge deployment docs) load the pre-quantized artifact instead of rebuilding it.

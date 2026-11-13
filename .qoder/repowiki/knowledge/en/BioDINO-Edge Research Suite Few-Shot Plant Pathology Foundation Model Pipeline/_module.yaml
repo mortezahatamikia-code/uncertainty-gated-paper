@@ -1,0 +1,26 @@
+schema_version: 1
+module_path: ""
+title: 'BioDINO-Edge Research Suite: Few-Shot Plant Pathology Foundation Model Pipeline'
+scope:
+    - README.md
+    - DEPLOYMENT_GUIDE.md
+    - PAPER_CONCEPTS.md
+    - Q&A.md
+    - RESUME.md
+    - datapackage.json
+    - requirements.txt
+    - pyrefly.toml
+    - .gitignore
+    - .gitattributes
+    - .geminiignore
+    - CHANGELOG.md
+    - Reyhane_Javidi_Alsaadi_CV.pdf
+    - biodino_companion_int8.onnx
+    - biodino_edge_results.json
+    - biodino_hierarchical_results.json
+    - biodino_v3_results.json
+    - large.png
+    - main.docx
+source_files: []
+depends_on: []
+related_to: []

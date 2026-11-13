@@ -1,0 +1,89 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: en-US
+branch: master
+nodes_managed: true
+exported_at: "2026-11-13T14:31:05Z"
+modules:
+    "":
+        dir_name: BioDINO-Edge Research Suite Few-Shot Plant Pathology Foundation Model Pipeline
+        title: 'BioDINO-Edge Research Suite: Few-Shot Plant Pathology Foundation Model Pipeline'
+        scope:
+            - README.md
+            - DEPLOYMENT_GUIDE.md
+            - PAPER_CONCEPTS.md
+            - Q&A.md
+            - RESUME.md
+            - datapackage.json
+            - requirements.txt
+            - pyrefly.toml
+            - .gitignore
+            - .gitattributes
+            - .geminiignore
+            - CHANGELOG.md
+            - Reyhane_Javidi_Alsaadi_CV.pdf
+            - biodino_companion_int8.onnx
+            - biodino_edge_results.json
+            - biodino_hierarchical_results.json
+            - biodino_v3_results.json
+            - large.png
+            - main.docx
+        source_files: []
+        children:
+            - android_app
+            - biodino_pipeline
+            - docs_and_papers
+            - morphopath_pipeline
+            - obsidian_notes
+        depends_on: []
+        related_to: []
+    android_app:
+        dir_name: BioDINO-Edge Android App
+        title: BioDINO-Edge Android App
+        scope:
+            - android_app/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    biodino_pipeline:
+        dir_name: BioDINO-Edge Few-Shot Plant Pathology Pipeline
+        title: BioDINO-Edge Few-Shot Plant Pathology Pipeline
+        scope:
+            - pipeline/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    docs_and_papers:
+        dir_name: Research Documentation, Papers & LaTeX Artifacts
+        title: Research Documentation, Papers & LaTeX Artifacts
+        scope:
+            - docs/
+            - paper/
+            - paper_morphopath/
+            - docs_morphopath/
+            - elsarticle/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    morphopath_pipeline:
+        dir_name: MorphoPath-Edge Foliar Pathology Dual Inference Pipeline
+        title: MorphoPath-Edge Foliar Pathology Dual Inference Pipeline
+        scope:
+            - pipeline_morphopath/
+            - tests_morphopath/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    obsidian_notes:
+        dir_name: MorphoPath Research Knowledge Graph & Kanban Workspace
+        title: MorphoPath Research Knowledge Graph & Kanban Workspace
+        scope:
+            - obsidian/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []

@@ -1,0 +1,1 @@
+Obsidian vault serving as the MorphoPath research project's living knowledge graph, Kanban board, and agent-executable task/spec/ADR workspace.

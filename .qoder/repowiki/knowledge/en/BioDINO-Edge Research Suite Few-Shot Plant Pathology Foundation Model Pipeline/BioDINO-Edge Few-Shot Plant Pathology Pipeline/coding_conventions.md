@@ -1,0 +1,5 @@
+- Scripts expose a dual import path for internal modules via `try: from pipeline.<mod> ... except (ModuleNotFoundError, ImportError): from <mod> ...`, enabling execution both as a package member and as a top-level script.
+- Deterministic reproducibility is established at module load time by seeding `random`, `numpy.random`, and `torch.manual_seed` (plus `torch.cuda.manual_seed_all` when CUDA is available) with a fixed seed constant (42).
+- Configuration is expressed as `@dataclass` objects (e.g. `EdgeConfig`, `ModelBackbones`) holding hyperparameters and model handles rather than global mutable variables.
+- Foundation backbones are loaded frozen in `.eval()` mode with Automatic Mixed Precision gated through a shared `get_autocast_ctx(device)` helper that returns `torch.autocast` on CUDA and `nullcontext` on CPU.
+- Data loading functions return a uniform `(support_samples, query_samples, class_names, prompts)` tuple, keeping PlantVillage and PlantDoc loaders interchangeable for the downstream pipeline code.

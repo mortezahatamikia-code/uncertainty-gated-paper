@@ -233,7 +233,7 @@ def create_architecture_diagram():
               title="Ledoit--Wolf & Fisher-LDA",
               items=[
                   (r"Analytical Shrinkage: $\hat{\mathbf{\Sigma}}^{-1}$ (Resolves $N \ll d$)", "#0F172A", 6.7, False),
-                  (r"Exact Projection: $(\mathbf{W}, \mathbf{b})$ in $<50$ ms (Zero Grads)", "#B45309", 6.9, True),
+                  (r"Exact Projection: $(\mathbf{W}, \mathbf{b})$ in $<22$ ms (Zero Grads)", "#B45309", 6.9, True),
                   (r"Suppresses Background Variance ($>31\times$)", "#475569", 6.4, False)
               ], title_color="#92400E")
 
@@ -300,6 +300,7 @@ def create_architecture_diagram():
               title="BioCLIP ViT-B (INT8)",
               items=[
                   (r"$\mathbf{f}_{\mathrm{bio}} \in \mathbb{R}^{512}$ (ViT-B/16)", "#6D28D9", 6.9, True),
+                  ("Add-On Latency: +42.9 ms", "#334155", 6.5, False),
                   ("Taxonomy Priors (TreeOfLife-10M)", "#475569", 6.5, False)
               ], title_color="#6D28D9")
 
@@ -319,7 +320,7 @@ def create_architecture_diagram():
               items=[
                   (r"$\mathbf{p}_{\mathrm{blend}} = 0.75 \mathbf{p}_{\mathrm{fish}} + 0.25 \mathbf{p}_{\mathrm{text}}$", "#0284C7", 6.6, True),
                   (r"$\mathbf{p}_{\mathrm{text}} = \mathrm{softmax}(\gamma \mathbf{f}_{\mathrm{bio}} \mathbf{P}_{\mathrm{text}}^T)$", "#0369A1", 6.4, True),
-                  ("Deep Path Latency: 42.9 ms", "#0F172A", 6.5, False)
+                  ("Tier-2 Total: 64.0 ms (15.6 FPS)", "#0F172A", 6.5, False)
               ], title_color="#0369A1", title_fs=7.1)
 
     draw_arrow(56.8, 20.5, 58.0, 20.5, color="#0284C7", lw=1.4)
@@ -329,7 +330,7 @@ def create_architecture_diagram():
     #       -> left along y=29.25 to x=34.4 (to left of Tier-2 banner!) -> down to Card 4.1 top (34.4, 24.45)
     draw_orthogonal_arrow([(64.8, 32.05), (64.8, 29.25), (34.4, 29.25), (34.4, 24.45)],
                           color="#7C3AED", lw=1.5, ls="--",
-                          label=r"Ambiguous (11.6%): $\mathcal{C}(\mathbf{x}) < 0.35$" + "\n" + r"$\to$ Triggers BioCLIP Escalation",
+                          label=r"Ambiguous (86.0%): $\mathcal{C}(\mathbf{x}) < 0.35$" + "\n" + r"$\to$ Triggers BioCLIP Escalation",
                           label_seg=1, label_pos=0.5,
                           label_color="#6D28D9", label_bg="#FAF5FF", label_fs=5.9)
 
@@ -415,20 +416,21 @@ def create_architecture_diagram():
               title="Immediate Live Diagnosis",
               items=[
                   ("Fast-Exit (Tier-1): 21.1 ms (>45 FPS)", "#047857", 6.8, True),
-                  ("Deep-Path (Tier-2): 42.9 ms (23 FPS)", "#0284C7", 6.8, True),
+                  ("Deep-Path (Tier-2): 64.0 ms (15.6 FPS)", "#0284C7", 6.8, True),
+                  ("Blended Stream: 58.0 ms (17.2 FPS)", "#334155", 6.6, True),
                   ("Real-Time Foliar Pathology Output", "#334155", 6.6, False)
               ], title_color="#047857")
 
     # Wire 6: Fast-Exit straight horizontal arrow from Routing Gate right edge (71.6) to Live Classification left edge (79.4)
     draw_arrow(71.6, 36.7, 79.4, 36.7, color="#059669", lw=1.6,
-               label="Fast-Exit (88.4%)\n" + r"$\mathcal{C}(\mathbf{x}) \geq 0.35$",
+               label="Fast-Exit (14.0%)\n" + r"$\mathcal{C}(\mathbf{x}) \geq 0.35$",
                label_pos=0.5, label_color="#047857", label_bg="#ECFDF5", label_fs=6.0)
 
     # Wire 7: Deep Consensus cleanly routed orthogonally (90-degree) into Immediate Classification
     # Starts at Card 4.3 right edge (71.6, 20.5), enters Card 6.1 left edge at (79.4, 34.0)
     draw_orthogonal_arrow([(71.6, 20.5), (74.8, 20.5), (74.8, 34.0), (79.4, 34.0)],
                           color="#0284C7", lw=1.5,
-                          label="Deep Consensus (11.6%)\n" + r"$0.75\,\mathbf{p}_{\mathrm{fish}} + 0.25\,\mathbf{p}_{\mathrm{text}}$",
+                          label="Deep Consensus (86.0%)\n" + r"$0.75\,\mathbf{p}_{\mathrm{fish}} + 0.25\,\mathbf{p}_{\mathrm{text}}$",
                           label_seg=1, label_pos=0.5,
                           label_color="#0369A1", label_bg="#F0F9FF", label_fs=5.9)
 
@@ -452,12 +454,12 @@ def create_architecture_diagram():
     draw_card(79.4, 2.2, 18.0, 14.0, "#064E3B", "#047857",
               title="Validated Benchmark Specs",
               items=[
-                  ("Peak Accuracy: 98.72% | Macro F1: 98.41%", "#A7F3D0", 6.8, True),
-                  ("PlantVillage Mean: 97.37% (30-Episodes)", "#FFFFFF", 6.8, True),
+                  ("Peak Accuracy: 98.67% | Macro F1: 98.41%", "#A7F3D0", 6.8, True),
+                  ("PlantVillage Mean: 97.41% (30-Episodes)", "#FFFFFF", 6.8, True),
                   ("PlantDoc In-the-Wild (5-Way): 83.61%", "#A7F3D0", 6.8, True),
-                  ("Calibration Reliability: ECE = 0.81%", "#E2E8F0", 6.6, False),
+                  ("Routing Reliability: 99.7% acc, 0.25% FNR (Tier-1)", "#E2E8F0", 6.6, False),
                   (r"Working Set Budget: $\leq$ 110 MB (APK: 22.7 MB)", "#6EE7B7", 6.8, True),
-                  ("100% Offline Edge CPU Execution (>45 FPS)", "#A7F3D0", 6.7, True)
+                  ("100% Offline Edge CPU (Tier-1: >45 FPS)", "#A7F3D0", 6.7, True)
               ], title_color="#A7F3D0", title_fs=7.5)
 
     # Save vector PDF and high-res raster PNG

@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: obsidian_notes
+title: MorphoPath Research Knowledge Graph & Kanban Workspace
+scope:
+    - obsidian/
+source_files: []
+depends_on: []
+related_to: []

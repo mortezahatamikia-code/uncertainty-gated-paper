@@ -1,0 +1,1 @@
+Top-level quickstart installs dependencies via `.venv/Scripts/pip.exe install -r requirements.txt`, runs the unified pipeline through `pipeline/biodino_edge_pipeline.py`, and compiles the IEEE paper via `cd paper && pdflatex -interaction=nonstopmode main.tex && bibtex main && pdflatex ...`.
