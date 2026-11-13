@@ -169,7 +169,7 @@ Applying the softmax function yields fast class posterior probabilities:
     \label{eq:tier1_softmax}
     \mathbf{p}_{\text{dino}} = \text{softmax}(\mathbf{l}_{\text{dino}}) \in \Delta^{C-1}
 \end{equation}
-The initial Tier-1 prediction is $\hat{y}_{\text{tier1}} = \arg\max_c p_{\text{dino}, c}$. To assess its reliability without requiring additional inference, we compute a joint margin-entropy confidence score $\mathcal{C}(\mathbf{x}) \in [0, 1]$:
+To strictly minimize edge computational overhead on routine foliage, Tier~1 deliberately employs zero-covariance cosine prototype matching rather than discriminant projection, reserving regularized Fisher-LDA exclusively for Tier-2 escalation where ambiguous queries require full covariance debiasing. The initial Tier-1 prediction is $\hat{y}_{\text{tier1}} = \arg\max_c p_{\text{dino}, c}$. To assess its reliability without requiring additional inference, we compute a joint margin-entropy confidence score $\mathcal{C}(\mathbf{x}) \in [0, 1]$:
 \begin{equation}
     \label{eq:shannon_gate}
     \mathcal{C}(\mathbf{x}) = \left(p_{\text{dino}, (1)} - p_{\text{dino}, (2)}\right) \cdot \left(1.0 - \mathcal{H}_{\text{norm}}(\mathbf{x})\right)_+

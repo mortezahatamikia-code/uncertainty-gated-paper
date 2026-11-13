@@ -48,12 +48,10 @@ NOVEL_CLASSES = [
 ]
 
 class BioDINOEdgeMobile(nn.Module):
-    """Tier 1: 21 MB Standalone Fast-Path Model (DINOv2 Small + Fisher-LDA + Shannon Gate + Foliage OOD Gate)"""
-    def __init__(self, backbone, fisher_weight, fisher_bias, leaf_prototypes, num_classes=11, temperature=20.0):
+    """Tier 1: 21 MB Standalone Fast-Path Model (DINOv2 Small + Fast Cosine Prototype Matching + Shannon Gate + Foliage OOD Gate)"""
+    def __init__(self, backbone, leaf_prototypes, num_classes=11, temperature=20.0):
         super().__init__()
         self.backbone = backbone
-        self.register_buffer("fisher_weight", fisher_weight) # (num_classes, 384)
-        self.register_buffer("fisher_bias", fisher_bias.unsqueeze(0)) # (1, num_classes)
         self.register_buffer("leaf_prototypes", leaf_prototypes) # (num_classes, 384)
         self.ln_k = float(np.log(num_classes))
         self.temperature = float(temperature)
@@ -62,7 +60,7 @@ class BioDINOEdgeMobile(nn.Module):
         f_raw = self.backbone(x)
         f_norm = F.normalize(f_raw, p=2.0, dim=-1) # (B, 384)
         
-        # Foliage manifold score: cosine similarity to class leaf prototypes
+        # Foliage manifold score & Fast Prototype matching (cosine similarity)
         # Real leaves have cosine similarity >= 0.55 (mean 0.896)
         # Black screens / non-leaf objects (headphones, desks, faces) have cosine similarity <= 0.35
         cos_sim = torch.matmul(f_norm, self.leaf_prototypes.transpose(0, 1)) # (B, num_classes)
@@ -71,8 +69,8 @@ class BioDINOEdgeMobile(nn.Module):
         # Soft foliage gate: 0.0 if score < 0.35, 1.0 if score >= 0.55
         foliage_gate = torch.clamp((foliage_score - 0.35) / 0.20, min=0.0, max=1.0)
 
-        # Calibrated Fisher-LDA logits with Temperature Scaling
-        logits = (torch.matmul(f_norm, self.fisher_weight.transpose(0, 1)) + self.fisher_bias) / self.temperature
+        # Fast Prototype Logits (scaled cosine similarity: gamma * cos_sim)
+        logits = self.temperature * cos_sim
         probabilities = F.softmax(logits, dim=-1)
 
         top2_vals, _ = torch.topk(probabilities, k=2, dim=-1)
@@ -152,22 +150,16 @@ def main():
     s_concat_np = np.concatenate([s_bio_np, s_dino_np], axis=-1)
     s_lbl_np = labels[s_idx_all].numpy()
 
-    # Fit DINOv2 Fisher for Tier 1
-    clf_dino = LinearDiscriminantAnalysis(solver='lsqr', shrinkage='auto')
-    clf_dino.fit(s_dino_np, s_lbl_np)
-    w_dino = torch.tensor(clf_dino.coef_, dtype=torch.float32)
-    b_dino = torch.tensor(clf_dino.intercept_, dtype=torch.float32)
-
     # Fit Joint 896-d Fisher for Tier 2
     clf_joint = LinearDiscriminantAnalysis(solver='lsqr', shrinkage='auto')
     clf_joint.fit(s_concat_np, s_lbl_np)
     w_joint = torch.tensor(clf_joint.coef_, dtype=torch.float32)
     b_joint = torch.tensor(clf_joint.intercept_, dtype=torch.float32)
 
-    # Compute normalized class leaf prototypes in DINOv2 space for Foliage OOD rejection
+    # Compute normalized 5-shot class leaf prototypes in DINOv2 space for Tier-1 Matching & OOD Rejection
     leaf_prototypes = []
     for c in range(num_classes):
-        c_feats = dino_feats[labels.numpy() == c].numpy()
+        c_feats = s_dino_np[s_lbl_np == c]
         proto = c_feats.mean(axis=0)
         proto = proto / (np.linalg.norm(proto) + 1e-12)
         leaf_prototypes.append(proto)
@@ -181,7 +173,7 @@ def main():
     print("=" * 80)
     backbone = timm.create_model('vit_small_patch14_dinov2', pretrained=True, img_size=224)
     backbone.eval()
-    tier1_model = BioDINOEdgeMobile(backbone, w_dino, b_dino, leaf_prototypes, num_classes=num_classes, temperature=20.0)
+    tier1_model = BioDINOEdgeMobile(backbone, leaf_prototypes, num_classes=num_classes, temperature=20.0)
     tier1_model.eval()
 
     tier1_fp32 = os.path.join(cache_dir, "biodino_mobile_fp32.onnx")

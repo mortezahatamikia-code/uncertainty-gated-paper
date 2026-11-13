@@ -260,13 +260,13 @@ def create_architecture_diagram():
                   ("Captures Fine Lesion Edges", "#475569", 6.4, False)
               ], title_color="#047857")
 
-    # Card 3.2: Fast Fisher-LDA Projection
+    # Card 3.2: Fast Prototype Matching (Cosine Similarity)
     draw_card(42.4, 32.2, 14.4, 9.0, "#FFFFFF", "#059669",
-              title="Fast Fisher Projection",
+              title="Fast Prototype Matching",
               items=[
-                  (r"$\mathbf{p}_{\mathrm{fast}} = \mathrm{softmax}(\mathbf{W}_{\mathrm{dino}}\mathbf{f} + \mathbf{b})$", "#065F46", 6.8, True),
-                  ("Precomputed 384-D Hyperplane", "#334155", 6.6, False),
-                  ("FLOPs: <10K (<0.003 ms)", "#475569", 6.4, False)
+                  (r"$\mathbf{p}_{\mathrm{dino}} = \mathrm{softmax}(\gamma \cdot \mathbf{f}\mathbf{P}_{\mathrm{dino}}^T)$", "#065F46", 6.8, True),
+                  ("Cosine Similarity to Prototypes", "#334155", 6.6, False),
+                  (r"Zero-Covariance Fast Match ($\gamma = 20$)", "#475569", 6.4, False)
               ], title_color="#065F46", title_fs=7.2)
 
     draw_arrow(41.2, 36.7, 42.4, 36.7, color="#059669", lw=1.4)
