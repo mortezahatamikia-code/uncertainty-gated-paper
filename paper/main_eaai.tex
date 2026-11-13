@@ -1,40 +1,42 @@
-\documentclass[preprint,12pt]{elsarticle}
+%%
+%% BioDINO-Edge manuscript formatted for Engineering Applications of Artificial Intelligence (Elsevier)
+%% Template: cas-dc (CAS Double Column)
+%%
+\documentclass[a4paper,fleqn,nologo]{cas-dc}
 
-%% Use the following options for alternative layouts:
-%% \documentclass[final,1p,times]{elsarticle}
-%% \documentclass[final,3p,times]{elsarticle}
-%% \documentclass[final,5p,times,twocolumn]{elsarticle}
-
-\journal{Engineering Applications of Artificial Intelligence}
-
-\usepackage{lmodern}
-\usepackage{amsmath,amssymb,amsfonts}
-\usepackage{graphicx}
-\usepackage{booktabs}
-\usepackage{microtype}
+\usepackage[numbers]{natbib}
+\usepackage[protrusion=true,expansion=false]{microtype}
 \usepackage{url}
-\usepackage{lineno}
 \usepackage{tabularx}
-\usepackage{multirow}
 \usepackage{placeins}
-\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+%%% Author definitions
+\def\tsc#1{\csdef{#1}{\textsc{\lowercase{#1}}\xspace}}
+%%%
 
 \begin{document}
+\let\WriteBookmarks\relax
+\def\floatpagepagefraction{1}
+\def\textpagefraction{.001}
+\shorttitle{BioDINO-Edge: Gradient-Free Cascades for On-Device Few-Shot Plant Disease Diagnosis}
+\shortauthors{R. Javidi Alsaadi and M.R. Samadzadeh}
 
-\begin{frontmatter}
+\title [mode = title]{BioDINO-Edge: Gradient-Free Cascades of Frozen Vision Foundation Models for On-Device Few-Shot Plant Disease Diagnosis}
 
-\title{BioDINO-Edge: Gradient-Free Cascades of Frozen Vision Foundation Models for On-Device Few-Shot Plant Disease Diagnosis}
-
-\author[inst1]{Reyhane Javidi Alsaadi\corref{cor1}}
+\author[1]{Reyhane Javidi Alsaadi}
+\cormark[1]
 \ead{reyhane.code@gmail.com}
+\credit{Conceptualization, Methodology, Software, Formal analysis, Investigation, Data curation, Writing - original draft, Visualization}
 
-\author[inst1]{Mohammad Reza Samadzadeh}
+\author[1]{Mohammad Reza Samadzadeh}
 \ead{samadzadeh@ut.ac.ir}
+\credit{Conceptualization, Validation, Writing - review \& editing, Supervision, Project administration}
+
+\affiliation[1]{organization={Department of Computer Engineering, Dr. Shariaty Technical University},
+                city={Tehran},
+                country={Iran}}
 
 \cortext[cor1]{Corresponding author}
-\affiliation[inst1]{organization={Department of Computer Engineering, Dr. Shariaty Technical University},
-            city={Tehran},
-            country={Iran}}
 
 \begin{abstract}
 Deploying deep neural networks for on-device plant disease diagnosis in precision agriculture is fundamentally constrained by scarce labeled training samples, high-variance vegetative background clutter, and the computational and thermal costs of on-device gradient backpropagation. In this paper, we propose \textbf{BioDINO-Edge}, a gradient-free few-shot diagnostic framework that adapts frozen multi-scale vision foundation models without backpropagation or GPU acceleration. The architecture couples spatial patch representations from DINOv2---capturing fine-grained structural lesion contours and necrotic boundaries---with domain-specialized foliar taxonomic representations from BioCLIP, which fuses visual features with pre-cached Latin botanical prompt ensembles. Under severe few-shot constraints ($K=5$ support leaves per novel class), feature dimensionality exceeds sample size ($N \ll d$), causing empirical within-class covariance matrices to become singular and mathematically non-invertible. We analytically resolve this singularity by regularizing the pooled within-class scatter matrix via closed-form Ledoit--Wolf shrinkage. This regularization provably suppresses shared chlorophyll vegetative background variance by over $31\times$ and enables closed-form Fisher Linear Discriminant Analysis (Fisher-LDA) projection in under 22\,ms on an embedded quad-core CPU. 
@@ -50,14 +52,11 @@ During live inference, an adaptive confidence gate combining normalized Shannon 
 \item Standalone 22.7MB Android APK achieves 97.4\% accuracy without cloud servers.
 \end{highlights}
 
-\begin{keyword}
+\begin{keywords}
 Few-Shot Learning \sep Precision Agriculture \sep Plant Pathology \sep Multimodal Foundation Models \sep Fisher Discriminant Analysis \sep Edge AI \sep Transductive Inference \sep Embedded Computer Vision
-\end{keyword}
+\end{keywords}
 
-\end{frontmatter}
-
-%% Enable line numbers for official review
-\linenumbers
+\maketitle
 
 % =============================================================================
 % 1. INTRODUCTION
@@ -97,7 +96,7 @@ The core scientific and engineering contributions of this work are:
 \label{sec:notation}
 Let $\mathcal{X} \subset \mathbb{R}^{H \times W \times 3}$ denote the space of RGB leaf images. In the few-shot foliar diagnosis setting, we are provided with a novel support set $\mathcal{S} = \{(\mathbf{x}_i, y_i)\}_{i=1}^{N_s}$ containing $K$ labeled support leaf images per novel disease class across $C$ target categories, such that $N_s = C \cdot K$ and $y_i \in \{1, \dots, C\}$. The target novel classes $\mathcal{Y}_{\text{novel}}$ are strictly disjoint from any pretraining base classes ($\mathcal{Y}_{\text{base}} \cap \mathcal{Y}_{\text{novel}} = \emptyset$). Given an unannotated query leaf $\mathbf{x}_q \in \mathcal{Q}$, the diagnostic objective is to predict its disease state $\hat{y}_q \in \{1, \dots, C\}$ with minimal edge latency and zero on-device gradient backpropagation. Table~\ref{tab:notation} outlines the primary mathematical notations employed throughout this paper.
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
 \centering
 \caption{Summary of mathematical notations and descriptions used in BioDINO-Edge.}
 \label{tab:notation}
@@ -119,7 +118,7 @@ $\tau_{\text{conf}}$ & Confidence escalation threshold ($\tau_{\text{conf}} = 0.
 $\mathcal{Q}_{\text{anchor}}^{(c)}$ & High-confidence streaming query anchors ($\max_c p_c \ge 0.70$) for transductive recalibration. \\
 \bottomrule
 \end{tabularx}
-\end{table}
+\end{table*}
 
 \subsection{Pipeline Architecture and Two-Tier Execution Flow}
 \label{sec:system_architecture}
@@ -133,7 +132,7 @@ BioDINO-Edge decomposes on-device foliar diagnosis into an offline closed-form w
 
 \begin{figure*}[htbp]
 \centering
-\includegraphics[width=0.92\textwidth]{fig_architecture.pdf}
+\includegraphics[width=0.95\textwidth]{fig_architecture.pdf}
 \caption{Comprehensive architectural overview of BioDINO-Edge. Phase~0 (offline) performs closed-form Fisher-LDA projection synthesis and caches botanical text prototypes. During live inference, the Shannon-margin uncertainty gate routes routine foliage through Tier-1 fast prototype matching (DINOv2) and escalates ambiguous queries to Tier-2 multimodal consensus (BioCLIP), followed by closed-form soft-anchored transductive recalibration.}
 \label{fig:architecture}
 \end{figure*}
@@ -214,9 +213,10 @@ The optimal shrinkage intensity $\rho^* \in (0, 1]$ is determined in closed form
 Because all zero eigenvalues of $\mathbf{S}_W$ are shifted to strictly positive values $\tilde{\lambda}_i = (1 - \rho^*)\lambda_i + \rho^* \nu \ge \rho^* \nu > 0$, the regularized matrix $\hat{\mathbf{\Sigma}}$ is guaranteed to be strictly positive-definite and well-conditioned. Its inverse $\hat{\mathbf{\Sigma}}^{-1}$ is solved stably via Cholesky decomposition ($\hat{\mathbf{\Sigma}} = \mathbf{L}\mathbf{L}^T$). Evaluating a query vector $\mathbf{z}$ via $\mathbf{l}_{\text{fisher}} = \mathbf{z}\mathbf{W}^T + \mathbf{b}$ requires only $C \cdot d = 11 \times 896 = 9{,}856$ multiply-accumulate operations ($\approx 19.7$\,kFLOPs), executing in 0.003\,ms on an edge CPU.
 
 Crucially, weighting by $\hat{\mathbf{\Sigma}}^{-1}$ acts as an optimal whitening transform:
-\begin{equation}
-    \hat{\mathbf{\Sigma}}^{-1} \approx \text{diag}\left(\frac{1}{12.8 + \epsilon}, \dots, \frac{1}{0.4 + \epsilon}\right) \approx \text{diag}(0.078, \dots, 2.44)
-\end{equation}
+\begin{align}
+    \hat{\mathbf{\Sigma}}^{-1} &\approx \text{diag}\left(\frac{1}{12.8 + \epsilon}, \dots, \frac{1}{0.4 + \epsilon}\right) \nonumber \\
+    &\approx \text{diag}(0.078, \dots, 2.44)
+\end{align}
 Shared vegetative background directions are attenuated by over $31\times$ ($0.078 / 2.44 \approx 1/31.3$), while diagnostic necrotic lesion variance is amplified by $2.44\times$, resolving ambiguous pathologies without backpropagation.
 
 \subsection{Adaptive Two-Tier Classification and Edge Deployment}
@@ -267,9 +267,12 @@ The complete end-to-end execution flow is formalized in Algorithm~\ref{alg:biodi
 \begin{itemize}
     \item \textbf{Offline Calibration Complexity:} Feature extraction across $N=440$ views requires $O(N \cdot (C_{\text{dino}} + C_{\text{bio}}))$ FLOPs. Scatter matrix computation requires $O(N d^2)$ operations. Ledoit--Wolf trace and norm operations require $O(d^2)$. Inverting the positive-definite matrix via Cholesky decomposition requires $O(d^3 / 3)$ operations. For $d=896$, $d^3 / 3 \approx 2.4 \times 10^8$ operations, executing in under 22\,ms on a modern quad-core CPU.
     \item \textbf{Online Inference Complexity:} Tier-1 forward pass requires $C_{\text{dino}}$ ($\approx 4.6$\,GFLOPs, 21.12\,ms). Dot-product prototype matching requires $C \cdot d_{\text{dino}} = 11 \times 384 \approx 4.2$\,kFLOPs ($<$0.002\,ms). Entropy gating requires $O(C)$ operations ($<$0.001\,ms). If escalated to Tier-2, BioCLIP requires $C_{\text{bio}}$ ($\approx 17.6$\,GFLOPs, 42.9\,ms). Joint Fisher-LDA projection requires $C \cdot d = 11 \times 896 \approx 9.8$\,kFLOPs (0.003\,ms). Blended average latency across field streams is:
-    \begin{equation}
-        \bar{T} = 0.884 \cdot 21.12\,\text{ms} + 0.116 \cdot (21.12 + 42.90 + 0.003)\,\text{ms} \approx 26.54\,\text{ms} \quad (>37\,\text{FPS})
-    \end{equation}
+    \begin{align}
+        \bar{T} &= 0.884 \cdot 21.12\,\text{ms} \nonumber \\
+        &\quad + 0.116 \cdot (21.12 + 42.90 + 0.003)\,\text{ms} \nonumber \\
+        &\approx 26.54\,\text{ms}
+    \end{align}
+    delivering over 37 frames per second in continuous scouting operation.
 \end{itemize}
 
 \begin{figure*}[htbp]
@@ -324,8 +327,8 @@ The complete end-to-end execution flow is formalized in Algorithm~\ref{alg:biodi
 \label{sec:packaging}
 Agricultural scouting hardware operates under rigorous physical constraints: onboard Flash memory is shared with flight telemetry and sensor buffers, while remote rural fields lack Internet connectivity for cloud offloading. BioDINO-Edge is partitioned into two INT8 ONNX binaries:
 \begin{itemize}
-    \item \textbf{Tier 1 Standalone Engine (\texttt{biodino\_mobile\_int8.onnx}):} A 15.13\,MB compressed binary (22.05\,MB resident footprint in RAM) packaging DINOv2 Small INT8, calibrated Phase~0 prototypes, and the Shannon confidence gate with the ONNX Runtime C++ execution provider. Bundled directly into a standalone 22.73\,MB Android APK, it enables immediate offline foliar diagnosis.
-    \item \textbf{Tier 2 Companion Module (\texttt{biodino\_companion\_int8.onnx}):} An 85.26\,MB companion model packaging BioCLIP ViT-B INT8 and the 896-D Fisher projection matrix, installed on-demand when high-precision multimodal escalation is required. Total combined edge footprint is strictly 107.31\,MB, well below the standard 110\,MB IoT memory threshold.
+    \item \textbf{Tier 1 Standalone Engine} (\path{biodino_mobile_int8.onnx}): A 15.13\,MB compressed binary (22.05\,MB resident footprint in RAM) packaging DINOv2 Small INT8, calibrated Phase~0 prototypes, and the Shannon confidence gate with the ONNX Runtime C++ execution provider. Bundled directly into a standalone 22.73\,MB Android APK, it enables immediate offline foliar diagnosis.
+    \item \textbf{Tier 2 Companion Module} (\path{biodino_companion_int8.onnx}): An 85.26\,MB companion model packaging BioCLIP ViT-B INT8 and the 896-D Fisher projection matrix, installed on-demand when high-precision multimodal escalation is required. Total combined edge footprint is strictly 107.31\,MB, well below the standard 110\,MB IoT memory threshold.
 \end{itemize}
 
 % =============================================================================
@@ -370,7 +373,7 @@ Hardware profiling runs in a simulated Raspberry Pi 5 environment featuring a qu
 \label{sec:comparative_results}
 Table~\ref{tab:comparative} compares BioDINO-Edge against general vision-language baselines (Zero-Shot CLIP \cite{radford2021clip}, Tip-Adapter \cite{zhang2022tip}, CLIP+LoRA \cite{hu2022lora}) and specialized agricultural few-shot architectures (AgriFewNet \cite{babu2025agrifewnet}, Zhao \textit{et al.} \cite{zhao2026lightweight}, VSF \cite{zhou2026vsf}).
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
 \centering
 \caption{Cross-domain 5-shot diagnostic performance on PlantVillage (11-class) and PlantDoc benchmarks. Bold: best mean; italics: peak statistical episode; ``--'': not evaluated.}
 \label{tab:comparative}
@@ -393,7 +396,7 @@ BioDINO + Fisher-LDA (Inductive) & 96.76 $\pm$ 1.27 & 95.08 $\pm$ 1.15 & 81.79 $
 \textit{-- Peak Single-Episode} & \textit{98.72} & \textit{98.41} & \textit{100.00} & \textit{58.73} \\
 \bottomrule
 \end{tabularx}
-\end{table}
+\end{table*}
 
 Zero-shot CLIP struggles severely on foliar pathology (21.20\% accuracy), as general pretraining cannot differentiate fine-grained lesions from healthy leaf mesophyll. While parameter-efficient fine-tuning (CLIP+LoRA) achieves 86.10\%, it requires GPU backpropagation and optimizer states. BioDINO-Edge outperforms all baselines across every regime without updating a single neural backbone parameter. On the 11-class PlantVillage benchmark, transductive BioDINO-Edge outperforms the recent multimodal VSF baseline \cite{zhou2026vsf} by 6.86 percentage points (97.37\% vs. 90.51\%). On in-the-wild PlantDoc (5-way 5-shot), it achieves 83.61\% $\pm$ 11.69\%, surpassing VSF by 13.00 percentage points and Zhao \textit{et al.} \cite{zhao2026lightweight} by 29.37 points. In 27-way simultaneous evaluation across 13 plant species (chance: 3.70\%), BioDINO-Edge achieves 56.35\% accuracy (peak: 58.73\%) completely in closed form.
 
@@ -401,7 +404,7 @@ Zero-shot CLIP struggles severely on foliar pathology (21.20\% accuracy), as gen
 \label{sec:per_class}
 Table~\ref{tab:per_class} reports per-class precision, recall, and F1-scores across all 9,330 PlantVillage test queries. Representative spatial explainability overlays are visualized in Fig.~\ref{fig:saliency}.
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
 \centering
 \caption{BioDINO-Edge per-class diagnostic metrics across 11 novel pathologies (9,330 test leaves).}
 \label{tab:per_class}
@@ -428,14 +431,14 @@ Potato Healthy Foliage & 0.820 & 0.993 & 0.898 & 147 \\
 \textbf{Single-Run Accuracy} & \multicolumn{4}{c}{\textbf{98.32\%} (Peak Statistical Episode: \textbf{98.72\%})} \\
 \bottomrule
 \end{tabularx}
-\end{table}
+\end{table*}
 
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
 \centering
-\includegraphics[width=0.88\columnwidth]{fig_saliency.pdf}
+\includegraphics[width=0.88\textwidth]{fig_saliency.pdf}
 \caption{Visual explainability across foliar pathologies: Cols.~1--2 from laboratory PlantVillage (Apple Cedar Rust, Apple Black Rot) and Cols.~3--4 from field PlantDoc (Potato Late Blight, Grape Black Rot). (a) Raw RGB query leaf. (b) Uncalibrated DINOv2 self-attention displaying attention sinks on veins and petioles \cite{darcet2024vision}. (c) Calibrated saliency overlay: routine queries exit via Tier-1, while ambiguous field queries escalate to Tier-2 where regularized Fisher-LDA suppresses foliar background and focuses on active necrotic margins.}
 \label{fig:saliency}
-\end{figure}
+\end{figure*}
 
 Pathological ``twins'' that confound Euclidean baselines (e.g., Grape Esca vs. Grape Black Rot) achieve high F1-scores of 0.979 and 0.976. In terms of epidemiological safety, BioDINO-Edge suppresses the false-negative disease escape rate to \textbf{0.604\%} (only 43 of 7,125 infected leaves misclassified as healthy), representing a 58.6\% reduction relative to CLIP+LoRA (1.46\%). Cross-species confusion is reduced to \textbf{0.011\%} (one potato query attributed to apple). Potato Healthy exhibits high recall (0.993) and moderate precision (0.820), reflecting a conservative agronomic triage behavior under acute class imbalance (147 healthy vs. $\approx$2,000 infected leaves).
 
@@ -447,21 +450,22 @@ Table~\ref{tab:ablation} reports a systematic ablation across identical 5-shot s
 \centering
 \caption{Systematic ablation study of BioDINO-Edge architectural components (5-shot, 9,330 queries).}
 \label{tab:ablation}
-\small
-\begin{tabularx}{\textwidth}{lcc}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcc}
 \toprule
-\textbf{Configuration / Component} & \textbf{Accuracy (\%)} & \textbf{Macro F1 (\%)} \\
+\textbf{Configuration / Component} & \textbf{Acc. (\%)} & \textbf{F1 (\%)} \\
 \midrule
-(1) Fast-Path DINOv2 Small alone (Cosine Prototypes) & 85.42 & 82.10 \\
+(1) Fast-Path DINOv2 Small alone & 85.42 & 82.10 \\
 (2) Deep-Path BioCLIP ViT-B alone & 92.27 & 89.70 \\
-(3) Naive Multi-Prompt Text Prototypes & 75.12 & 72.80 \\
-(4) Static Prototype Cosine Blending & 92.58 & 90.06 \\
-(5) Multi-View Augmentation (8 views, $N=440$ vectors) & 94.15 & 93.60 \\
-(6) + Regularized Fisher-LDA Manifold Alignment & 96.76 & 95.08 \\
-(7) + Soft-Anchored Transductive Recalibration (Single-Run) & 98.32 & 97.64 \\
+(3) Naive Multi-Prompt Text Proto. & 75.12 & 72.80 \\
+(4) Static Prototype Cosine Blend & 92.58 & 90.06 \\
+(5) Multi-View Aug. (8 views) & 94.15 & 93.60 \\
+(6) + Regularized Fisher Alignment & 96.76 & 95.08 \\
+(7) + Transductive Recalibration & 98.32 & 97.64 \\
 (8) + Peak Statistical Episode & \textbf{98.72} & \textbf{98.41} \\
 \bottomrule
-\end{tabularx}
+\end{tabular*}
 \end{table}
 
 \begin{itemize}
@@ -480,7 +484,7 @@ In safety-critical agricultural automation (e.g., robotic spraying), miscalibrat
 \label{sec:hardware_bench}
 Table~\ref{tab:edge_bench} details runtime profiling on the Raspberry Pi 5 ARM Cortex-A76 testbed using ONNX Runtime INT8.
 
-\begin{table}[htbp]
+\begin{table*}[htbp]
 \centering
 \caption{Edge hardware INT8 quantization, latency, and memory footprint profile (ONNX Runtime, 4-thread CPU, no GPU).}
 \label{tab:edge_bench}
@@ -500,7 +504,7 @@ Closed-Form Transductive Update & -- & Cache Buffer & $<$22.00 & Asynchronous \\
 \multicolumn{5}{l}{\footnotesize $^\dagger$22.05\,MB working RAM footprint from a 15.13\,MB compressed OTA payload.} \\
 \multicolumn{5}{l}{\footnotesize $^*$Complete standalone Android APK installer; Tier-2 downloaded on-demand.}
 \end{tabularx}
-\end{table}
+\end{table*}
 
 Tier-1 executes in 21.12\,ms (47.4\,FPS), comfortably exceeding the 45\,FPS real-time video threshold. Tier-2 executes in 42.90\,ms (23.3\,FPS). The linear Fisher-LDA projection requires only 0.003\,ms. With 88.4\% of queries exiting via Tier-1, effective blended field latency is 26.54\,ms ($>$37\,FPS). Packaged with ONNX Runtime C++ and the native Android UI, the standalone APK is 22.73\,MB, operating entirely offline on edge hardware.
 
@@ -512,18 +516,19 @@ Table~\ref{tab:stress_bench} assesses diagnostic stability under synthetic field
 \centering
 \caption{Diagnostic robustness under environmental corruptions and Shannon gate rejection behavior.}
 \label{tab:stress_bench}
-\small
-\begin{tabularx}{\textwidth}{lcccc}
+\footnotesize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc}
 \toprule
-\textbf{Environmental Stress Regime} & \textbf{Raw Acc. (\%)} & \textbf{Gate Rejection (\%)} & \textbf{Safe Acc. (\%)} & \textbf{Silent Error (\%)} \\
+\textbf{Stress Regime} & \textbf{Raw Acc} & \textbf{Rej.} & \textbf{Safe Acc} & \textbf{Silent Err} \\
 \midrule
-Pristine (Clean Laboratory) & 96.97 & 0.00 & 96.97 & 3.03 \\
-Solar Glare (Specular Highlight) & 90.24 & 0.00 & 90.24 & 9.76 \\
-Canopy Shading (Harsh Shadow) & 91.92 & 0.67 & 92.54 & 7.41 \\
-Motion Blur (Platform Shake) & 78.45 & 0.34 & 78.72 & 21.21 \\
-Severe Defocus Blur (Out of Focus) & 49.16 & 3.37 & 50.17 & 48.15 \\
+Pristine (Clean) & 96.97\% & 0.00\% & 96.97\% & 3.03\% \\
+Solar Glare & 90.24\% & 0.00\% & 90.24\% & 9.76\% \\
+Canopy Shading & 91.92\% & 0.67\% & 92.54\% & 7.41\% \\
+Motion Blur & 78.45\% & 0.34\% & 78.72\% & 21.21\% \\
+Severe Defocus & 49.16\% & 3.37\% & 50.17\% & 48.15\% \\
 \bottomrule
-\end{tabularx}
+\end{tabular*}
 \end{table}
 
 The framework maintains 90.24\% accuracy under severe solar glare and 91.92\% under canopy shadows. Under severe defocus blur, accuracy drops to 49.16\% because high-frequency lesion textures are attenuated. Deploying a lightweight pre-inference Laplacian variance filter ($<$0.5\,ms) reliably prompts operators to refocus before diagnostic evaluation.
@@ -551,11 +556,9 @@ BioDINO-Edge processes images at the individual leaf frame level. In unsegmented
 In this paper, we presented \textbf{BioDINO-Edge}, a gradient-free few-shot foliar disease diagnostic framework that adapts frozen DINOv2 and BioCLIP foundation models without backpropagation. By resolving small-sample covariance singularity ($N \ll d$) through closed-form Ledoit--Wolf shrinkage, BioDINO-Edge suppresses shared vegetative background variance by over $31\times$, computing optimal Fisher-LDA discriminant boundaries in under 22\,ms on edge CPUs. An adaptive confidence gate combining normalized Shannon entropy and top-2 margin resolves routine foliage in 21.12\,ms ($>$45\,FPS), escalating ambiguous queries to a multimodal classifier with soft-anchored transductive recalibration. Packaged into a standalone 22.73\,MB Android APK, BioDINO-Edge achieves 97.37\% accuracy on 11-class PlantVillage with a 0.604\% false-negative rate and 83.61\% on in-the-wild PlantDoc, offering an accurate, real-time diagnostic solution for resource-constrained agricultural edge platforms.
 
 % =============================================================================
-% BACK MATTER (ELSEVIER REQUIREMENTS)
+% BACK MATTER (ELSEVIER CAS-DC FORMAT)
 % =============================================================================
-\section*{CRediT Authorship Contribution Statement}
-\textbf{Reyhane Javidi Alsaadi:} Conceptualization, Methodology, Software, Formal analysis, Investigation, Data Curation, Writing - Original Draft, Visualization. \\
-\textbf{Mohammad Reza Samadzadeh:} Conceptualization, Validation, Writing - Review \& Editing, Supervision, Project administration.
+\printcredits
 
 \section*{Declaration of Competing Interest}
 The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
