@@ -202,13 +202,16 @@ The denominator $N - C = 440 - 11 = 429$ represents degrees of freedom remaining
 Consequently, $\mathbf{S}_W$ has nullity of at least $896 - 429 = 467$, possessing at least 467 eigenvalues equal to zero ($\det(\mathbf{S}_W) = 0$). The matrix is strictly singular, rendering standard Fisher-LDA mathematically impossible to invert directly.
 
 \subsubsection{Analytical Ledoit--Wolf Covariance Shrinkage}
+\label{sec:shrinkage}
 Rather than resorting to heuristic regularization (e.g., grid search over $\mathbf{S}_W + \epsilon \mathbf{I}$), we regularize $\mathbf{S}_W$ using analytical Ledoit--Wolf shrinkage \cite{ledoit2004well}, which contracts $\mathbf{S}_W$ toward a well-conditioned spherical target:
 \begin{equation}
     \hat{\mathbf{\Sigma}} = (1 - \rho^*)\mathbf{S}_W + \rho^* \nu \mathbf{I}_{d}, \quad \nu = \frac{1}{d}\text{Tr}(\mathbf{S}_W)
+    \label{eq:lw_target}
 \end{equation}
 The optimal shrinkage intensity $\rho^* \in (0, 1]$ is determined in closed form by minimizing expected quadratic Frobenius risk:
 \begin{equation}
     \rho^* = \min\left(1, \frac{\sum_{i=1}^N \|(\mathbf{z}_i - \boldsymbol{\mu}_{c_i})(\mathbf{z}_i - \boldsymbol{\mu}_{c_i})^T - \mathbf{S}_W\|_F^2}{N^2 \left[\text{Tr}(\mathbf{S}_W^2) - \frac{1}{d}\text{Tr}^2(\mathbf{S}_W)\right]}\right)
+    \label{eq:lw_shrinkage}
 \end{equation}
 Because all zero eigenvalues of $\mathbf{S}_W$ are shifted to strictly positive values $\tilde{\lambda}_i = (1 - \rho^*)\lambda_i + \rho^* \nu \ge \rho^* \nu > 0$, the regularized matrix $\hat{\mathbf{\Sigma}}$ is guaranteed to be strictly positive-definite and well-conditioned. Its inverse $\hat{\mathbf{\Sigma}}^{-1}$ is solved stably via Cholesky decomposition ($\hat{\mathbf{\Sigma}} = \mathbf{L}\mathbf{L}^T$). Evaluating a query vector $\mathbf{z}$ via $\mathbf{l}_{\text{fisher}} = \mathbf{z}\mathbf{W}^T + \mathbf{b}$ requires only $C \cdot d = 11 \times 896 = 9{,}856$ multiply-accumulate operations ($\approx 19.7$\,kFLOPs), executing in 0.003\,ms on an edge CPU.
 
@@ -255,6 +258,7 @@ When $\mathcal{C}(\mathbf{x}) < \tau_{\text{conf}}$, the query escalates to Tier
 yielding the final consensus diagnosis $\hat{y} = \arg\max_c p_{\text{blend}, c}$.
 
 \subsubsection{Soft-Anchored Transductive Recalibration}
+\label{sec:transductive}
 In 5-shot calibration, centroids $\boldsymbol{\mu}_c$ are estimated from five support leaves. Diurnal illumination changes, shadows, and symptom progression introduce prototype shift between initial support images and field queries. To adapt without manual labels, confident Tier-2 queries satisfying $\max_c p_{\text{blend}, c} \ge 0.70$ are buffered into an on-device FIFO queue as reference anchors $\mathcal{Q}_{\text{anchor}}^{(c)}$, capped at 20 anchors per class. Ground-truth support samples receive a $3\times$ weight factor to prevent pseudo-label drift:
 \begin{equation}
     \tilde{\mathcal{S}}_c^{\text{trans}} = \tilde{\mathcal{S}}_c^{(3\times)} \cup \mathcal{Q}_{\text{anchor}}^{(c)}
@@ -345,11 +349,27 @@ We evaluate BioDINO-Edge across two distinct foliar pathology regimes:
 From the standard PlantVillage repository \cite{hughes2012plantvillage}, we construct a curated 11-class diagnostic subset comprising 9,385 foliar images across three economically critical crops: Apple (\textit{Malus domestica}), Grape (\textit{Vitis vinifera}), and Potato (\textit{Solanum tuberosum}). The 11 classes span healthy foliage and 8 fungal/bacterial/oomycete pathologies: Apple Scab (\textit{Venturia inaequalis}), Apple Black Rot (\textit{Botryosphaeria obtusa}), Apple Cedar Rust (\textit{Gymnosporangium juniperi-virginianae}), Apple Healthy, Grape Black Rot (\textit{Guignardia bidwellii}), Grape Esca / Black Measles (\textit{Phaeomoniella chlamydospora}), Grape Leaf Blight (\textit{Pseudocercospora vitis}), Grape Healthy, Potato Early Blight (\textit{Alternaria solani}), Potato Late Blight (\textit{Phytophthora infestans}), and Potato Healthy. For few-shot calibration, 5 support leaves per class ($K=5$) are randomly sampled (55 total), strictly isolating the remaining 9,330 images as unseen query test leaves. Neither support nor test splits were involved in pretraining the frozen foundation backbones.
 
 \subsubsection{PlantDoc In-The-Wild Benchmark (Field Regime)}
-To evaluate cross-domain robustness under complex agricultural noise (e.g., specular solar glare, canopy shading, soil clutter, overlapping foliage, and motion blur), we evaluate on the PlantDoc benchmark \cite{singh2020plantdoc}. PlantDoc contains 27 classes across 13 botanical species, comprising 252 test images captured in real-world Indian agricultural fields with smartphone cameras. We evaluate under two distinct protocols:
+To evaluate cross-domain robustness under complex agricultural noise (e.g., specular solar glare, canopy shading, soil clutter, overlapping foliage, and motion blur), we evaluate on the in-the-wild PlantDoc benchmark \cite{singh2020plantdoc}. PlantDoc comprises 2,588 foliar images spanning 27 pathology classes across 13 botanical species, partitioned officially into:
+\begin{itemize}
+    \item \textbf{Official Training Repository ($\mathcal{D}_{\text{train}}^{\text{PlantDoc}}$):} 2,336 in-the-wild images across all 27 target classes, serving strictly as the source repository from which few-shot support samples are selected.
+    \item \textbf{Official Test Benchmark ($\mathcal{D}_{\text{test}}^{\text{PlantDoc}}$):} 252 unconstrained field images across the 27 classes, captured with handheld mobile devices under ambient field illumination in Indian agricultural orchards.
+\end{itemize}
+Crucially, in all evaluations, support sets are drawn exclusively from $\mathcal{D}_{\text{train}}^{\text{PlantDoc}}$, while query sets are formed exclusively from $\mathcal{D}_{\text{test}}^{\text{PlantDoc}}$, strictly guaranteeing zero data overlap ($\mathcal{S} \cap \mathcal{Q} = \emptyset$). We evaluate under two distinct few-shot regimes:
 \begin{enumerate}
-    \item \textbf{5-Way 5-Shot Episodic Evaluation:} Fifty independent episodes sample 5 classes with 5 support leaves per class (25 total), classifying remaining leaves.
-    \item \textbf{27-Way All-Class Simultaneous Stress Test:} All 27 classes are evaluated simultaneously (random chance: 3.70\%). The model receives 5 support leaves per category (135 total, expanded via 8-view augmentation to $N=1{,}080$ vectors) and classifies all 252 unconstrained field queries directly in closed form without gradient fine-tuning.
+    \item \textbf{5-Way 5-Shot Episodic Benchmark:} Following standard few-shot evaluation protocols \cite{snell2017prototypical,zhou2026vsf}, we conduct 50 independent Monte Carlo episodes. In each episode $e$, 5 classes are sampled uniformly at random without replacement ($\mathcal{C}_e \subset \{1, \dots, 27\}$). The support set $\mathcal{S}_e$ consists of 5 labeled leaves per class ($5 \times 5 = 25$ total) randomly sampled from the respective class directories in $\mathcal{D}_{\text{train}}^{\text{PlantDoc}}$. The query set $\mathcal{Q}_e$ comprises all test images in $\mathcal{D}_{\text{test}}^{\text{PlantDoc}}$ corresponding to those 5 sampled classes (averaging 46.7 query leaves per episode), ensuring $\mathcal{S}_e \cap \mathcal{Q}_e = \emptyset$.
+    \item \textbf{27-Way All-Class Simultaneous Stress Test:} All 27 classes are evaluated simultaneously in a high-way setting (random chance: $1/27 \approx 3.70\%$). The model receives 5 support leaves per category ($5 \times 27 = 135$ total) sampled strictly from $\mathcal{D}_{\text{train}}^{\text{PlantDoc}}$ (expanded via 8-view multi-scale cropping and color jitter to $N = 1{,}080$ feature vectors) and evaluates on all 252 unconstrained field queries from $\mathcal{D}_{\text{test}}^{\text{PlantDoc}}$ in closed form without gradient backpropagation ($\mathcal{S} \cap \mathcal{Q} = \emptyset$).
 \end{enumerate}
+
+\subsection{Data Integrity, Hyperparameter Provenance, and Leakage Safeguards}
+\label{sec:integrity}
+To prevent data snooping, circular tuning, and optimistic performance estimation, we enforce strict evaluation safeguards:
+\begin{itemize}
+    \item \textbf{Disjoint Support-Query Separation:} For both laboratory (PlantVillage) and field (PlantDoc) regimes, support sets $\mathcal{S}$ and query sets $\mathcal{Q}$ are mutually disjoint ($\mathcal{S} \cap \mathcal{Q} = \emptyset$). In PlantVillage, 55 support leaves are isolated and excluded from the 9,330 query test images. In PlantDoc, all 135 support samples originate strictly from $\mathcal{D}_{\text{train}}^{\text{PlantDoc}}$, while all 252 query images originate from $\mathcal{D}_{\text{test}}^{\text{PlantDoc}}$.
+    \item \textbf{Zero-Tuning Analytical Regularization:} The Ledoit--Wolf shrinkage parameter $\rho^*$ is determined in closed form via Eq.~(\ref{eq:lw_shrinkage}) directly from the sample covariance of the support set. It requires zero hyperparameter search, cross-validation, or tuning on query/test data.
+    \item \textbf{Frozen Cross-Domain Hyperparameters:} All operational hyperparameters---namely, the logit scaling factor $\gamma = 20.0$, the Fisher-LDA ensemble weight $w_{\text{lda}} = 0.75$, and the Shannon confidence routing threshold $\tau = 0.35$---were calibrated strictly on the development dataset (PlantVillage Phase-0 validation) and held completely frozen for all PlantDoc experiments. No validation split or hyperparameter tuning was conducted on PlantDoc.
+    \item \textbf{Unsupervised Transductive Anchoring:} The transductive recalibration module (Section~\ref{sec:transductive}) is strictly unsupervised; it operates solely on streaming query feature vectors and model-predicted pseudo-labels. Ground-truth query labels are strictly sequestered and accessed only after inference to compute final performance metrics.
+    \item \textbf{Dual Inductive vs. Transductive Reporting:} To confirm that empirical gains do not depend on transductive adaptation, Table~\ref{tab:comparative} reports both pure Inductive performance (where queries are processed independently without anchor updates) and Transductive performance. Even in pure inductive mode, BioDINO-Edge achieves 81.79\% $\pm$ 11.16\% in 5-way and 55.16\% in 27-way, outperforming all prior state-of-the-art methods.
+\end{itemize}
 
 \subsection{Evaluation Protocols and Epidemiological Safety Metrics}
 \label{sec:metrics}
