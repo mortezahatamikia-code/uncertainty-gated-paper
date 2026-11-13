@@ -13,7 +13,7 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from pipeline.morphopath_engine import (
+from pipeline_morphopath.morphopath_engine import (
     MorphoPathEngine,
     l2_normalize,
     tukey_power_transform,
@@ -21,7 +21,7 @@ from pipeline.morphopath_engine import (
     softmax_prob,
     is_healthy_leaf_name,
 )
-from pipeline.canopy_suppressor import CanopyClutterGlareSuppressor
+from pipeline_morphopath.canopy_suppressor import CanopyClutterGlareSuppressor
 from experiments.phase1_morphopath.benchmark_phase4_advanced import (
     load_plantdoc_seed42,
     load_plantvillage_pool,
@@ -77,7 +77,7 @@ def evaluate_opt006(tau_ex_values=[1.0, 3.0, 5.0, 8.0, 10.0, 12.0, 15.0, 20.0, 3
     qdc, _ = center_and_normalize(qd) # test-time mean centering
     
     # Mean prototype baseline for comparison
-    from pipeline.morphopath_math import compute_prototypes
+    from pipeline_morphopath.morphopath_math import compute_prototypes
     proto_bio = compute_prototypes(sbc, sup_labels, n_classes)
     proto_dino = compute_prototypes(sdc, sup_labels, n_classes)
     sims_base = 0.65 * (qbc @ proto_bio.T) + 0.35 * (qdc @ proto_dino.T)

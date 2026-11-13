@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score
 
-from pipeline.morphopath_archetypes import ARCHETYPE_NAMES, is_healthy_leaf_name
+from pipeline_morphopath.morphopath_archetypes import ARCHETYPE_NAMES, is_healthy_leaf_name
 
 
 def compute_clinical_metrics(

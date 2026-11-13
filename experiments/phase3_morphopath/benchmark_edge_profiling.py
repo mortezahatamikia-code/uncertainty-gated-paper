@@ -43,7 +43,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from pipeline.morphopath_engine import MorphoPathEngine, l2_normalize
+from pipeline_morphopath.morphopath_engine import MorphoPathEngine, l2_normalize
 
 CACHE_FILE = PROJECT_ROOT / "experiments" / "phase1_morphopath" / "plantdoc_features_seed42.pt"
 MICRO_FILE = PROJECT_ROOT / "experiments" / "phase1_morphopath" / "micro_symptom_prototypes.pt"

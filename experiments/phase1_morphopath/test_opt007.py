@@ -14,7 +14,7 @@ import torch.nn.functional as F
 import open_clip
 from sklearn.metrics import accuracy_score, f1_score
 
-from pipeline.morphopath_engine import (
+from pipeline_morphopath.morphopath_engine import (
     MorphoPathEngine,
     l2_normalize,
     tukey_power_transform,
@@ -22,7 +22,7 @@ from pipeline.morphopath_engine import (
     softmax_prob,
     is_healthy_leaf_name,
 )
-from pipeline.canopy_suppressor import CanopyClutterGlareSuppressor
+from pipeline_morphopath.canopy_suppressor import CanopyClutterGlareSuppressor
 from experiments.phase1_morphopath.benchmark_phase4_advanced import load_plantdoc_seed42
 
 # 1. Define Negative Symptom Prompts

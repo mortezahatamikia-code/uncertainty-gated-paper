@@ -43,7 +43,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from pipeline.biodino_hierarchical_pipeline import extract_botanical_species
-from pipeline.morphopath_engine import (
+from pipeline_morphopath.morphopath_engine import (
     MorphoPathEngine,
     fit_shrunk_lda,
     is_healthy_leaf_name,

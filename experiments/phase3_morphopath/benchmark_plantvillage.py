@@ -60,7 +60,7 @@ from pipeline.biodino_hierarchical_pipeline import (
     build_augmentation_pipeline,
     DEVICE,
 )
-from pipeline.morphopath_engine import (
+from pipeline_morphopath.morphopath_engine import (
     MorphoPathEngine,
     ARCHETYPE_NAMES,
     fit_shrunk_lda,

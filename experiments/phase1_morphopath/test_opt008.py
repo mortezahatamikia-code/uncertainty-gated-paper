@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from sklearn.metrics import accuracy_score, f1_score
 
-from pipeline.morphopath_engine import (
+from pipeline_morphopath.morphopath_engine import (
     MorphoPathEngine,
     fit_shrunk_lda,
     is_healthy_leaf_name,

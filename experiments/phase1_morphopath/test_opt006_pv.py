@@ -10,7 +10,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score
 from experiments.phase1_morphopath.benchmark_phase4_advanced import load_plantvillage_pool
-from pipeline.morphopath_engine import (
+from pipeline_morphopath.morphopath_engine import (
     tukey_power_transform,
     center_and_normalize,
     l2_normalize,
