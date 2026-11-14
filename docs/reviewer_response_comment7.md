@@ -135,7 +135,7 @@ The measurements contradict three earlier headline claims. We have corrected the
 | "22.05 MB resident RAM" / "110 MB RAM budget" | **Peak PSS = 497.45 MB** (385.02 MB native heap); 107.31 MB is the **on-disk/OTA storage** footprint, not a RAM bound | **Corrected**; storage vs. runtime RAM distinguished |
 | BioCLIP "42.90 ms" | **Tier-2 incremental = 104.74 ms** | **Corrected** |
 
-The gate's primary benefit is therefore **safety, not throughput**: the fast-exited subset is resolved at 99.7% accepted accuracy and 0.25% false-negative rate, while ambiguous queries receive the full multimodal analysis. The standalone APK remains **22.73 MB** and operates entirely offline; accuracy is unchanged (97.41% ± 0.71% 30-episode mean), since the corrections concern latency/memory reporting, not the classifier.
+The gate's primary benefit is therefore **safety, not throughput**: the fast-exited subset is resolved at 99.7% accepted accuracy and 0.25% false-negative rate, while ambiguous queries receive the full multimodal analysis. The standalone APK remains **≈22.8 MB** and operates entirely offline; accuracy is unchanged (97.41% ± 0.71% 30-episode mean), since the corrections concern latency/memory reporting, not the classifier.
 
 ---
 

@@ -112,7 +112,7 @@ android {
         }
         // Research-only build type for on-device edge benchmarks (reviewer evidence).
         // Keeps EJML + benchmark harness out of the production release APK so the
-        // reported 22.73 MB bundle size is unchanged. Build with: assembleBenchmark
+        // reported ~22.8 MB bundle size is unchanged. Build with: assembleBenchmark
         create("benchmark") {
             initWith(getByName("debug"))
             isMinifyEnabled = false
