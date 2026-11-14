@@ -57,7 +57,11 @@ HERE = Path(__file__).resolve().parent
 CACHE = _PROJECT_ROOT / "cache_artifacts" / "pv_novel_embeddings.pt"
 N_EPISODES, SEED, K_SHOT = 30, 42, 5
 SCALE, W_LDA, TAU = 20.0, 0.75, 0.35
-T1_MS, T2_MS = 21.12, 64.02
+# Per-path edge costs measured on the physical Android testbed (Samsung SM-S721B,
+# Exynos 2400e, ONNX Runtime 1.18.0 INT8, 4-thread CPU, NNAPI off); see
+# experiments/edge_device_benchmark/results/benchmark_report.json (mean over 100 iters).
+# T1 = Tier-1 fast-exit end-to-end; T2 = escalated Tier-2 end-to-end (T1 + incremental BioCLIP).
+T1_MS, T2_MS = 59.78, 164.52
 TAU_GRID = [round(0.05 * i, 2) for i in range(1, 15)]  # 0.05 .. 0.70
 
 

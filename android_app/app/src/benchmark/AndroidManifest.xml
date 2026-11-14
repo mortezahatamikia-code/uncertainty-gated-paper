@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Benchmark-only manifest overlay (merged into the 'benchmark' build type).
+  The production release APK does not contain this activity.
+  Launch via adb shell am start with component
+  com.biodino.edge/.benchmark.BenchmarkActivity and integer extras
+  n_iters / sustained_seconds (see run_device_benchmark.ps1).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity
+            android:name=".benchmark.BenchmarkActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize"
+            android:theme="@android:style/Theme.DeviceDefault.Light" />
+    </application>
+
+</manifest>

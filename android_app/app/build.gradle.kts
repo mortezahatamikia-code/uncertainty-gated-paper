@@ -110,6 +110,18 @@ android {
         debug {
             isMinifyEnabled = false
         }
+        // Research-only build type for on-device edge benchmarks (reviewer evidence).
+        // Keeps EJML + benchmark harness out of the production release APK so the
+        // reported 22.73 MB bundle size is unchanged. Build with: assembleBenchmark
+        create("benchmark") {
+            initWith(getByName("debug"))
+            isMinifyEnabled = false
+            isShrinkResources = false
+            // Non-debuggable so Android does not show the "debuggable app / 16 KB" compatibility
+            // dialog over the benchmark (it can interrupt timing and add outliers).
+            isDebuggable = false
+            matchingFallbacks += listOf("debug")
+        }
     }
 
     compileOptions {
@@ -162,6 +174,10 @@ dependencies {
 
     // Kotlin Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    // EJML dense linear algebra: only linked into the research 'benchmark' build type
+    // (closed-form Fisher / Ledoit-Wolf / Cholesky adaptation-cost breakdown).
+    "benchmarkImplementation"("org.ejml:ejml-all:0.43.1")
 
     // Testing
     testImplementation("junit:junit:4.13.2")
