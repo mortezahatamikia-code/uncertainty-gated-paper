@@ -20,7 +20,7 @@ flowchart TD
     
     F --> G{"آیا C(x) >= tau (0.35)؟"}
     
-    G -- "بله (اطمینان بالا)" --> H["خروج سریع: FAST EXIT\nاستفاده مستقیم از پیش‌بینی DINOv2\nتاخیر: زیر ۲۵ میلی‌ثانیه"]
+    G -- "بله (اطمینان بالا)" --> H["خروج سریع: FAST EXIT\nاستفاده مستقیم از پیش‌بینی DINOv2\nتاخیر: ۵۹.۷۸ میلی‌ثانیه روی دستگاه (INT8)"]
     G -- "خیر (ابهام بالینی)" --> I["مسیر عمیق: DEEP ROUTE\nفراخوانی BioCLIP ViT-B"]
     
     I --> J["پیش‌پردازش اختصاصی BioCLIP (t_bio)"]
@@ -70,7 +70,7 @@ class DemoConfig:
 $$\mathcal{C}(x) = (p_{(1)} - p_{(2)}) \times \left(1 - \frac{-\sum_{k=1}^K p_k \ln(p_k)}{\ln(K)}\right)$$
 اگر این شاخص از آستانه $\tau=0.35$ بیشتر باشد، پیش‌بینی سریع DINOv2 بسیار قطعی است و نیازی به اتلاف پردازش روی مسیر عمیق وجود ندارد.
 
-### ۳.۳. کالیبراسیون آنی منیفولد فیشر (< ۵ میلی‌ثانیه)
+### ۳.۳. کالیبراسیون آنی منیفولد فیشر (حل بستهٔ لدویت-ولف)
 اسکریپت با لود کردن فایل کش آرتیفکت (`cache_artifacts/pv_novel_embeddings.pt`)، پروتوتایپ‌های ۵-شات ساپورت را استخراج کرده و ماتریس وزن ($W \in \mathbb{R}^{11 \times 896}$) و بایاس ($b \in \mathbb{R}^{11}$) فیشر را با انقباض لدویت-ولف محاسبه و مستقیماً به تانسور پردازشی منتقل می‌نماید:
 ```python
 W_fisher, b_fisher, _ = fit_fisher_lda(s_concat, s_y, device=device)
@@ -114,19 +114,19 @@ python pipeline/demo_predict.py --tau 0.80
   | |_) | | (_) | |_| |_| |_| |\  | |_| |_____ | |___| (_| | (_| |  __/
   |____/|_|\___/|____/|_____|_| \_|\____/      |_____|\__,_|\__, |\___|
                                                             |___/      
-     Biologically-Grounded Edge Vision Pathology | SOTA 98.72%
+     Biologically-Grounded Edge Vision Pathology | Peak 98.67%
 ========================================================================
 
 [*] Target leaf image: plantvillage/.../Apple___Apple_scab/...FREC_Scab 3335.JPG
 
 [*] Inference Hardware Device: CPU
 [*] Loading pre-calibrated support manifold from: cache_artifacts\pv_novel_embeddings.pt
-  • Regularized Fisher-LDA manifold calibrated in <5 ms.
+  • Regularized Fisher-LDA manifold calibrated (closed-form Ledoit-Wolf).
 
 [*] Initializing DINOv2 Small Fast-Path backbone...
 
 ==========================================================================
- ⏱️  Inference Latency:    26.15 ms  (Target Edge Budget: < 25 ms)
+ ⏱️  Inference Latency:    26.15 ms  (Measured On-Device Tier-1: 59.78 ms)
  🚦 Gating Route:         FAST EXIT [DINOv2 Small Single-Pass]
  🌡️  Shannon Entropy:      0.353 (0.0 = Certainty, 1.0 = Pure Guess)
  📏 Decision Margin:      0.690
@@ -153,7 +153,7 @@ python pipeline/demo_predict.py --tau 0.80
 ```
 
 ### شاخص‌های کلیدی:
-1. **⏱️ Inference Latency:** مدت زمان خالص استنتاج تصویر (هدف کمتر از ۲۵ میلی‌ثانیه برای پردازش بیش از ۴۰ فریم بر ثانیه).
+1. **⏱️ Inference Latency:** مدت زمان خالص استنتاج تصویر (بودجه اندازه‌گیری‌شده روی دستگاه: ۵۹.۷۸ میلی‌ثانیه برای سطح ۱، معادل ~۱۶.۷ فریم بر ثانیه؛ میانگین آبشاری ۱۴۹.۸۴ میلی‌ثانیه).
 2. **🚦 Gating Route:** مشخص می‌کند که آیا تصویر بدون نیاز به مدل دوم تأیید شده (`FAST EXIT`) یا به دلیل پیچیدگی علائم وارد مدل سنگین پاتولوژی زیستی شده است (`DEEP ROUTE`).
 3. **🌡️ Shannon Entropy:** میزان بی‌نظمی و ابهام توزیع پیش‌بینی بین ۰.۰ (قطعیت کامل) تا ۱.۰ (حدس تصادفی).
 4. **🛡️ Confidence Index:** شاخص نهایی اعتبار بالینی برگ که با آستانه $\tau=0.35$ مقایسه می‌شود.

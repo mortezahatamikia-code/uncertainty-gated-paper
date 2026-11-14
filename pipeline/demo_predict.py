@@ -118,7 +118,7 @@ def print_banner():
   | |_) | | (_) | |_| |_| |_| |\  | |_| |_____ | |___| (_| | (_| |  __/
   |____/|_|\___/|____/|_____|_| \_|\____/      |_____|\__,_|\__, |\___|
                                                             |___/      
-     Biologically-Grounded Edge Vision Pathology | SOTA 98.72%
+     Biologically-Grounded Edge Vision Pathology | Peak 98.67%
 ========================================================================
 """
     print(banner)
@@ -214,7 +214,7 @@ def main():
         support_joint_features = torch.cat([support_bio, support_dino], dim=-1).numpy()
         support_labels_np = support_labels_tensor.numpy()
         fisher_weights, fisher_biases, _ = fit_fisher_lda(support_joint_features, support_labels_np, device=device)
-        print("  • Regularized Fisher-LDA manifold calibrated in <5 ms.\n")
+        print("  • Regularized Fisher-LDA manifold calibrated (closed-form Ledoit-Wolf).\n")
     else:
         print("[-] Pre-computed cache not found. Please run biodino_edge_pipeline.py once to build cache artifacts.")
         sys.exit(1)
@@ -277,7 +277,7 @@ def main():
 
     # ----------------- DISPLAY RESULTS -----------------
     print("\n" + "=" * 74)
-    print(f" ⏱️  Inference Latency:    {latency_ms:.2f} ms  (Target Edge Budget: < 25 ms)")
+    print(f" ⏱️  Inference Latency:    {latency_ms:.2f} ms  (Measured On-Device Tier-1: 59.78 ms)")
     print(f" 🚦 Gating Route:         {route}")
     print(f" 🌡️  Shannon Entropy:      {norm_entropy:.3f} (0.0 = Certainty, 1.0 = Pure Guess)")
     print(f" 📏 Decision Margin:      {margin:.3f}")

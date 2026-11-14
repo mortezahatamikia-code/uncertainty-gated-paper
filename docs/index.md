@@ -23,7 +23,7 @@
 | **[`few_shot_taxonomy_guide.md`](few_shot_taxonomy_guide.md)** | **شجره‌نامه یادگیری چندنمونه‌ای** | محققان آکادمیک | ~ ۲۲۰ خط | بررسی ۴ نسل تکامل یادگیری چندشات از متا-لرنینگ MAML تا BioDINO-Edge ۲۰۲۶. |
 | **[`reviewer_rebuttal_playbook.md`](reviewer_rebuttal_playbook.md)** | **سناریوهای دفاع و پاسخ به داور** | نویسندگان مقاله و ارائه‌دهندگان | ~ ۲۸۰ خط | پاسخ مقتدرانه به ۲۰ پرسش چالشی داوران، فواصل اطمینان و طرح ۱۰ اسلاید دفاع شفاهی. |
 | **[`failure_modes_and_robustness.md`](failure_modes_and_robustness.md)** | **کالبدشکافی خطاها و آزمون OOD** | داوران ژورنال‌های معتبر | ~ ۲۶۰ خط | تحلیل خطاهای باقیمانده، آزمون‌های تنش تاری و نور، تشخیص داده‌های نامربوط با گیت شانون. |
-| **[`edge_hardware_deployment_guide.md`](edge_hardware_deployment_guide.md)** | **راهنمای استقرار سخت‌افزار لبه** | مهندسان سخت‌افزار و IoT | ~ ۲۵۰ خط | استقرار روی رزبری‌پای، انویدیا جتسون، اکسپورت ONNX INT8، مدیریت گرما و باتری پهپاد. |
+| **[`edge_hardware_deployment_guide.md`](edge_hardware_deployment_guide.md)** | **راهنمای استقرار سخت‌افزار لبه** | مهندسان سخت‌افزار و IoT | ~ ۲۵۰ خط | بنچمارک اندازه‌گیری‌شده روی گلکسی S24 FE (INT8 CPU)، اکسپورت ONNX، مدیریت گرما و عملکرد پایدار. |
 | **[`android_mobile_app_guide.md`](android_mobile_app_guide.md)** | **راهنمای اپلیکیشن اندروید نیتیو** | توسعه‌دهندگان اندروید و موبایل | ~ ۲۰۰ خط | معماری کاتلین و Jetpack Compose، پایپلاین بافر مستقیم بدون GC، استنتاج ONNX NNAPI و دوربین CameraX. |
 | **[`paper_guide.md`](paper_guide.md)** | **راهنمای محیط لاتک و کامپایل** | نویسندگان مقاله | ~ ۶۰ خط | راهنمای گام‌به‌گام ستاپ ادیتور، اکستنشن LaTeX Workshop و کامپایلر MiKTeX. |
 | **[challenges_methods_alternatives_and_flowchart.md](challenges_methods_alternatives_and_flowchart.md)** | **چالش‌ها، روش‌های جایگزین، ارکان یادگیری ماشین و فلوچارت تفصیلی** | داوران و مهندسان هوش مصنوعی | **~ ۲۵۰ خط** | تبیین تابع زیان، بهینه‌ساز، توابع فعال‌ساز، روش‌های رد شده (کراس‌آنتروپی، Adam، کسینوسی) و فلوچارت تفصیلی سرتاسری. |
@@ -47,8 +47,8 @@ research-few-shot/
 │   ├── generate_saliency_and_calibration.py      # اسکریپت استخراج سلف‌اتنشن و دیاگرام کالیبراسیون ECE (شکل‌های ۲ و ۳)
 │   └── taxonomic_prompts.py                     # بانک پرامپت‌های گیاه‌پزشکی لاتین (سیب، انگور و سیب‌زمینی)
 │
-├── 🧠 biodino_mobile_int8.onnx                  # مدل مستقل سطح ۱ موبایل (۳۸۴ بعدی، ۲۲MB، تاخیر ~۲۱ms در ریشه)
-├── 🧠 biodino_companion_int8.onnx               # مدل مکمل همراه سطح ۲ (۸۹۶ بعدی، ۸۵MB، دقت ۹۸.۷۲٪ در ریشه)
+├── 🧠 biodino_mobile_int8.onnx                  # مدل مستقل سطح ۱ موبایل (۳۸۴ بعدی، ۲۲.۰۵MB، تاخیر ۵۹.۷۸ms روی دستگاه)
+├── 🧠 biodino_companion_int8.onnx               # مدل مکمل همراه سطح ۲ (۸۹۶ بعدی، ۸۵.۲۶MB، دقت ۹۷.۴۱٪ ± ۰.۷۱٪)
 ├── 📊 biodino_edge_results.json                  # گزارش عددی رسمی بنچمارک، ماتریس کانفیوژن و ECE
 ├── 📜 CHANGELOG.md                              # گاه‌شمار نسخه‌ها و رکوردهای دقت پروژه
 ├── 📦 datapackage.json                          # شناسنامه بسته داده باز OKF (مشخصات ۲۷ کلاس پایه و ۱۱ کلاس نوظهور)
@@ -60,14 +60,14 @@ research-few-shot/
 ├── 📁 cache_artifacts/                          # ⚡ کَش استخراج ویژگی‌های سنگین جهت اجرای آنی زیر ۱ ثانیه
 │   └── pv_novel_embeddings.pt                  # فیچرهای استخراج‌شده ۹,۳۳۰ برگ آزمون ۱۱ کلاسه (۳۵MB)
 │
-├── 📁 paper/                                    # 📝 پکیج کامل مقاله رسمی کنفرانس/ژورنال IEEE
-│   ├── main.tex                                 # سورس کامل دو ستونه لاتک مقاله
-│   ├── main.pdf                                 # فایل PDF دوربین‌خوان نهایی مقاله (۷ صفحه)
+├── 📁 paper/                                    # 📝 پکیج کامل مقاله رسمی ژورنال EAAI (الزویر)
+│   ├── main_eaai_elsarticle.tex                 # سورس کامل لاتک مقاله (قالب الزویر)
+│   ├── main_eaai_elsarticle.pdf                 # فایل PDF نهایی مقاله (۲۰ صفحه)
 │   ├── fig_architecture.pdf / .png             # شکل ۱: معماری دو سطحی BioDINO-Edge
 │   ├── fig_saliency.pdf / .png                 # شکل ۲: نقشه‌های سلف‌اتنشن و مهار چاله توجه
 │   ├── fig_calibration.pdf / .png              # شکل ۳: دیاگرام قابلیت اطمینان و کالیبراسیون ۱۰ سطلی
 │   ├── references.bib                           # مراجع استاندارد BibTeX
-│   └── IEEEtran.cls                             # کلاس رسمی ژورنال‌های IEEE
+│   └── elsarticle.cls                           # کلاس رسمی ژورنال‌های الزویر
 │
 ├── 📁 docs/                                     # 📚 دانشنامه جامع ۱۶ گانه مستندات علمی، ریاضی و اجرایی
 ├── 📁 web/                                      # 🌐 پورتفولیو و وب‌سایت علمی Next.js 16 + Tailwind CSS

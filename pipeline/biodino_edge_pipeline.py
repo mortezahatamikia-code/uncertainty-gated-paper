@@ -257,10 +257,11 @@ class CascadedEvaluator:
     """
     True Adaptive Cascaded Edge Predictor & Evaluator.
     
-    Executes DINOv2 fast-path first (~21 ms on CPU / <2 ms on GPU); only uncertain
-    queries whose Shannon confidence falls below threshold tau trigger the
-    compute-intensive BioCLIP (ViT-B) + Fisher-LDA deep path on edge.
-    Bypasses deep computation for >70% of confident samples, drastically reducing latency.
+    Executes DINOv2 fast-path first (59.78 ms measured on-device, INT8 CPU); only
+    uncertain queries whose Shannon confidence falls below threshold tau trigger
+    the compute-intensive BioCLIP (ViT-B) + Fisher-LDA deep path on edge.
+    Bypasses deep computation for ~14% of samples (30-episode mean fast-exit),
+    lowering mean cascade latency to 149.84 ms vs 164.52 ms for the deep path on all.
     """
     def __init__(
         self,

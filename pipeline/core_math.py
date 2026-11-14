@@ -107,19 +107,6 @@ def compute_class_prototypes(
     ])
 
 
-    # Centralized Fisher-LDA + BioCLIP Taxonomic Text ensemble probability predictor.
-    # Eliminates redundant matrix multiplication, softmax scaling, and convex combination.
-    
-    # Computes:
-    #     1. joint_features = [bioclip_features, dino_features] (if not directly supplied)
-    #     2. lda_prob = Softmax(joint_features @ fisher_weights.T + fisher_biases)
-    #     3. text_prob = Softmax(scale * (bioclip_features @ text_prototypes.T))
-    #     4. ensemble_prob = w_lda * lda_prob + (1.0 - w_lda) * text_prob
-        
-    # Returns:
-    #     ensemble_prob: Ensemble class probability distribution tensor (N, n_classes).
-    #     lda_prob: Pure visual Fisher-LDA class probability distribution tensor (N, n_classes).
-    #     text_prob: Pure textual taxonomic class probability distribution tensor (N, n_classes).
 def compute_fisher_ensemble_probs(
     fisher_weights: torch.Tensor,
     fisher_biases: torch.Tensor,
@@ -132,7 +119,21 @@ def compute_fisher_ensemble_probs(
     w_lda: float = 0.75,
     device: Optional[Union[torch.device, str]] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Centralized Fisher-LDA + BioCLIP Taxonomic Text ensemble probability predictor.
 
+    Eliminates redundant matrix multiplication, softmax scaling, and convex combination.
+
+    Computes:
+        1. joint_features = [bioclip_features, dino_features] (if not directly supplied)
+        2. lda_prob = Softmax(joint_features @ fisher_weights.T + fisher_biases)
+        3. text_prob = Softmax(scale * (bioclip_features @ text_prototypes.T))
+        4. ensemble_prob = w_lda * lda_prob + (1.0 - w_lda) * text_prob
+
+    Returns:
+        ensemble_prob: Ensemble class probability distribution tensor (N, n_classes).
+        lda_prob: Pure visual Fisher-LDA class probability distribution tensor (N, n_classes).
+        text_prob: Pure textual taxonomic class probability distribution tensor (N, n_classes).
+    """
     dev = torch.device(device) if device is not None else fisher_weights.device
 
     # 1. Prepare joint representation on target device
@@ -189,7 +190,7 @@ def refine_transductive(
     
     Selects high-confidence query predictions as pseudo-labeled anchors, repeats the
     ground-truth support set by `support_weight` to prevent manifold drift, and re-fits
-    Fisher LDA in closed form (<25ms) without backpropagation or gradient descent.
+    Fisher LDA in closed form (~534 ms algebra measured on-device) without backpropagation or gradient descent.
     
     Args:
         support_features: Support set concatenated feature embeddings (N_support, 896).
@@ -248,7 +249,7 @@ def refine_transductive(
     concat_features = np.concatenate(refinement_features, axis=0)
     concat_labels = np.concatenate(refinement_labels, axis=0)
 
-    # Re-fit regularized Fisher LDA in closed form (<25ms)
+    # Re-fit regularized Fisher LDA in closed form (~534 ms algebra on-device)
     refined_weights, refined_biases, _ = fit_fisher_lda(concat_features, concat_labels, device=dev)
 
     # Compute refined ensemble probabilities via centralized helper
