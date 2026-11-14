@@ -1,0 +1,41 @@
+{
+  "protocol": "canonical seed-42 5-shot split, 8-view augmented support (N=440), joint 896-D Fisher-LDA (lsqr, auto shrinkage), gamma=20, w_lda=0.75",
+  "cases": [
+    {
+      "image": "D:\\Research\\uncertainty-gated-paper\\plantvillage\\plantvillage dataset\\color\\Apple___Cedar_apple_rust\\052e3deb-0499-4685-bc39-cea7f1df0700___FREC_C.Rust 3742.JPG",
+      "title": "Apple Cedar Rust",
+      "gate_confidence": 0.2062,
+      "routed_tier": 2,
+      "lda_predicted_class": "Apple Cedar Rust",
+      "intended_class": "Apple Cedar Rust",
+      "contrast": "Apple Cedar Rust vs Apple Healthy"
+    },
+    {
+      "image": "D:\\Research\\uncertainty-gated-paper\\plantvillage\\plantvillage dataset\\color\\Apple___Black_rot\\032cf235-07ff-478f-b347-d55c07835bc5___JR_FrgE.S 8778.JPG",
+      "title": "Apple Black Rot",
+      "gate_confidence": 0.0592,
+      "routed_tier": 2,
+      "lda_predicted_class": "Apple Black Rot",
+      "intended_class": "Apple Black Rot",
+      "contrast": "Apple Black Rot vs Apple Healthy"
+    },
+    {
+      "image": "D:\\Research\\uncertainty-gated-paper\\pipeline\\plantdoc_samples\\apple_rust_leaf_10.jpg",
+      "title": "Apple Cedar Rust",
+      "gate_confidence": 0.0176,
+      "routed_tier": 2,
+      "lda_predicted_class": "Apple Cedar Rust",
+      "intended_class": "Apple Cedar Rust",
+      "contrast": "Apple Cedar Rust vs Apple Healthy"
+    },
+    {
+      "image": "D:\\Research\\uncertainty-gated-paper\\pipeline\\plantdoc_samples\\grape_leaf_black_rot_4.jpg",
+      "title": "Grape Black Rot",
+      "gate_confidence": 0.052,
+      "routed_tier": 2,
+      "lda_predicted_class": "Grape Esca",
+      "intended_class": "Grape Black Rot",
+      "contrast": "Grape Esca vs Grape Healthy"
+    }
+  ]
+}

@@ -69,7 +69,7 @@ All methods share, **within each episode**, the identical support indices, query
 | Table `tab:comparative` BioDINO 11-class | Canonical reference run (reproduced ≤ 0.04 pp by the script) |
 | Table `tab:comparative` BioDINO 5-way K-shot | **Controlled re-run** (this work) |
 | Table `tab:literature` AgriFewNet / VSF / Zhao | **As reported** in original publications, *not* re-run |
-| PlantDoc 83.61% / 56.35% | Our cross-domain run (protocol in appendix) |
+| PlantDoc 83.61% / 56.35% | Our PlantDoc field-domain run (labeled target-domain support; protocol in appendix) |
 
 ### Literature values, as reported (not a controlled head-to-head)
 
@@ -90,7 +90,7 @@ The reviewer is correct that 5-Way vs. 27-Way comparisons under different condit
 
 - The **controlled table** contains only regimes run under identical conditions (11-class and 5-way K-shot on the same PlantVillage subset). The 27-way all-class stress test is **not** placed head-to-head with 5-way literature values.
 - The **5-way K-shot ladder (K = 1, 5, 10, 15)** matches the measurement protocols of VSF (5-way 1/5-shot) and AgriFewNet (1/5/10/15-shot), enabling *in-regime* comparison (same regime, different splits — explicitly caveated).
-- **PlantDoc** results (83.61% 5-way 5-shot; 56.35% 27-way) are reported as our cross-domain results; literature PlantDoc values (VSF 70.61, Zhao 54.24) are listed separately as context, not as a controlled comparison.
+- **PlantDoc** results (83.61% 5-way 5-shot; 56.35% 27-way) are reported as our field-domain results (labeled target-domain support); literature PlantDoc values (VSF 70.61, Zhao 54.24) are listed separately as context, not as a controlled comparison.
 
 **Withdrawn claims (removed from the manuscript):**
 

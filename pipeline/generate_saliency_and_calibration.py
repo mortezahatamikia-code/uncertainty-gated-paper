@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Generate Visual Saliency Maps (Explainable AI via DINOv2 Self-Attention Rollout)
-and Expected Calibration Error (ECE) Reliability Diagrams for BioDINO-Edge.
+Generate the post-hoc explainability figure (frozen DINOv2 CLS attention vs.
+Fisher decision attribution of the deployed Tier-2 LDA) and Expected
+Calibration Error (ECE) reliability diagrams for BioDINO-Edge.
 """
 
 import os, sys, random
@@ -36,28 +37,45 @@ print(f"[*] Running on device: {DEVICE}")
 # 1. Visual Saliency Maps via DINOv2 Self-Attention
 # -----------------------------------------------------------------------------
 def generate_saliency_figures():
-    print("\n[*] Loading DINOv2 Small and Fisher-LDA for Dual-Regime Saliency Extraction...")
-    
-    # 1. Fit Fisher-LDA on support set
-    cache_path = CACHE_DIR / "pv_novel_embeddings.pt"
-    if not cache_path.exists():
-        cache_path = PROJECT_ROOT / "cache_artifacts" / "pv_novel_embeddings.pt"
-    
-    cdata = torch.load(cache_path, map_location="cpu")
-    dino_feats = cdata["dino_feats"].numpy()
-    c_labels = cdata["labels"].numpy()
-    
-    rng = np.random.RandomState(42)
-    s_idx = []
-    for c in range(11):
-        c_idx = np.where(c_labels == c)[0]
-        s_idx.extend(rng.choice(c_idx, size=5, replace=False))
-    
-    clf = LinearDiscriminantAnalysis(solver="lsqr", shrinkage="auto").fit(dino_feats[s_idx], c_labels[s_idx])
-    
-    # 2. DINOv2 model with attention capture
-    dino_model = timm.create_model('vit_small_patch14_dinov2', pretrained=True, dynamic_img_size=True).to(DEVICE).eval()
-    last_block = dino_model.blocks[-1]
+    """Frozen-encoder attention vs. post-hoc Fisher decision attribution.
+
+    The encoders are never modified by the LDA. Row (b) shows the raw DINOv2
+    last-block CLS attention; row (c) shows a post-hoc linear attribution of
+    the deployed Tier-2 decision: L2-normalized last-block patch tokens of both
+    encoders projected onto the target-vs-healthy contrast direction of the
+    canonical 896-D Fisher-LDA (8-view augmented support, seed-42 split),
+    averaged after bicubic upsampling, ReLU'd and min-max normalized per image.
+    BioCLIP tokens pass through ln_post and the visual projection so that the
+    attribution lives in the deployed 512-D feature space.
+    Badges report the measured Shannon gate confidence and resulting routing.
+    """
+    import json
+    import sys
+    if str(PROJECT_ROOT) not in sys.path:
+        sys.path.insert(0, str(PROJECT_ROOT))
+    from pipeline.core_math import (
+        fit_fisher_lda, compute_class_prototypes,
+        compute_fisher_ensemble_probs, calculate_shannon_confidence,
+    )
+    from pipeline.data_engine import load_plantvillage
+    from pipeline.biodino_edge_pipeline import load_backbones, extract_support_features
+
+    print("\n[*] Loading canonical support split and deployed Fisher-LDA...")
+    cdata = torch.load(CACHE_DIR / "pv_novel_embeddings.pt", map_location="cpu", weights_only=True)
+    class_names = cdata["novel_classes"]
+    text_protos = cdata["bio_text_protos"]
+    n_classes = len(class_names)
+
+    models = load_backbones(DEVICE)
+    support_samples, _, _, _ = load_plantvillage(PROJECT_ROOT / "plantvillage", k_shot=5, seed=42)
+    s_bio, s_dino, s_y_t = extract_support_features(support_samples, models, device=DEVICE)
+    s_bio, s_dino, s_y_t = s_bio.cpu(), s_dino.cpu(), s_y_t.cpu()
+    s_x = torch.cat([s_bio, s_dino], dim=-1).numpy()
+    W, b, clf = fit_fisher_lda(s_x, s_y_t.numpy(), device="cpu")
+    dino_protos = compute_class_prototypes(s_dino, s_y_t, n_classes)
+
+    # DINOv2 last-block attention capture (frozen encoder; LDA never touches it)
+    last_block = models.dino_model.blocks[-1]
     captured_attn = []
 
     def custom_forward(x, attn_mask=None, is_causal=False):
@@ -75,217 +93,160 @@ def generate_saliency_figures():
 
     last_block.attn.forward = custom_forward
 
-    transform = T.Compose([
-        T.Resize((224, 224)),
-        T.ToTensor(),
-        T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
+    # BioCLIP last-block patch tokens (pre ln_post; L2-normalized below)
+    captured_bio = []
+
+    def bio_hook(module, args, output):
+        captured_bio.append(output.detach().cpu())
+
+    models.bioclip_model.visual.transformer.resblocks[-1].register_forward_hook(bio_hook)
+
+    short_names = ["Apple Scab", "Apple Black Rot", "Apple Cedar Rust", "Apple Healthy",
+                   "Grape Black Rot", "Grape Esca", "Grape Leaf Blight", "Grape Healthy",
+                   "Potato Early Blight", "Potato Late Blight", "Potato Healthy"]
 
     pv_color = PROJECT_ROOT / "plantvillage" / "plantvillage dataset" / "color"
     pd_dir = PROJECT_ROOT / "pipeline" / "plantdoc_samples"
 
-    # 4 distinct pathological target cases representing dual regimes: 2 PlantVillage + 2 PlantDoc
-    target_cases = [
-        {
-            "dataset_tag": "PlantVillage (Lab)",
-            "img_path": sorted(list((pv_color / "Apple___Cedar_apple_rust").glob("*.JPG")) + list((pv_color / "Apple___Cedar_apple_rust").glob("*.jpg")))[8],
-            "title": "Apple Cedar Rust",
-            "pathogen": "G. juniperi-virginianae",
-            "tier": 1,
-            "attn_tag": "Lesion Focus",
-            "attn_color": "#2e7d32",
-            "outcome_title": "Tier-1 Fast-Exit",
-            "outcome_sub": "21.1 ms (Resolved)",
-            "accuracy": "Accuracy: 100.0%",
-            "badge_color": "#e8f5e9",
-            "badge_border": "#388e3c",
-            "badge_text": "#1b5e20",
-            "healthy_cls": 3,
-            "target_cls": 2,
-        },
-        {
-            "dataset_tag": "PlantVillage (Lab)",
-            "img_path": sorted(list((pv_color / "Apple___Black_rot").glob("*.JPG")) + list((pv_color / "Apple___Black_rot").glob("*.jpg")))[18],
-            "title": "Apple Black Rot",
-            "pathogen": "B. obtusa",
-            "tier": 1,
-            "attn_tag": "Lesion Focus",
-            "attn_color": "#2e7d32",
-            "outcome_title": "Tier-1 Fast-Exit",
-            "outcome_sub": "21.1 ms (Resolved)",
-            "accuracy": "Accuracy: 99.8%",
-            "badge_color": "#e8f5e9",
-            "badge_border": "#388e3c",
-            "badge_text": "#1b5e20",
-            "healthy_cls": 3,
-            "target_cls": 1,
-        },
-        {
-            "dataset_tag": "PlantDoc (In-The-Wild)",
-            "img_path": pd_dir / "potato_late_blight_0_1421_0.jpeg",
-            "title": "Potato Late Blight",
-            "pathogen": "P. infestans",
-            "tier": 2,
-            "attn_tag": "Sink: Petiole",
-            "attn_color": "#b71c1c",
-            "outcome_title": "Tier-2 Escalation",
-            "outcome_sub": "Fisher-LDA Refocused",
-            "accuracy": "Accuracy: 97.0%",
-            "badge_color": "#e3f2fd",
-            "badge_border": "#1976d2",
-            "badge_text": "#0d47a1",
-            "healthy_cls": 10,
-            "target_cls": 9,
-        },
-        {
-            "dataset_tag": "PlantDoc (In-The-Wild)",
-            "img_path": pd_dir / "grape_leaf_black_rot_4.jpg",
-            "title": "Grape Black Rot",
-            "pathogen": "G. bidwellii",
-            "tier": 2,
-            "attn_tag": "Sink: Center Stem",
-            "attn_color": "#b71c1c",
-            "outcome_title": "Tier-2 Escalation",
-            "outcome_sub": "Fisher-LDA Refocused",
-            "accuracy": "Accuracy: 98.0%",
-            "badge_color": "#e3f2fd",
-            "badge_border": "#1976d2",
-            "badge_text": "#0d47a1",
-            "healthy_cls": 7,
-            "target_cls": 4,
-        }
+    # 4 cases: 2 PlantVillage (lab) + 2 PlantDoc (field, cross-domain queries
+    # attributed against the corresponding PlantVillage class prototypes).
+    cases = [
+        {"img": sorted(list((pv_color / "Apple___Cedar_apple_rust").glob("*.JPG")) + list((pv_color / "Apple___Cedar_apple_rust").glob("*.jpg")))[8],
+         "title": "Apple Cedar Rust", "intended": 2, "healthy": 3},
+        {"img": sorted(list((pv_color / "Apple___Black_rot").glob("*.JPG")) + list((pv_color / "Apple___Black_rot").glob("*.jpg")))[18],
+         "title": "Apple Black Rot", "intended": 1, "healthy": 3},
+        {"img": pd_dir / "apple_rust_leaf_10.jpg",
+         "title": "Apple Cedar Rust", "intended": 2, "healthy": 3},
+        {"img": pd_dir / "grape_leaf_black_rot_4.jpg",
+         "title": "Grape Black Rot", "intended": 4, "healthy": 7},
     ]
+
+    maps, diagnostics = [], []
+    for c in cases:
+        pil_img = Image.open(c["img"]).convert("RGB")
+        rgb_np = np.array(pil_img.resize((224, 224))) / 255.0
+        dino_x = models.dino_transforms(pil_img).unsqueeze(0).to(DEVICE)
+        bio_x = models.bioclip_transforms(pil_img).unsqueeze(0).to(DEVICE)
+
+        captured_attn.clear()
+        captured_bio.clear()
+        with torch.no_grad():
+            feats = models.dino_model.forward_features(dino_x)
+            f_dino = F.normalize(models.dino_model.forward_head(feats), dim=-1).cpu()
+            f_bio = F.normalize(models.bioclip_model.encode_image(bio_x), dim=-1).cpu()
+
+        # Tier-1 gate exactly as deployed: gamma=20 cosine prototypes + Shannon margin-entropy
+        prob1 = F.softmax(20.0 * (f_dino @ dino_protos.t()), dim=-1)
+        conf = float(calculate_shannon_confidence(prob1, n_classes).item())
+        tier = 1 if conf >= 0.35 else 2
+
+        # Deployed Tier-2 ensemble decision (0.75 LDA + 0.25 text, scale=20)
+        joint_q = torch.cat([f_bio, f_dino], dim=-1)
+        prob_ens, _, _ = compute_fisher_ensemble_probs(
+            fisher_weights=W, fisher_biases=b, joint_features=joint_q,
+            bioclip_features=f_bio, text_prototypes=text_protos,
+            scale=20.0, w_lda=0.75, device="cpu")
+        pred = int(prob_ens.argmax(dim=-1).item())
+
+        # (b) Frozen DINOv2 CLS attention (head-averaged, last block)
+        attn = captured_attn[0]
+        cls_attn = attn[0, :, 0, 1:].mean(dim=0).reshape(16, 16).numpy()
+        cls_attn = (cls_attn - cls_attn.min()) / (cls_attn.max() - cls_attn.min() + 1e-8)
+        attn_up = F.interpolate(torch.tensor(cls_attn)[None, None], size=(224, 224),
+                                mode="bicubic", align_corners=False)[0, 0].numpy()
+        attn_up = np.clip(attn_up, 0.0, 1.0)
+
+        # (c) Post-hoc Fisher decision attribution: contrast direction of the
+        # joint LDA split per encoder, projected onto L2-normalized patch tokens.
+        w_contrast = clf.coef_[pred] - clf.coef_[c["healthy"]]
+        w_bio, w_dino = w_contrast[:512], w_contrast[512:]
+        pd_tok = F.normalize(feats[0, 1:, :], dim=-1).cpu().numpy()
+        m_dino = (pd_tok @ w_dino).reshape(16, 16)
+        bt = captured_bio[0]
+        if bt.dim() == 3 and bt.shape[0] == 1:
+            bt = bt[0]
+        elif bt.dim() == 3 and bt.shape[1] == 1:
+            bt = bt[:, 0]
+        pb_tok = bt[1:, :]
+        with torch.no_grad():
+            pb_tok = models.bioclip_model.visual.ln_post(pb_tok)
+            if models.bioclip_model.visual.proj is not None:
+                pb_tok = pb_tok @ models.bioclip_model.visual.proj
+        pb_tok = F.normalize(pb_tok, dim=-1).numpy()
+        m_bio = (pb_tok @ w_bio).reshape(14, 14)
+        m_dino_up = F.interpolate(torch.tensor(m_dino)[None, None].float(), size=(224, 224),
+                                  mode="bicubic", align_corners=False)[0, 0].numpy()
+        m_bio_up = F.interpolate(torch.tensor(m_bio)[None, None].float(), size=(224, 224),
+                                 mode="bicubic", align_corners=False)[0, 0].numpy()
+        fisher = np.maximum(0.5 * (m_dino_up + m_bio_up), 0.0)
+        fisher = (fisher - fisher.min()) / (fisher.max() - fisher.min() + 1e-8)
+
+        maps.append({"rgb": rgb_np, "attn": attn_up, "fisher": fisher,
+                     "conf": conf, "tier": tier, "pred": pred})
+        diagnostics.append({
+            "image": str(c["img"]), "title": c["title"],
+            "gate_confidence": round(conf, 4), "routed_tier": tier,
+            "lda_predicted_class": short_names[pred],
+            "intended_class": short_names[c["intended"]],
+            "contrast": f"{short_names[pred]} vs {short_names[c['healthy']]}",
+        })
+        print(f"  [{c['title']}] C(x)={conf:.3f} -> Tier-{tier} | LDA: {short_names[pred]}")
 
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["font.sans-serif"] = ["DejaVu Sans", "Arial", "Helvetica"]
 
-    fig = plt.figure(figsize=(10.4, 8.4), dpi=300)
-    
-    # Ultra-compact GridSpec: bottom leaves space for badges & colorbar, top leaves space for titles + banners
+    fig = plt.figure(figsize=(10.4, 7.9), dpi=300)
     gs = gridspec.GridSpec(nrows=3, ncols=4, figure=fig,
-                           left=0.125, right=0.985, top=0.825, bottom=0.165,
-                           wspace=0.035, hspace=0.040)
-
+                           left=0.125, right=0.985, top=0.865, bottom=0.155,
+                           wspace=0.035, hspace=0.055)
     axes = np.empty((3, 4), dtype=object)
     for r in range(3):
-        for c in range(4):
-            axes[r, c] = fig.add_subplot(gs[r, c])
-
+        for col in range(4):
+            axes[r, col] = fig.add_subplot(gs[r, col])
     fig.canvas.draw()
-    pos_00 = axes[0, 0].get_position()
-    pos_01 = axes[0, 1].get_position()
-    pos_02 = axes[0, 2].get_position()
-    pos_03 = axes[0, 3].get_position()
 
-    center_tier1 = (pos_00.x0 + pos_01.x1) / 2.0
-    center_tier2 = (pos_02.x0 + pos_03.x1) / 2.0
-    banner_y = 0.942
-
-    # Top Section Banners aligned above column pairs
-    fig.text(center_tier1, banner_y,
-             "TIER 1: FAST-PATH ROUTINE TRIAGE\n"
-             r"(PlantVillage Lab)  |  $\mathbf{\mathcal{C}_1(\mathbf{x}) \geq 0.35}$  |  21.1 ms ($>$45 FPS)",
-             ha="center", va="center", fontsize=8.8, fontweight="bold", color="#1b5e20",
-             linespacing=1.28,
-             bbox=dict(boxstyle="round,pad=0.42", facecolor="#e8f5e9", edgecolor="#4caf50", linewidth=1.3))
-
-    fig.text(center_tier2, banner_y,
-             "TIER 2: GATED DEEP-PATH ESCALATION\n"
-             r"(PlantDoc Field)  |  $\mathbf{\mathcal{C}_1(\mathbf{x}) < 0.35}$  |  Fisher-LDA Refocused",
-             ha="center", va="center", fontsize=8.8, fontweight="bold", color="#0d47a1",
-             linespacing=1.28,
-             bbox=dict(boxstyle="round,pad=0.42", facecolor="#e3f2fd", edgecolor="#2196f3", linewidth=1.3))
-
-    # Clean vertical dashed divider between Tier 1 and Tier 2 regimes
-    div_x = (pos_01.x1 + pos_02.x0) / 2.0
-    div_line = Line2D([div_x, div_x], [axes[2, 0].get_position().y0 - 0.082, 0.985],
-                      transform=fig.transFigure, color="#777777", linestyle="--", linewidth=1.3, alpha=0.8)
-    fig.add_artist(div_line)
+    # Dataset regime labels (source dataset, not routing; routing is per-column)
+    center_lab = (axes[0, 0].get_position().x0 + axes[0, 1].get_position().x1) / 2.0
+    center_field = (axes[0, 2].get_position().x0 + axes[0, 3].get_position().x1) / 2.0
+    fig.text(center_lab, 0.955, "Laboratory Benchmark (PlantVillage)", ha="center", va="center",
+             fontsize=9.0, fontweight="bold", color="#1b5e20")
+    fig.text(center_field, 0.955, "In-the-Wild Field Queries (PlantDoc)", ha="center", va="center",
+             fontsize=9.0, fontweight="bold", color="#0d47a1")
+    div_x = (axes[0, 1].get_position().x1 + axes[0, 2].get_position().x0) / 2.0
+    fig.add_artist(Line2D([div_x, div_x], [axes[2, 0].get_position().y0 - 0.075, 0.925],
+                          transform=fig.transFigure, color="#777777", linestyle="--",
+                          linewidth=1.2, alpha=0.8))
 
     row_labels = [
         "(a) Input Query Leaf\n[RGB Observation]",
-        "(b) Raw DINOv2\nSelf-Attention Map",
-        "(c) BioDINO Calibrated\nSaliency Overlay"
+        "(b) Frozen DINOv2\nCLS Attention",
+        "(c) Fisher Decision\nAttribution (Post-hoc)",
     ]
-
     for row_idx, label in enumerate(row_labels):
-        axes[row_idx, 0].set_ylabel(label, fontsize=9.2, fontweight="bold", labelpad=10, rotation=90, va="center", linespacing=1.18)
+        axes[row_idx, 0].set_ylabel(label, fontsize=9.0, fontweight="bold",
+                                    labelpad=10, rotation=90, va="center", linespacing=1.18)
 
     im_heat = None
-    for col_idx, c in enumerate(target_cases):
-        pil_img = Image.open(c["img_path"]).convert("RGB").resize((224, 224))
-        rgb_np = np.array(pil_img) / 255.0
-        x = transform(pil_img).unsqueeze(0).to(DEVICE)
+    for col_idx, (c, m) in enumerate(zip(cases, maps)):
+        axes[0, col_idx].set_title(c["title"], fontsize=9.4, fontweight="bold", pad=6)
+        axes[0, col_idx].imshow(m["rgb"])
+        im_heat = axes[1, col_idx].imshow(m["attn"], cmap="turbo", vmin=0, vmax=1)
+        heat = plt.get_cmap("turbo")(m["fisher"])[:, :, :3]
+        axes[2, col_idx].imshow(0.52 * m["rgb"] + 0.48 * heat)
+        for r in range(3):
+            axes[r, col_idx].set_xticks([])
+            axes[r, col_idx].set_yticks([])
 
-        captured_attn.clear()
-        with torch.no_grad():
-            feats = dino_model.forward_features(x)
-            _ = dino_model(x)
-
-        # 1. Attention Map
-        attn = captured_attn[0]
-        cls_attn = attn[0, :, 0, 1:].mean(dim=0).reshape(16, 16).numpy()
-        cls_attn = (cls_attn - cls_attn.min()) / (cls_attn.max() - cls_attn.min() + 1e-8)
-        attn_t = torch.tensor(cls_attn).unsqueeze(0).unsqueeze(0)
-        attn_up = F.interpolate(attn_t, size=(224, 224), mode="bicubic", align_corners=False).squeeze().numpy()
-        attn_up = np.clip(attn_up, 0.0, 1.0)
-
-        # 2. Fisher Map
-        patch_tokens = feats[0, 1:, :]
-        patch_norm = F.normalize(patch_tokens, dim=-1).cpu().numpy()
-        w_contrast = clf.coef_[c["target_cls"]] - clf.coef_[c["healthy_cls"]]
-        fisher_map = (patch_norm @ w_contrast).reshape(16, 16)
-        fisher_pos = np.maximum(fisher_map, 0)
-        if fisher_pos.max() > 0:
-            fisher_norm = (fisher_pos - fisher_pos.min()) / (fisher_pos.max() - fisher_pos.min() + 1e-8)
-        else:
-            fisher_norm = fisher_pos
-        fisher_t = torch.tensor(fisher_norm).unsqueeze(0).unsqueeze(0).float()
-        fisher_up = F.interpolate(fisher_t, size=(224, 224), mode="bicubic", align_corners=False).squeeze().numpy()
-        fisher_up = np.clip(fisher_up, 0.0, 1.0)
-
-        # Column Header (attached directly to top subplot)
-        axes[0, col_idx].set_title(c["title"], fontsize=9.4, fontweight="bold", pad=16)
-        axes[0, col_idx].text(0.5, 1.025, f"({c['pathogen']})",
-                              transform=axes[0, col_idx].transAxes,
-                              ha="center", va="bottom", fontsize=8.2, fontstyle="italic", color="#333333")
-
-        # Row 0: Original Leaf
-        axes[0, col_idx].imshow(rgb_np)
-        axes[0, col_idx].set_xticks([])
-        axes[0, col_idx].set_yticks([])
-
-        # Row 1: Attention Map
-        im_heat = axes[1, col_idx].imshow(attn_up, cmap="turbo", vmin=0, vmax=1)
-        axes[1, col_idx].set_xticks([])
-        axes[1, col_idx].set_yticks([])
-        
-        # Row 1 Attention diagnostic callout pill
-        axes[1, col_idx].text(0.5, 0.06, c["attn_tag"], transform=axes[1, col_idx].transAxes,
-                              ha="center", va="bottom", fontsize=7.8, fontweight="bold",
-                              color="white",
-                              bbox=dict(boxstyle="round,pad=0.22", facecolor=c["attn_color"], alpha=0.92,
-                                        edgecolor="white", linewidth=0.7))
-
-        # Row 2: Overlay
-        if c["tier"] == 1:
-            heat = plt.get_cmap("turbo")(attn_up)[:, :, :3]
-        else:
-            heat = plt.get_cmap("turbo")(fisher_up)[:, :, :3]
-
-        overlay = 0.52 * rgb_np + 0.48 * heat
-        axes[2, col_idx].imshow(overlay)
-        axes[2, col_idx].set_xticks([])
-        axes[2, col_idx].set_yticks([])
-
-        # Row 2 Outcome Badge placed neatly BELOW Row 2 (with Final Accuracy)
-        outcome_text = f"{c['outcome_title']}\n{c['outcome_sub']}\n{c['accuracy']}"
-        axes[2, col_idx].text(0.5, -0.12, outcome_text,
-                              transform=axes[2, col_idx].transAxes,
+        badge = rf"$\mathcal{{C}}(\mathbf{{x}})$ = {m['conf']:.2f} $\to$ Tier-{m['tier']}"
+        if m["pred"] != c["intended"]:
+            badge += "\n" + f"LDA: {short_names[m['pred']]}"
+        axes[2, col_idx].text(0.5, -0.13, badge, transform=axes[2, col_idx].transAxes,
                               ha="center", va="top", fontsize=8.0, fontweight="bold",
-                              color=c["badge_text"], linespacing=1.24,
-                              bbox=dict(boxstyle="round,pad=0.36", facecolor=c["badge_color"],
-                                        edgecolor=c["badge_border"], linewidth=1.1))
+                              color="#1b5e20" if m["tier"] == 1 else "#0d47a1", linespacing=1.24,
+                              bbox=dict(boxstyle="round,pad=0.32",
+                                        facecolor="#e8f5e9" if m["tier"] == 1 else "#e3f2fd",
+                                        edgecolor="#388e3c" if m["tier"] == 1 else "#1976d2",
+                                        linewidth=1.0))
 
     for r in range(3):
         for col in range(4):
@@ -294,10 +255,9 @@ def generate_saliency_figures():
                 spine.set_edgecolor("#333333")
                 spine.set_linewidth(0.85)
 
-    # Sleek Colorbar at bottom
-    cbar_ax = fig.add_axes([0.31, 0.020, 0.38, 0.015])
+    cbar_ax = fig.add_axes([0.31, 0.025, 0.38, 0.015])
     cb = fig.colorbar(im_heat, cax=cbar_ax, orientation="horizontal")
-    cb.set_label("Normalized Pathological Saliency Density [0, 1]", fontsize=8.4, fontweight="bold", labelpad=3)
+    cb.set_label("Normalized Map Intensity [0, 1] (per-map min\u2013max)", fontsize=8.4, fontweight="bold", labelpad=3)
     cb.ax.tick_params(labelsize=7.5)
 
     pdf_path = PAPER_DIR / "fig_saliency.pdf"
@@ -311,12 +271,18 @@ def generate_saliency_figures():
     if web_png.parent.exists():
         plt.savefig(web_png, bbox_inches="tight", dpi=300)
     plt.close()
-    plt.close()
 
-    print(f"  [+] Saliency figures saved successfully:")
+    diag_path = PAPER_DIR / "fig_saliency_diagnostics.json"
+    with open(diag_path, "w", encoding="utf-8") as f:
+        json.dump({"protocol": "canonical seed-42 5-shot split, 8-view augmented support (N=440), "
+                               "joint 896-D Fisher-LDA (lsqr, auto shrinkage), gamma=20, w_lda=0.75",
+                   "cases": diagnostics}, f, indent=2, ensure_ascii=False)
+
+    print(f"  [+] Attribution figures saved:")
     print(f"      - {pdf_path}")
     print(f"      - {png_path}")
     print(f"      - {docs_png}")
+    print(f"      - {diag_path}")
 
 # -----------------------------------------------------------------------------
 # 2. Expected Calibration Error (ECE) & Reliability Diagrams
@@ -522,7 +488,14 @@ def generate_calibration_figures():
     }
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--saliency-only", action="store_true",
+                        help="Regenerate only the attribution figure (skip the legacy ECE panel).")
+    args = parser.parse_args()
     generate_saliency_figures()
+    if args.saliency_only:
+        sys.exit(0)
     calib_stats = generate_calibration_figures()
 
     # Update biodino_edge_results.json

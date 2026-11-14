@@ -64,8 +64,8 @@ research-few-shot/
 │   ├── main_eaai_elsarticle.tex                 # سورس کامل لاتک مقاله (قالب الزویر)
 │   ├── main_eaai_elsarticle.pdf                 # فایل PDF نهایی مقاله (۲۰ صفحه)
 │   ├── fig_architecture.pdf / .png             # شکل ۱: معماری دو سطحی BioDINO-Edge
-│   ├── fig_saliency.pdf / .png                 # شکل ۲: نقشه‌های سلف‌اتنشن و مهار چاله توجه
-│   ├── fig_calibration.pdf / .png              # شکل ۳: دیاگرام قابلیت اطمینان و کالیبراسیون ۱۰ سطلی
+│   ├── fig_saliency.pdf / .png                 # نقشه انتساب پسینی فیشر (ابزار اکتشافی؛ خارج از نسخه فعلی مقاله)
+│   ├── fig_reliability.pdf / .png              # شکل ۲: دیاگرام قابلیت اطمینان و کالیبراسیون ۱۰ سطلی
 │   ├── references.bib                           # مراجع استاندارد BibTeX
 │   └── elsarticle.cls                           # کلاس رسمی ژورنال‌های الزویر
 │

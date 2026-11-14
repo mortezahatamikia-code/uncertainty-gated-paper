@@ -233,7 +233,7 @@ def create_architecture_diagram():
               title="Ledoit--Wolf & Fisher-LDA",
               items=[
                   (r"Analytical Shrinkage: $\hat{\mathbf{\Sigma}}^{-1}$ (Resolves $N \ll d$)", "#0F172A", 6.7, False),
-                  (r"Exact Projection: $(\mathbf{W}, \mathbf{b})$ in $<22$ ms (Zero Grads)", "#B45309", 6.9, True),
+                  (r"Exact Projection: $(\mathbf{W}, \mathbf{b})$ in $\approx$0.53 s (Zero Grads)", "#B45309", 6.9, True),
                   (r"Suppresses Background Variance ($>31\times$)", "#475569", 6.4, False)
               ], title_color="#92400E")
 
@@ -256,7 +256,7 @@ def create_architecture_diagram():
               title="DINOv2 Small (INT8)",
               items=[
                   (r"$\mathbf{f}_{\mathrm{dino}} \in \mathbb{R}^{384}$ (Patch 14)", "#047857", 6.9, True),
-                  ("Latency: 21.1 ms on CPU", "#334155", 6.7, False),
+                  ("Latency: 59.78 ms on CPU", "#334155", 6.7, False),
                   ("Captures Fine Lesion Edges", "#475569", 6.4, False)
               ], title_color="#047857")
 
@@ -277,7 +277,7 @@ def create_architecture_diagram():
               items=[
                   (r"$\mathcal{C} = \Delta p \cdot (1 - \mathcal{H}_{\mathrm{norm}})_+$", "#A16207", 6.9, True),
                   (r"Fast-Exit Cutoff: $\tau_{\mathrm{conf}} = 0.35$", "#C2410C", 6.8, True),
-                  ("Filters Spurious Attn Sinks", "#475569", 6.4, False)
+                  ("Routes Ambiguous Queries to Tier-2", "#475569", 6.4, False)
               ], title_color="#A16207", title_fs=7.1)
 
     draw_arrow(56.8, 36.7, 58.0, 36.7, color="#CA8A04", lw=1.4)
@@ -300,7 +300,7 @@ def create_architecture_diagram():
               title="BioCLIP ViT-B (INT8)",
               items=[
                   (r"$\mathbf{f}_{\mathrm{bio}} \in \mathbb{R}^{512}$ (ViT-B/16)", "#6D28D9", 6.9, True),
-                  ("Add-On Latency: +42.9 ms", "#334155", 6.5, False),
+                  ("Add-On Latency: +104.74 ms", "#334155", 6.5, False),
                   ("Taxonomy Priors (TreeOfLife-10M)", "#475569", 6.5, False)
               ], title_color="#6D28D9")
 
@@ -320,7 +320,7 @@ def create_architecture_diagram():
               items=[
                   (r"$\mathbf{p}_{\mathrm{blend}} = 0.75 \mathbf{p}_{\mathrm{fish}} + 0.25 \mathbf{p}_{\mathrm{text}}$", "#0284C7", 6.6, True),
                   (r"$\mathbf{p}_{\mathrm{text}} = \mathrm{softmax}(\gamma \mathbf{f}_{\mathrm{bio}} \mathbf{P}_{\mathrm{text}}^T)$", "#0369A1", 6.4, True),
-                  ("Tier-2 Total: 64.0 ms (15.6 FPS)", "#0F172A", 6.5, False)
+                  ("Tier-2 Total: 164.52 ms (6.1 FPS)", "#0F172A", 6.5, False)
               ], title_color="#0369A1", title_fs=7.1)
 
     draw_arrow(56.8, 20.5, 58.0, 20.5, color="#0284C7", lw=1.4)
@@ -378,7 +378,7 @@ def create_architecture_diagram():
 
     # Card 5.3: Closed-Form Update
     draw_card(58.0, 2.2, 13.6, 6.8, "#FFFFFF", "#10B981",
-              title="Closed-Form Update (<22 ms)",
+              title=r"Closed-Form Update ($\approx$0.53 s)",
               items=[
                   (r"Re-estimates $\mathbf{W}^{\mathrm{trans}}$ & $\hat{\mathbf{\Sigma}}^{\mathrm{trans}}$", "#047857", 6.8, True),
                   ("Zero Gradient Retraining on CPU", "#334155", 6.5, False)
@@ -415,9 +415,9 @@ def create_architecture_diagram():
     draw_card(79.4, 32.2, 18.0, 9.0, "#FFFFFF", "#059669",
               title="Immediate Live Diagnosis",
               items=[
-                  ("Fast-Exit (Tier-1): 21.1 ms (>45 FPS)", "#047857", 6.8, True),
-                  ("Deep-Path (Tier-2): 64.0 ms (15.6 FPS)", "#0284C7", 6.8, True),
-                  ("Blended Stream: 58.0 ms (17.2 FPS)", "#334155", 6.6, True),
+                  ("Fast-Exit (Tier-1): 59.78 ms (16.7 FPS)", "#047857", 6.8, True),
+                  ("Deep-Path (Tier-2): 164.52 ms (6.1 FPS)", "#0284C7", 6.8, True),
+                  ("Blended Stream: 149.84 ms (6.7 FPS)", "#334155", 6.6, True),
                   ("Real-Time Foliar Pathology Output", "#334155", 6.6, False)
               ], title_color="#047857")
 
@@ -446,7 +446,7 @@ def create_architecture_diagram():
     # Wire 8: Updated Hyperplanes from Recalibration cleanly routed orthogonally (90-degree) into Session Log
     draw_orthogonal_arrow([(71.6, 5.6), (77.0, 5.6), (77.0, 23.6), (79.4, 23.6)],
                           color="#059669", lw=1.5,
-                          label="Updated " + r"$\mathbf{W}^{\mathrm{trans}}$" + "\n(<22 ms)",
+                          label="Updated " + r"$\mathbf{W}^{\mathrm{trans}}$" + "\n" + r"($\approx$0.53 s)",
                           label_seg=1, label_pos=0.5,
                           label_color="#047857", label_bg="#ECFDF5", label_fs=6.0)
 
@@ -458,8 +458,8 @@ def create_architecture_diagram():
                   ("PlantVillage Mean: 97.41% (30-Episodes)", "#FFFFFF", 6.8, True),
                   ("PlantDoc In-the-Wild (5-Way): 83.61%", "#A7F3D0", 6.8, True),
                   ("Routing Reliability: 99.7% acc, 0.25% FNR (Tier-1)", "#E2E8F0", 6.6, False),
-                  (r"Working Set Budget: $\leq$ 110 MB (APK: 22.7 MB)", "#6EE7B7", 6.8, True),
-                  ("100% Offline Edge CPU (Tier-1: >45 FPS)", "#A7F3D0", 6.7, True)
+                  (r"Storage Budget: $\leq$ 110 MB (APK: 22.73 MB)", "#6EE7B7", 6.8, True),
+                  ("100% Offline Edge CPU (Tier-1: 16.7 FPS)", "#A7F3D0", 6.7, True)
               ], title_color="#A7F3D0", title_fs=7.5)
 
     # Save vector PDF and high-res raster PNG
