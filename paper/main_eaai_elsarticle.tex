@@ -8,6 +8,7 @@
 %% \documentclass[preprint,12pt]{elsarticle}
 
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage[utf8]{inputenc}
 \usepackage[a4paper,margin=2.5cm]{geometry}
 \usepackage{amsmath,amssymb,amsfonts}
@@ -29,6 +30,18 @@
 \renewcommand{\dbltopfraction}{0.95}
 \renewcommand{\dblfloatpagefraction}{0.85}
 
+\makeatletter
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip\footnotesize
+  \sbox\@tempboxa{#1: #2}%
+  \ifdim \wd\@tempboxa >\hsize
+    {\parfillskip=0pt plus 1fil #1: #2\par}%
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+\makeatother
 \makeatletter
 \setlength{\@fptop}{0pt}
 \setlength{\@fpsep}{14pt plus 2pt minus 2pt}
@@ -91,7 +104,7 @@ Few-shot learning (FSL) addresses this bottleneck by letting a model classify a 
 
 Existing few-shot methods for leaf diseases still have three main limits. Most are tested only on curated laboratory datasets, so their embeddings often shift and accuracy drops across domains in real fields with complex backgrounds, occluded leaves, and changing light \cite{yang2024laboratory,kudo2025few}. Few-shot work also rarely accounts for the compute, thermal, and memory limits of edge hardware, and many studies use large backbones, iterative fine-tuning, or expensive optimization without reporting latency or memory on physical mobile devices \cite{babu2025agrifewnet,radocaj2025evolution}. Standard few-shot classifiers also return uncalibrated softmax probabilities that fail to express predictive uncertainty, often producing overconfident predictions on ambiguous lesions or unfamiliar foliage \cite{sharif2026real}. Without calibrated confidence thresholds, accepting such predictions risks incorrect interventions in automated scouting \cite{sharif2026real}.
 
-To address these challenges, we present BioDINO-Edge, a dual-foundation few-shot leaf diagnosis pipeline built for deployment on edge devices. It combines a fast Tier-1 visual encoder (INT8-quantized DINOv2-Small, 384 dimensions) with a deeper Tier-2 biological encoder (INT8-quantized BioCLIP, 512 dimensions) into a shared 896-dimensional representation space. To minimize latency, an adaptive Shannon margin-entropy gate evaluates Tier-1 confidence, allowing clear queries to exit early and routing only uncertain cases to Tier-2. Adaptation to novel classes is performed analytically via regularized Fisher Linear Discriminant Analysis with Ledoit--Wolf covariance shrinkage. This gives closed-form, gradient-free calibration in 533.99~ms on-device, with no backpropagation. BioDINO-Edge occupies about 22.0~MB on disk for Tier~1, or about 107.3~MB in total when the companion model is included. On a physical mobile handset (10-core SoC, CPU-only INT8 execution), it stays within 497.45~MB peak runtime RAM (PSS) and reaches 149.84~ms average cascade latency with a 14.0\% fast-exit fraction, while sustaining 4.26~FPS under a 600~s thermal soak. The system reaches 96.03\% accuracy (94.81\% macro-F1) on 5-shot PlantVillage, 98.04\% with transductive refinement, and 83.61\% mean accuracy on in-the-wild PlantDoc in 5-way 5-shot evaluation, while reducing Expected Calibration Error from 37.97\% to 0.79\%.
+To address these challenges, we present BioDINO-Edge, a dual-foundation few-shot leaf diagnosis pipeline built for deployment on edge devices. It combines a fast Tier-1 visual encoder (INT8-quantized DINOv2-Small, 384 dimensions) with a deeper Tier-2 biological encoder (INT8-quantized BioCLIP, 512 dimensions) into a shared 896-dimensional representation space. To minimize latency, an adaptive Shannon margin-entropy gate evaluates Tier-1 confidence, allowing clear queries to exit early and routing only uncertain cases to Tier-2. Adaptation to novel classes is performed analytically via regularized Fisher Linear Discriminant Analysis with Ledoit--Wolf covariance shrinkage. This gives closed-form, gradient-free calibration in 533.99~ms on-device, with no backpropagation. BioDINO-Edge occupies about 22.0~MB on disk for Tier~1, or about 107.3~MB in total when the companion model is included. On a physical mobile handset (10-core System-on-Chip (SoC), CPU-only INT8 execution), it stays within 497.45~MB peak runtime random-access memory (RAM, measured via Proportional Set Size (PSS)) and reaches 149.84~ms average cascade latency with a 14.0\% fast-exit fraction, while sustaining 4.26~FPS under a 600~s thermal soak. The system reaches 96.03\% accuracy (94.81\% macro-F1) on 5-shot PlantVillage, 98.04\% with transductive refinement, and 83.61\% mean accuracy on in-the-wild PlantDoc in 5-way 5-shot evaluation, while reducing Expected Calibration Error (ECE) from 37.97\% to 0.79\%.
 
 The main contributions are:
 \begin{enumerate}
@@ -105,11 +118,11 @@ The rest of the paper is organized as follows. Section 2 reviews related work on
 
 \section{Related Work}
 \label{sec:related_work}
-Few-shot learning has developed along several lines since the first metric- and optimization-based methods. Prototypical Networks classify queries by distance to class means \cite{snell2017prototypical}, MAML learns task-adaptable initializations via gradient steps \cite{finn2017maml}, and nearest-neighbor classification on normalized features remains a competitive baseline \cite{wang2019simpleshot}. Later work also uses the unlabeled query set: information maximization and entropy regularization \cite{boudiaf2020transductive}, Laplacian label propagation \cite{ziko2020laplacian}, and adaptive context networks \cite{bateni2020improved} refine predictions at inference time, and optimal transport improves the feature distribution \cite{hu2021leveraging}. These transductive methods often iterate over a query graph or optimize logits at test time, which is cheap on a server but costly on a phone.
+Few-shot learning has developed along several lines since the first metric- and optimization-based methods. Prototypical Networks classify queries by distance to class means \cite{snell2017prototypical}, Model-Agnostic Meta-Learning (MAML) learns task-adaptable initializations via gradient steps \cite{finn2017maml}, and nearest-neighbor classification on normalized features remains a competitive baseline \cite{wang2019simpleshot}. Later work also uses the unlabeled query set: information maximization and entropy regularization \cite{boudiaf2020transductive}, Laplacian label propagation \cite{ziko2020laplacian}, and adaptive context networks \cite{bateni2020improved} refine predictions at inference time, and optimal transport improves the feature distribution \cite{hu2021leveraging}. These transductive methods often iterate over a query graph or optimize logits at test time, which is cheap on a server but costly on a phone.
 
-Frozen vision and vision-language models now provide strong features without task-specific training, as CLIP learns a shared image-text space from contrastive pretraining \cite{radford2021clip} and DINO shows that self-supervised ViT features transfer well \cite{caron2021emerging}. Two practical questions follow from this: how well these models are calibrated, and how they can be adapted without full fine-tuning. Modern networks turn out to be better calibrated in-distribution than earlier studies suggested, although calibration drops under distribution shift \cite{minderer2021revisiting}. For adaptation, training-free adapters cache support features to extend a frozen CLIP model \cite{zhang2022tip}, prompt learning adapts the text encoder \cite{zhou2022coop}, and LoRA lowers the cost of fine-tuning \cite{hu2022lora}. Newer foundation models extend this line, with DINOv2 providing stronger self-supervised patch features \cite{oquab2023dinov2} and BioCLIP moving the vision-language space toward organismal taxonomy \cite{stevens2024bioclip}. The evaluation of selective classification has also been criticized for inconsistent confidence measures \cite{traub2024overcoming}.
+Frozen vision and vision-language models now provide strong features without task-specific training, as Contrastive Language--Image Pre-training (CLIP) learns a shared image-text space from contrastive pretraining \cite{radford2021clip} and self-distillation with no labels (DINO) shows that self-supervised Vision Transformer (ViT) features transfer well \cite{caron2021emerging}. Two practical questions follow from this: how well these models are calibrated, and how they can be adapted without full fine-tuning. Modern networks turn out to be better calibrated in-distribution than earlier studies suggested, although calibration drops under distribution shift \cite{minderer2021revisiting}. For parameter-efficient fine-tuning (PEFT) and adaptation, training-free adapters cache support features to extend a frozen CLIP model \cite{zhang2022tip}, prompt learning adapts the text encoder \cite{zhou2022coop}, and Low-Rank Adaptation (LoRA) lowers the cost of fine-tuning \cite{hu2022lora}. Newer foundation models extend this line, with DINOv2 providing stronger self-supervised patch features \cite{oquab2023dinov2} and BioCLIP moving the vision-language space toward organismal taxonomy \cite{stevens2024bioclip}. The evaluation of selective classification has also been criticized for inconsistent confidence measures \cite{traub2024overcoming}.
 
-Few-shot methods for plant disease follow these general lines but add agricultural constraints, with cross-domain meta-learning applied to lab-to-field transfer \cite{yang2024laboratory} and multi-scale attention and discriminative enhancement improving fine-grained lesion features \cite{zhao2024mafde}. Recent efforts explore supervised contrastive learning \cite{mu2024few}, metric domain adaptation \cite{kudo2025few}, and lightweight backbones such as AgriFewNet \cite{babu2025agrifewnet}, while surveys highlight the expanding use of deep learning and UAV imagery in crop pathology \cite{radocaj2025evolution}. More recent work adds multimodal visual-semantic fusion \cite{zhou2026vsf}, uncertainty-aware edge inference \cite{sharif2026real}, and lightweight cross-domain calibration \cite{zhao2026lightweight}.
+Few-shot methods for plant disease follow these general lines but add agricultural constraints, with cross-domain meta-learning applied to lab-to-field transfer \cite{yang2024laboratory} and multi-scale attention and discriminative enhancement improving fine-grained lesion features \cite{zhao2024mafde}. Recent efforts explore supervised contrastive learning \cite{mu2024few}, metric domain adaptation \cite{kudo2025few}, and lightweight backbones such as AgriFewNet \cite{babu2025agrifewnet}, while surveys highlight the expanding use of deep learning and Unmanned Aerial Vehicle (UAV) imagery in crop pathology \cite{radocaj2025evolution}. More recent work adds multimodal visual-semantic fusion (VSF) \cite{zhou2026vsf}, uncertainty-aware edge inference \cite{sharif2026real}, and lightweight cross-domain calibration \cite{zhao2026lightweight}.
 
 In contrast, BioDINO-Edge keeps foundation models frozen and relies on closed-form classification, eliminating fine-tuning and test-time optimization. A two-tier cascade routes only ambiguous queries to the deeper encoder, with latency, memory, and calibration validated directly on a physical handset.
 
@@ -122,12 +135,13 @@ This section details the mathematical formulation, architecture, and edge deploy
 
 \subsection{Problem Formulation and Mathematical Notation}
 \label{sec:notation}
-Let $\mathcal{X} \subset \mathbb{R}^{H \times W \times 3}$ denote the space of RGB leaf images. In few-shot foliar diagnosis, we are given a support set $\mathcal{S} = \{(\mathbf{x}_i, y_i)\}_{i=1}^{N_s}$ containing $K$ labeled leaves per class across $C$ target categories ($N_s = C \cdot K$, $y_i \in \{1, \dots, C\}$). Target novel classes are disjoint from pretraining classes ($\mathcal{Y}_{\text{base}} \cap \mathcal{Y}_{\text{novel}} = \emptyset$). Given an unannotated query leaf $\mathbf{x}_q \in \mathcal{Q}$, the diagnostic objective is to predict its disease state $\hat{y}_q \in \{1, \dots, C\}$ with minimal edge latency and zero on-device gradient backpropagation. Table~\ref{tab:notation} outlines the primary mathematical notations employed throughout this paper.
+Let $\mathcal{X} \subset \mathbb{R}^{H \times W \times 3}$ denote the space of red--green--blue (RGB) leaf images. In few-shot foliar diagnosis, we are given a support set $\mathcal{S} = \{(\mathbf{x}_i, y_i)\}_{i=1}^{N_s}$ containing $K$ labeled leaves per class across $C$ target categories ($N_s = C \cdot K$, $y_i \in \{1, \dots, C\}$). Target novel classes are disjoint from pretraining classes ($\mathcal{Y}_{\text{base}} \cap \mathcal{Y}_{\text{novel}} = \emptyset$). Given an unannotated query leaf $\mathbf{x}_q \in \mathcal{Q}$, the diagnostic objective is to predict its disease state $\hat{y}_q \in \{1, \dots, C\}$ with minimal edge latency and zero on-device gradient backpropagation. Table~\ref{tab:notation} outlines the primary mathematical notations employed throughout this paper.
 
 \begin{table*}[htbp]
-\centering
 \caption{Summary of mathematical notations and descriptions used in BioDINO-Edge.}
 \label{tab:notation}
+\centering
+
 \footnotesize
 \begin{tabularx}{\textwidth}{lX}
 \toprule
@@ -281,7 +295,7 @@ yielding the final consensus diagnosis $\hat{y} = \arg\max_c p_{\text{blend}, c}
 
 \subsubsection{Soft-Anchored Transductive Recalibration}
 \label{sec:transductive}
-In 5-shot calibration, centroids $\boldsymbol{\mu}_c$ are estimated from five support leaves. Illumination changes, shadows, and symptom progression can introduce prototype shift between support images and field queries. To adapt without manual labels, confident Tier-2 queries ($\max_c p_{\text{blend}, c} \ge 0.70$) are buffered into a FIFO queue as reference anchors $\mathcal{Q}_{\text{anchor}}^{(c)}$ (capped at 20 anchors per class). Ground-truth support samples receive a $3\times$ weight factor to prevent pseudo-label drift:
+In 5-shot calibration, centroids $\boldsymbol{\mu}_c$ are estimated from five support leaves. Illumination changes, shadows, and symptom progression can introduce prototype shift between support images and field queries. To adapt without manual labels, confident Tier-2 queries ($\max_c p_{\text{blend}, c} \ge 0.70$) are buffered into a first-in, first-out (FIFO) queue as reference anchors $\mathcal{Q}_{\text{anchor}}^{(c)}$ (capped at 20 anchors per class). Ground-truth support samples receive a $3\times$ weight factor to prevent pseudo-label drift:
 \begin{equation}
     \tilde{\mathcal{S}}_c^{\text{trans}} = \tilde{\mathcal{S}}_c^{(3\times)} \cup \mathcal{Q}_{\text{anchor}}^{(c)}
 \end{equation}
@@ -291,8 +305,8 @@ When the buffer reaches capacity during scouting, updated centroids $\boldsymbol
 \label{sec:complexity}
 The complete end-to-end execution flow is described in Section~\ref{sec:methodology} and summarized in Figure~\ref{fig:architecture}. We analyze computational complexity across both operational phases:
 \begin{itemize}
-    \item \textbf{Offline Calibration Complexity:} Feature extraction across $N=440$ views requires $O(N \cdot (C_{\text{dino}} + C_{\text{bio}}))$ FLOPs and dominates wall-clock time ($\approx$88\,s on-device). Scatter matrix computation scales as $O(N d^2)$. The Ledoit--Wolf shrinkage intensity is evaluated in closed form via the Frobenius identity $\sum_i \|\mathbf{x}_i \mathbf{x}_i^T - \mathbf{S}\|_F^2 = \sum_i \|\mathbf{x}_i\|^4 - N \|\mathbf{S}\|_F^2$, reducing cost to $O(N d)$. Inverting the positive-definite matrix via Cholesky decomposition requires $O(d^3 / 3)$ operations ($\approx 2.4 \times 10^8$ operations for $d=896$). On the physical edge CPU (pure-Java EJML), Cholesky factorization takes $\approx$332\,ms, and full algebraic recalibration completes in $\approx$0.53\,s without gradients (Table~\ref{tab:adaptation_breakdown}).
-    \item \textbf{Online Inference Complexity:} Tier-1 forward pass requires $C_{\text{dino}}$ ($\approx 4.6$\,GFLOPs), yielding a measured fast-exit latency of $T_1 = 59.78$\,ms ($\approx$16.7\,FPS) on the physical Android testbed (Section~\ref{sec:edge_hardware}). Dot-product prototype matching requires $C \cdot d_{\text{dino}} = 11 \times 384 \approx 4.2$\,kFLOPs ($<$0.002\,ms), and entropy gating requires $O(C)$ operations ($<$0.001\,ms). Upon escalation, BioCLIP adds a measured incremental encoder cost of $\Delta T_{\text{bio}} = 104.74$\,ms ($C_{\text{bio}} \approx 17.6$\,GFLOPs), since the Tier-1 DINOv2 embedding is cached and reused rather than recomputed. The joint Fisher-LDA projection is fused into the same Tier-2 ONNX graph ($C \cdot d = 11 \times 896 \approx 9.8$\,kFLOPs, negligible). The complete end-to-end Tier-2 path for an escalated query therefore costs $T_2 = T_1 + \Delta T_{\text{bio}} = 164.52$\,ms ($\approx$6.1\,FPS). With 14.0\% of queries exiting at Tier-1 (Section~\ref{sec:calibration}), the routing-weighted average latency across field streams is:
+    \item \textbf{Offline Calibration Complexity:} Feature extraction across $N=440$ views requires $O(N \cdot (C_{\text{dino}} + C_{\text{bio}}))$ floating-point operations (FLOPs) and dominates wall-clock time ($\approx$88\,s on-device). Scatter matrix computation scales as $O(N d^2)$. The Ledoit--Wolf shrinkage intensity is evaluated in closed form via the Frobenius identity $\sum_i \|\mathbf{x}_i \mathbf{x}_i^T - \mathbf{S}\|_F^2 = \sum_i \|\mathbf{x}_i\|^4 - N \|\mathbf{S}\|_F^2$, reducing cost to $O(N d)$. Inverting the positive-definite matrix via Cholesky decomposition requires $O(d^3 / 3)$ operations ($\approx 2.4 \times 10^8$ operations for $d=896$). On the physical edge CPU (pure-Java Efficient Java Matrix Library (EJML)), Cholesky factorization takes $\approx$332\,ms, and full algebraic recalibration completes in $\approx$0.53\,s without gradients (Table~\ref{tab:adaptation_breakdown}).
+    \item \textbf{Online Inference Complexity:} Tier-1 forward pass requires $C_{\text{dino}}$ ($\approx 4.6$\,billion FLOPs (GFLOPs)), yielding a measured fast-exit latency of $T_1 = 59.78$\,ms ($\approx$16.7\,FPS) on the physical Android testbed (Section~\ref{sec:edge_hardware}). Dot-product prototype matching requires $C \cdot d_{\text{dino}} = 11 \times 384 \approx 4.2$\,thousand FLOPs (kFLOPs, $<$0.002\,ms), and entropy gating requires $O(C)$ operations ($<$0.001\,ms). Upon escalation, BioCLIP adds a measured incremental encoder cost of $\Delta T_{\text{bio}} = 104.74$\,ms ($C_{\text{bio}} \approx 17.6$\,GFLOPs), since the Tier-1 DINOv2 embedding is cached and reused rather than recomputed. The joint Fisher-LDA projection is fused into the same Tier-2 Open Neural Network Exchange (ONNX) graph ($C \cdot d = 11 \times 896 \approx 9.8$\,kFLOPs, negligible). The complete end-to-end Tier-2 path for an escalated query therefore costs $T_2 = T_1 + \Delta T_{\text{bio}} = 164.52$\,ms ($\approx$6.1\,FPS). With 14.0\% of queries exiting at Tier-1 (Section~\ref{sec:calibration}), the routing-weighted average latency across field streams is:
     \begin{align}
         \bar{T} &= 0.140 \cdot T_1 + 0.860 \cdot T_2 \nonumber \\
         &= 0.140 \cdot 59.78\,\text{ms} + 0.860 \cdot 164.52\,\text{ms} \nonumber \\
@@ -303,10 +317,10 @@ The complete end-to-end execution flow is described in Section~\ref{sec:methodol
 
 \subsection{Two-Tier Quantized Edge Model Packaging and Android Architecture}
 \label{sec:packaging}
-Agricultural scouting hardware operates under constrained flash memory and often lacks Internet connectivity for cloud offloading. BioDINO-Edge is partitioned into two 8-bit integer (INT8) quantized Open Neural Network Exchange (ONNX) binaries (footprints reported in MiB, where $1\,\text{MB}=2^{20}$ bytes):
+Agricultural scouting hardware operates under constrained flash memory and often lacks Internet connectivity for cloud offloading. BioDINO-Edge is partitioned into two 8-bit integer (INT8) quantized ONNX binaries (footprints reported in MiB, where $1\,\text{MB}=2^{20}$ bytes):
 \begin{itemize}
-    \item \textbf{Tier 1 Standalone Engine} (\path{biodino_mobile_int8.onnx}): A $\approx$22.0\,MB on-disk binary ($\approx$15.1\,MB compressed inside the APK) packaging DINOv2 Small INT8, calibrated Phase~0 prototypes, and the Shannon confidence gate with the ONNX Runtime C++ execution provider. Bundled directly into a standalone $\approx$22.8\,MB Android application package (APK), it enables immediate offline foliar diagnosis. Runtime RAM is dominated by the ONNX Runtime arena rather than the binary size and is measured separately (peak process PSS $\approx$497\,MB, Section~\ref{sec:edge_hardware}).
-    \item \textbf{Tier 2 Companion Module} (\path{biodino_companion_int8.onnx}): An $\approx$85.3\,MB companion model packaging BioCLIP ViT-B INT8 and the 896-D Fisher projection matrix, installed on-demand when high-precision multimodal escalation is required. The total combined on-disk model footprint is $\approx$107.3\,MB, below the 110\,MB Internet-of-Things (IoT) \emph{storage} budget; this is a flash/OTA size constraint, not a runtime RAM bound (runtime memory is reported in Section~\ref{sec:edge_hardware}).
+    \item \textbf{Tier 1 Standalone Engine} (\path{biodino_mobile_int8.onnx}): A $\approx$22.0\,MB on-disk binary ($\approx$15.1\,MB compressed inside the APK) packaging DINOv2 Small INT8, calibrated Phase~0 prototypes, and the Shannon confidence gate with the ONNX Runtime C++ execution provider. Bundled directly into a standalone $\approx$22.8\,MB Android Application Package (APK), it enables immediate offline foliar diagnosis. Runtime RAM is dominated by the ONNX Runtime arena rather than the binary size and is measured separately (peak process PSS $\approx$497\,MB, Section~\ref{sec:edge_hardware}).
+    \item \textbf{Tier 2 Companion Module} (\path{biodino_companion_int8.onnx}): An $\approx$85.3\,MB companion model packaging BioCLIP ViT-B INT8 and the 896-D Fisher projection matrix, installed on-demand when high-precision multimodal escalation is required. The total combined on-disk model footprint is $\approx$107.3\,MB, below the 110\,MB Internet-of-Things (IoT) \emph{storage} budget; this is a flash storage and over-the-air (OTA) update size constraint, not a runtime RAM bound (runtime memory is reported in Section~\ref{sec:edge_hardware}).
 \end{itemize}
 
 % =============================================================================
@@ -356,7 +370,7 @@ Experiments on PlantVillage are evaluated over 30 independent Monte Carlo episod
 \end{itemize}
 
 \subsection{Edge Hardware Testbed}
-Hardware profiling runs on a physical Samsung Galaxy S24~FE (SM-S721B, Exynos~2400e / s5e9945, 10-core ARM64, 7.2\,GB RAM) under Android~17 (API~37). Runtime latency and memory benchmarks use ONNX Runtime~1.18.0 with per-channel INT8 quantization on the CPU, constrained to 4 intra-op / 2 inter-op threads with the NNAPI and GPU delegates disabled; the closed-form algebra runs in pure Java (EJML~0.43.1). Latency is timed with \texttt{SystemClock.elapsedRealtimeNanos} over 100 iterations after 10 warm-up passes, memory is the process PSS, and a 600\,s sustained soak plus a 60\,s cool-down before the algebra isolate thermal effects. Full configuration and measured results are reported in Section~\ref{sec:edge_hardware} (Tables~\ref{tab:device_spec}--\ref{tab:adaptation_breakdown}).
+Hardware profiling is evaluated on a physical Samsung Galaxy S24~FE handset (SM-S721B with Exynos~2400e SoC, 10-core ARM64 architecture, 7.2\,GB RAM) running Android~17 (API~37). Runtime latency and memory benchmarks use ONNX Runtime~1.18.0 with per-channel INT8 quantization executed strictly on the CPU, configured with 4 intra-op and 2 inter-op threads while keeping Android Neural Networks API (NNAPI) and GPU delegates disabled. Closed-form linear algebra is executed in pure Java using EJML~0.43.1. Latency is recorded via \texttt{SystemClock.elapsedRealtimeNanos} over 100 benchmark iterations following 10 warm-up runs. Runtime memory is tracked via process PSS. A 600\,s continuous soak and a 60\,s pre-algebra cooling phase isolate thermal behavior. Complete hardware specifications and empirical profiles are detailed in Section~\ref{sec:edge_hardware} (Tables~\ref{tab:device_spec}--\ref{tab:adaptation_breakdown}).
 
 % =============================================================================
 % 4. RESULTS AND DISCUSSION
@@ -369,9 +383,10 @@ Hardware profiling runs on a physical Samsung Galaxy S24~FE (SM-S721B, Exynos~24
 To ensure a reproducible comparison, we separate \emph{controlled re-runs} from \emph{literature-reported} values. Table~\ref{tab:comparative} evaluates all baselines on identical frozen BioCLIP+DINOv2 embeddings, splits, random seeds, and shot counts as BioDINO-Edge. Because backbones remain frozen, this isolates the adaptation algorithm from encoder differences. We evaluate two regimes on the PlantVillage 11-class novel subset (9{,}385 images): (i)~11-class simultaneous classification (30 Monte-Carlo episodes, seed $42+17e$, 5-shot support, all remaining images as queries), and (ii)~the standard 5-way $K$-shot episodic ladder ($K=1,5,10,15$; 50 episodes each, seed 42), which matches the measurement protocols of VSF~\cite{zhou2026vsf} (5-way 1/5-shot) and AgriFewNet~\cite{babu2025agrifewnet} (1/5/10/15-shot) so that our results can be compared \emph{in-regime}. The baselines are training-free and correctly referenced: Zero-Shot CLIP/BioCLIP~\cite{radford2021clip,stevens2024bioclip}, Tip-Adapter~\cite{zhang2022tip} ($\alpha{=}1.0,\beta{=}5.5$), Prototypical Networks~\cite{snell2017prototypical}, and SimpleShot~\cite{wang2019simpleshot}. Table~\ref{tab:literature} separately lists specialized architectures \emph{as reported} in their original publications; these use different encoders, class subsets, and splits, so they provide context only and are \emph{not} a controlled head-to-head. Prototypical Networks and SimpleShot coincide because Euclidean and cosine rankings are identical on $\ell_2$-normalized features, and the 11-class BioDINO-Edge values are the canonical reference run (Section~\ref{sec:transductive_validation}), reproduced by the provided script within 0.04\,pp. Full splits, seeds, model versions, and hyperparameters are given in \ref{app:repro}.
 
 \begin{table*}[htbp]
-\centering
-\caption{Controlled few-shot comparison on the PlantVillage 11-class novel subset. Accuracy is mean$\pm$std over episodes (\%); F1 is macro-mean (\%); bold marks the best mean.}
+\caption{Controlled few-shot comparison on the PlantVillage 11-class novel subset. Accuracy is mean $\pm$ std over episodes (\%); F1 is macro-mean (\%); bold marks the best mean.}
 \label{tab:comparative}
+\centering
+
 \footnotesize
 \setlength{\tabcolsep}{4pt}
 \begin{tabularx}{\textwidth}{l *{6}{>{\centering\arraybackslash}X}}
@@ -393,8 +408,9 @@ BioDINO-Edge (Inductive) & 95.08 $\pm$ 1.27 & 94.51 & 88.45 $\pm$ 9.12 & 97.96 $
 \end{table*}
 
 \begin{table*}[htbp]
+\caption{Specialized agricultural few-shot architectures, \emph{as reported}
 \centering
-\caption{Specialized agricultural few-shot architectures, \emph{as reported} in the original publications (not re-run by us).}
+ in the original publications (not re-run by us).}
 \label{tab:literature}
 \footnotesize
 \begin{tabularx}{\textwidth}{l l l X}
@@ -411,16 +427,17 @@ Zhao \textit{et al.} \cite{zhao2026lightweight} & PV $\rightarrow$ PlantDoc & 1/
 
 In the controlled 11-class regime (Table~\ref{tab:comparative}), Zero-Shot CLIP/BioCLIP achieves only 19.18\% because generic pretraining struggles to separate lesions from healthy leaf tissue, while Tip-Adapter reaches 49.97\%. Prototypical Networks and SimpleShot achieve 93.28\%, confirming the discriminative strength of the frozen features. BioDINO-Edge improves upon them via regularized Fisher-LDA (95.08\% inductive) and closed-form transductive recalibration (97.41\%), yielding a 2.33 percentage point paired gain over the inductive mode (Section~\ref{sec:transductive_validation}). Unlike gradient fine-tuning (e.g., LoRA \cite{hu2022lora}), this closed-form adaptation requires no backpropagation or optimizer state. In the 5-way regime, centroid baselines reach 97.45\% (5-shot) and 98.57\% (15-shot); BioDINO-Edge remains highest across all $K$ (98.77\% at 5-shot, 99.63\% at 15-shot), with the largest transductive gain in the 1-shot setting (93.42\% vs.\ 88.44\%).
 
-For context, Table~\ref{tab:literature} lists specialized architectures \emph{as reported}: AgriFewNet~\cite{babu2025agrifewnet} (87.3/94.8/97.1/98.2\% at 1/5/10/15-shot on PlantVillage), VSF~\cite{zhou2026vsf} (90.51\% on PlantVillage and 70.61\% on PlantDoc, 5-way 5-shot), and Zhao \textit{et al.}~\cite{zhao2026lightweight} (54.24\% five-shot cross-domain). Our controlled 5-way 5-shot re-run (98.77\% on our PlantVillage subset) and our PlantDoc field-domain result (83.61\% $\pm$ 11.69\% in 5-way 5-shot; 56.35\% in 27-way all-class stress testing, chance 3.70\%) lie in the same regimes, but because the encoders, class subsets, and splits differ we treat these as in-regime context rather than a controlled head-to-head, and we draw no direct superiority claim across protocols. The 27-way stress test is reported as a separate, harder regime and is not compared against 5-way literature values.
+For context, Table~\ref{tab:literature} lists specialized architectures \emph{as reported} in prior literature: AgriFewNet~\cite{babu2025agrifewnet} (reporting 87.3\%, 94.8\%, 97.1\%, and 98.2\% at 1, 5, 10, and 15 shots on PlantVillage), VSF~\cite{zhou2026vsf} (90.51\% on PlantVillage and 70.61\% on PlantDoc in 5-way 5-shot testing), and Zhao \textit{et al.}~\cite{zhao2026lightweight} (54.24\% five-shot cross-domain accuracy). Our controlled 5-way 5-shot re-run (98.77\% on our PlantVillage subset) and our PlantDoc field-domain result (83.61\% $\pm$ 11.69\% in 5-way 5-shot; 56.35\% in 27-way all-class stress testing, chance 3.70\%) lie in comparable regimes. Because encoders, class subsets, and data splits differ across studies, we treat these published figures as in-regime context rather than a direct head-to-head baseline, drawing no strict superiority claim across protocols. The 27-way stress test is evaluated as a distinct, unconstrained setting and is not contrasted against 5-way literature benchmarks.
 
 \subsection{Per-Class Pathology Diagnostics and Epidemiological Safety}
 \label{sec:per_class}
 Table~\ref{tab:per_class} reports per-class precision, recall, and F1-scores across all 9,330 PlantVillage test queries.
 
 \begin{table*}[htbp]
-\centering
 \caption{BioDINO-Edge per-class diagnostic metrics across 11 novel pathologies (9,330 test leaves).}
 \label{tab:per_class}
+\centering
+
 \footnotesize
 \setlength{\tabcolsep}{5pt}
 \begin{tabularx}{\textwidth}{lcccc}
@@ -461,9 +478,10 @@ Visually similar pathologies on the same host (e.g., Grape Esca vs. Grape Black 
 Table~\ref{tab:ablation} reports a systematic ablation across identical 5-shot splits to quantify individual component contributions; rows (4)--(5) are static cosine prototype blends ($0.65\,\mathbf{l}_{\text{bio}}+0.35\,\mathbf{l}_{\text{dino}}$) and row (6) replaces them with regularized Fisher-LDA.
 
 \begin{table}[htbp]
-\centering
 \caption{Systematic ablation of BioDINO-Edge components (single run, 5-shot, 9,330 queries).}
 \label{tab:ablation}
+\centering
+
 \footnotesize
 \setlength{\tabcolsep}{3pt}
 \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcc}
@@ -495,9 +513,10 @@ Table~\ref{tab:ablation} reports a systematic ablation across identical 5-shot s
 % the same 30 episodes (DINOv2 +0.90 pp, BioCLIP +1.87 pp); inductive ablated rows
 % are measured directly. Source: experiments/dinov2_ablation_gate_scenario.
 \begin{table}[htbp]
-\centering
-\caption{Contribution of each foundation model to the Fisher-LDA classifier (30 identical 5-shot episodes, mean$\pm$std).}
+\caption{Contribution of each foundation model to the Fisher-LDA classifier (30 identical 5-shot episodes, mean $\pm$ std).}
 \label{tab:feature_ablation}
+\centering
+
 \footnotesize
 \setlength{\tabcolsep}{4pt}
 \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc}
@@ -511,7 +530,7 @@ DINOv2 only & 384 & 90.60$\pm$2.02 & 95.54$\pm$1.03 \\
 \end{tabular*}
 \end{table}
 
-\textbf{Contribution of DINOv2.} Table~\ref{tab:feature_ablation} isolates the Fisher input while holding the text branch fixed (BioCLIP features, $w_{\mathrm{lda}}=0.75$); ablated rows subtract the paired contribution from the full-system benchmark. Removing DINOv2 (BioCLIP-only, 512-D) lowers transductive accuracy by 0.90 percentage points (paired $t(29)=9.88$, $p=8.6\times10^{-11}$, 29 of 30 episodes, $d_z=1.80$). Removing BioCLIP instead lowers it by 1.87 points, so BioCLIP carries most of the class signal and DINOv2 adds a smaller, consistent complement. DINOv2 also serves as the routing gate: its margin-entropy score ranks query safety better than the Tier-2 consensus confidence (mean AURC 1.14\% vs.\ 2.11\% over the 30 episodes). Finally, it provides the fast path: accepting 14.02\% of queries at Tier-1 lowers routing-weighted latency from 164.52\,ms (BioCLIP on every query) to 149.84\,ms. The cascade does not raise accuracy over running Tier-2 on all queries (Table~\ref{tab:gate_scenario}); its function is to reduce edge compute and route low-risk queries through a path with 0.25\% FNR.
+\textbf{Contribution of DINOv2.} Table~\ref{tab:feature_ablation} isolates the Fisher input while holding the text branch fixed (BioCLIP features, $w_{\mathrm{lda}}=0.75$); ablated rows subtract the paired contribution from the full-system benchmark. Removing DINOv2 (BioCLIP-only, 512-D) lowers transductive accuracy by 0.90 percentage points (paired $t(29)=9.88$, $p=8.6\times10^{-11}$, 29 of 30 episodes, $d_z=1.80$). Removing BioCLIP instead lowers it by 1.87 points, so BioCLIP carries most of the class signal and DINOv2 adds a smaller, consistent complement. DINOv2 also serves as the routing gate: its margin-entropy score ranks query safety better than the Tier-2 consensus confidence (mean Area Under the Risk--Coverage curve (AURC) 1.14\% vs.\ 2.11\% over the 30 episodes). Finally, it provides the fast path: accepting 14.02\% of queries at Tier-1 lowers routing-weighted latency from 164.52\,ms (BioCLIP on every query) to 149.84\,ms. The cascade does not raise accuracy over running Tier-2 on all queries (Table~\ref{tab:gate_scenario}); its function is to reduce edge compute and route low-risk queries through a path with 0.25\% FNR.
 
 \subsection{Statistical Significance and Sensitivity of Transductive Recalibration}
 \label{sec:transductive_validation}
@@ -520,9 +539,10 @@ Because the transductive module adapts the classifier from its own predictions, 
 \textbf{Paired significance over identical episodes.} Inductive and transductive predictions are compared on the \emph{same} 30 Monte Carlo episodes (identical support/query splits), so episode difficulty cancels in the paired difference. The mean paired gain is 2.33 percentage points (pp; 95\% confidence interval $[1.91, 2.74]$; Table~\ref{tab:paired_test}), with paired $t(29) = 11.57$ ($p = 2.2 \times 10^{-12}$) and Wilcoxon signed-rank $p = 1.9 \times 10^{-9}$. The transductive mode wins on all 30 episodes (Cohen's $d_z = 2.11$), so the gain is stable across support splits rather than an artifact of a favorable episode.
 
 \begin{table}[htbp]
-\centering
 \caption{Paired comparison of inductive vs.\ transductive inference over 30 identical Monte Carlo episodes (PlantVillage, 5-shot).}
 \label{tab:paired_test}
+\centering
+
 \footnotesize
 \setlength{\tabcolsep}{4pt}
 \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lc}
@@ -543,9 +563,10 @@ Cohen's $d_z$ & 2.11 \\
 \textbf{Hyperparameter sensitivity.} Table~\ref{tab:transductive_sensitivity} reports a one-factor-at-a-time sweep of the three design constants (support weight, anchor confidence threshold, buffer capacity) over the same 30 episodes, varying one constant while holding the others at the deployed $(3\times, 0.70, 20)$. In-domain accuracy is nearly flat in the support weight (97.21--97.44\% for $1\times$--$10\times$); the weight matters for drift protection under field streaming, not for in-domain gain. The confidence threshold plateaus over $\tau \in [0.5, 0.7]$ and collapses at $\tau \ge 0.8$ (95.98\% and 95.39\%) because anchors become too few, not because labels become noisier. Buffer capacity saturates: 20 anchors per class capture the available gain (97.41\%), and 40 or 80 anchors add 0.10 and 0.26 points at proportionally larger memory cost. The deployed $(3\times, 0.70, 20)$ sits at the plateau/knee of all three curves.
 
 \begin{table}[htbp]
-\centering
-\caption{Sensitivity of transductive accuracy to the three recalibration design constants (mean$\pm$std over 30 identical episodes).}
+\caption{Sensitivity of transductive accuracy to the three recalibration design constants (mean $\pm$ std over 30 identical episodes).}
 \label{tab:transductive_sensitivity}
+\centering
+
 \footnotesize
 \setlength{\tabcolsep}{4pt}
 \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcc}
@@ -594,9 +615,10 @@ The shrinkage analysis of Section~\ref{sec:shrinkage} assumes i.i.d.\ support sa
 % (run_augmentation_sensitivity.py -> results/augmentation_sensitivity.json);
 % rows generated by make_table.py. View sweep + control: 30 episodes; type sweep: 10.
 \begin{table}[htbp]
-\centering
-\caption{Sensitivity to augmentation count and type (mean$\pm$std over episodes).}
+\caption{Sensitivity to augmentation count and type (mean $\pm$ std over episodes).}
 \label{tab:aug_sensitivity}
+\centering
+
 \footnotesize
 \setlength{\tabcolsep}{2pt}
 \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccccc}
@@ -629,9 +651,10 @@ In safety-critical agricultural automation such as robotic spraying, an overconf
 \textbf{Tier-2 calibration.} The refined Tier-2 consensus is also under-confident (ECE 19.45\%), and most of the error sits in the dominant bin $(0.7,0.8]$: 7,102 queries at 98.0\% accuracy but 77.5\% mean confidence (Table~\ref{tab:reliability_bins}). The equal-width MCE of 44.26\% comes from bins with at most nine samples (one query in $(0.4,0.5]$); equal-mass binning lowers it to 21.53\%, and bins with $n\geq30$ give 20.49\%. Scalar logit temperature scaling cannot remove this residual: the consensus is a fixed $0.75/0.25$ blend of Fisher logits and BioCLIP text probabilities, so softening the logits alone leaves the blend miscalibrated (the fitted $T$ hits the optimizer bound and held-out ECE moves 19.33\%$\to$19.83\%). A power transform $\mathrm{softmax}(\log p / T)$ with $T=0.50$ instead collapses nearly all mass into one or two bins, producing a small ECE (0.48\%) but an equal-width MCE of 80.85\% (Fig.~\ref{fig:reliability}d); a freshly fitted power temperature ($T=0.54$) reproduces this (held-out ECE 0.24\%, MCE 88.74\%). The large equal-width MCE therefore reflects a single-sample bin rather than widespread miscalibration. We therefore do not claim that Tier-2 is well calibrated; routing reliability is instead verified through tier-separated error rates and selective risk.
 
 \begin{table}[htbp]
-\centering
 \caption{Per-bin reliability of the uncalibrated refined Tier-2 consensus (equal-width bins, full 9,330-query stream; empty bins omitted).}
 \label{tab:reliability_bins}
+\centering
+
 \footnotesize
 \begin{tabular}{lcccc}
 \toprule
@@ -650,9 +673,10 @@ $(0.9,1.0]$ & 5    & 100.0 & 90.6 & 9.4 \\
 \textbf{Tier-separated routing reliability.} Table~\ref{tab:tier_routing} reports the two tiers independently over 30 benchmark episodes at $\tau=0.35$. Tier-1 directly accepts 14.02\%$\pm$2.25\% of queries at 99.69\%$\pm$0.41\% accuracy and a 0.25\%$\pm$0.52\% false-negative rate (FNR); the escalated 85.98\% are resolved by Tier-2 at 96.98\%$\pm$0.83\% accuracy (FNR 0.87\%$\pm$0.39\%), yielding cascaded accuracy 97.36\%$\pm$0.69\% (F1 97.01\%$\pm$0.64\%) and routing-weighted latency 149.84$\pm$2.36\,ms. In the canonical single run, the 936 accepted queries achieve 99.79\% accuracy (FNR 0.25\%) versus 97.83\% (FNR 0.81\%) for the 8,394 escalated queries (cascaded 98.03\%). The accepted subset thus has roughly tenfold lower error (0.21\% vs.\ 2.17\%), and its accuracy is measured only on directly accepted queries, independent of Tier-2.
 
 \begin{table*}[htbp]
-\centering
-\caption{Tier-separated routing reliability at $\tau=0.35$ (30 benchmark episodes, mean$\pm$std).}
+\caption{Tier-separated routing reliability at $\tau=0.35$ (30 benchmark episodes, mean $\pm$ std).}
 \label{tab:tier_routing}
+\centering
+
 \footnotesize
 \begin{tabularx}{\textwidth}{lcccc}
 \toprule
@@ -672,9 +696,10 @@ Tier-2 (escalated) & 85.98$\pm$2.25 & 96.98$\pm$0.83 & 0.87$\pm$0.39 & 164.52 \\
 % means (cascade 97.36, refined Tier-2-on-all 97.37). Selective-mode rows are
 % measured over the same 30 episodes. Source: experiments/dinov2_ablation_gate_scenario.
 \begin{table}[htbp]
-\centering
 \caption{Routing-policy comparison (30-episode mean).}
 \label{tab:gate_scenario}
+\centering
+
 \footnotesize
 \setlength{\tabcolsep}{3pt}
 \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc}
@@ -719,9 +744,10 @@ Selective, $\tau=0.10$ & 62.17 & 98.63 & 0.44 & 124.90 \\
 Table~\ref{tab:device_spec} lists the physical testbed configuration; Tables~\ref{tab:device_perf} and~\ref{tab:adaptation_breakdown} report measured on-device latency, memory, and the closed-form adaptation breakdown. All values are from a production Samsung Galaxy S24~FE (SM-S721B, Exynos~2400e) running Android~17, using ONNX Runtime~1.18.0 with INT8 weights on a 4-thread CPU (NNAPI/GPU delegates disabled) and pure-Java EJML for the algebra. Model load is a one-time cost; latency is timed over 100 iterations after 10 warm-up passes, memory is the process PSS, and the algebra is timed after a 60\,s cool-down at stable thermal state (status~2). Two fast-exit fractions appear in this section: the 14.0\% used in the routing analysis (Table~\ref{tab:tier_routing}) is the 30-episode full-stream mean over all PlantVillage queries, whereas the 18\% in Table~\ref{tab:device_perf} is measured on the fixed 11-image on-device set used for the thermal and memory soak, which samples one image per class rather than the full class distribution.
 
 \begin{table}[htbp]
-\centering
 \caption{On-device edge testbed configuration (physical Android device, CPU-only INT8).}
 \label{tab:device_spec}
+\centering
+
 \footnotesize
 \begin{tabular}{ll}
 \toprule
@@ -740,9 +766,10 @@ Precision / delegate & INT8 / CPU (NNAPI off) \\
 \end{table}
 
 \begin{table*}[htbp]
-\centering
-\caption{Measured on-device performance (mean$\pm$std over $N=100$ iterations; median and p95 in ms).}
+\caption{Measured on-device performance (mean $\pm$ std over $N=100$ iterations; median and p95 in ms).}
 \label{tab:device_perf}
+\centering
+
 \footnotesize
 \begin{tabular}{lccc}
 \toprule
@@ -767,9 +794,10 @@ Sustained throughput (FPS) & 4.26 & -- & -- \\
 \end{table*}
 
 \begin{table*}[htbp]
-\centering
 \caption{Closed-form adaptation cost breakdown on-device ($N=440$, $d=896$, $C=11$).}
 \label{tab:adaptation_breakdown}
+\centering
+
 \footnotesize
 \begin{tabular}{lcc}
 \toprule
@@ -835,9 +863,10 @@ Reference environment: Python 3.12.1, torch 2.6.0 (CUDA 12.4 build; all reported
 Table~\ref{tab:provenance} states the origin of each reported value (``Re-run'': computed by us with the provided script on the stated protocol; ``As reported'': quoted from the original publication, not re-run). The controlled script reproduces the canonical inductive accuracy exactly (95.08\%) and the transductive accuracy within 0.04\,pp (97.37\% re-run vs.\ 97.41\% reference); the residual is floating-point sensitivity of the iterative least-squares (\texttt{lsqr}) LDA solve across library versions, far below the episode standard deviation (0.71\,pp). The centroid/cosine baselines involve no iterative solve and reproduce exactly. We report the canonical reference values for the 11-class regime to remain consistent with the paired-significance and sensitivity analyses (Sections~\ref{sec:transductive_validation}--\ref{sec:calibration}).
 
 \begin{table}[htbp]
-\centering
 \caption{Provenance of reported values.}
 \label{tab:provenance}
+\centering
+
 \footnotesize
 \begin{tabularx}{\columnwidth}{l X}
 \toprule
