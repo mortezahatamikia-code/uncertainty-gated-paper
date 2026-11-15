@@ -25,6 +25,18 @@
 \renewcommand{\dblfloatpagefraction}{0.85}
 
 \makeatletter
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip\footnotesize
+  \sbox\@tempboxa{#1: #2}%
+  \ifdim \wd\@tempboxa >\hsize
+    {\parfillskip=0pt plus 1fil #1: #2\par}%
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+\makeatother
+\makeatletter
 \setlength{\@fptop}{0pt}
 \setlength{\@fpsep}{14pt plus 2pt minus 2pt}
 \setlength{\@fpbot}{0pt plus 1fil}
@@ -45,9 +57,9 @@
 
 % Author names, affiliations, and contact details are withheld for double-anonymized review.
 \begin{abstract}
-Deploying deep networks for on-device plant disease diagnosis in precision agriculture is constrained by scarce labeled samples, high-variance vegetative background clutter, and the computational and thermal cost of on-device gradient backpropagation. We propose \textbf{BioDINO-Edge}, a gradient-free few-shot framework that adapts frozen multi-scale vision foundation models without backpropagation or graphics processing unit (GPU) acceleration. The contribution to AI is a closed-form adaptation method; the contribution to engineering is an offline diagnostic application. It couples spatial patch representations from DINOv2 (self-distillation with no labels), which capture fine-grained lesion contours, with taxonomic foliar representations from BioCLIP (a biology-domain vision--language model), which fuse visual features with pre-cached Latin botanical prompts. Under severe few-shot constraints ($K=5$ support leaves per novel class), feature dimensionality exceeds sample size ($N \ll d$), so empirical within-class covariance matrices become singular. We resolve this analytically with closed-form Ledoit--Wolf shrinkage of the pooled within-class scatter, which down-weights dominant shared vegetative variance and enables Fisher linear discriminant analysis (Fisher-LDA) projection in $\approx$0.53\,s on a mobile edge central processing unit (CPU).
+On-device plant disease diagnosis is limited by scarce labels, foliar clutter, and the computational cost of backpropagation. We propose \textbf{BioDINO-Edge}, a gradient-free few-shot framework that adapts frozen vision foundation models without fine-tuning or graphics processing unit (GPU) acceleration. The method concatenates DINOv2 patch representations, which capture lesion contours, with BioCLIP taxonomic foliar features fused with pre-cached Latin botanical prompts. Under 5-shot support, feature dimensionality exceeds sample size ($N \ll d$), causing empirical within-class covariance to become singular. We address this with closed-form Ledoit--Wolf shrinkage of the pooled within-class scatter. Shrinkage down-weights shared vegetative variance and enables Fisher linear discriminant analysis (Fisher-LDA) projection in 0.53\,s on a mobile central processing unit (CPU).
 
-During inference, a confidence gate combining normalized Shannon entropy and top-2 margin routes routine foliage through a lightweight Tier-1 path (59.78\,ms, $\approx$16.7\,frames per second (FPS) on a physical Android device) and escalates ambiguous queries to a multimodal Tier-2 classifier; high-confidence predictions are buffered as anchors to recalibrate Tier-2 weights transductively. Packaged into an $\approx$22.8\,MB Android application, BioDINO-Edge achieves 97.41\% $\pm$ 0.71\% 30-episode accuracy (peak 98.67\%, macro F1 98.41\%) on 11-class PlantVillage with a 0.702\% false-negative rate, and attains 83.61\% $\pm$ 11.69\% (5-way 5-shot) and 56.35\% (27-way) on in-the-wild PlantDoc, entirely offline.
+At inference, an uncertainty gate combining normalized Shannon entropy and top-2 margin routes routine leaves through a Tier-1 path at 59.78\,ms ($\approx$16.7\,frames per second (FPS)) on a physical Android smartphone. Ambiguous samples are escalated to a multimodal Tier-2 classifier. High-confidence predictions are buffered as anchors to recalibrate Tier-2 weights transductively in closed form. The system is packaged as a standalone $\approx$22.8\,MB Android application and runs fully offline. On 11-class PlantVillage, it achieves 97.41\% $\pm$ 0.71\% 30-episode accuracy (peak 98.67\%, macro F1 98.41\%) with a 0.702\% false-negative rate. On in-the-wild PlantDoc, it attains 83.61\% $\pm$ 11.69\% in 5-way 5-shot testing and 56.35\% in 27-way evaluation.
 \end{abstract}
 
 \begin{highlights}
@@ -75,7 +87,7 @@ Deep learning and convolutional architectures have introduced automated alternat
 
 Recent agricultural FSL literature has explored cross-domain meta-learning architectures such as CDFSL-BDC (cross-domain few-shot learning with Brownian distance covariance) \cite{yang2024laboratory} and MAFDE-DN4 (multi-scale attention fusion and discriminative enhancement over a deep nearest-neighbor network) \cite{zhao2024mafde}, alongside few-shot metric domain adaptation (FMDA) \cite{kudo2025few}, lightweight networks such as AgriFewNet \cite{babu2025agrifewnet}, visual-semantic fusion (VSF) \cite{zhou2026vsf}, and edge-federated frameworks \cite{sharif2026real}. Despite notable progress, four fundamental technical bottlenecks persist in real-world agricultural deployments:
 \begin{enumerate}
-    \item \textbf{Vegetative Manifold Dominance:} Over 90\% of an infected leaf's visual area comprises healthy green chlorophyll, venation, and natural illumination, while pathological lesions occupy less than 5\%--10\% of the surface \cite{shoaib2023advanced}. In standard feature spaces, isotropic distance metrics (e.g., Euclidean or cosine similarity) are overwhelmed by shared foliar variance, causing severe cross-disease confusion between distinct pathologies of the same host species (e.g., Grape Black Rot vs. Grape Esca) \cite{zhou2026vsf}.
+    \item \textbf{Vegetative Manifold Dominance:} Over 90\% of an infected leaf's visual area comprises healthy green chlorophyll, venation, and natural illumination, while pathological lesions occupy less than 5\%--10\% of the surface \cite{shoaib2023advanced}. In standard feature spaces, distance metrics that weight all directions equally (e.g., Euclidean or cosine similarity) are overwhelmed by shared foliar variance, causing severe cross-disease confusion between distinct pathologies of the same host species (e.g., Grape Black Rot vs. Grape Esca) \cite{zhou2026vsf}.
     \item \textbf{High-Dimensional Covariance Singularity ($N \ll d$):} Discriminant metric learning (such as Fisher linear discriminant analysis, Fisher-LDA) seeks to dampen shared vegetative noise by inverting the within-class covariance matrix \cite{fisher1936use}. However, in scarce 5-shot regimes with high-dimensional foundation embeddings ($d=896$, $N=440$), sample count is substantially smaller than dimensionality, rendering the empirical scatter matrix rank-deficient with hundreds of zero eigenvalues and analytically non-invertible \cite{ledoit2004well}.
     \item \textbf{The Edge Adaptation Paradox:} While parameter-efficient fine-tuning (PEFT) methods such as Low-Rank Adaptation (LoRA) \cite{hu2022lora} improve accuracy, on-device backpropagation induces thermal throttling and high latency on resource-constrained microprocessors (e.g., Raspberry Pi 5, mobile phones, or agricultural scouting drones) \cite{zhao2026lightweight}.
     \item \textbf{Memory \& Rural Connectivity Constraints:} Modern foundation models typically exceed hundreds of megabytes or gigabytes, preventing packaging into lightweight standalone mobile applications suitable for rural areas lacking broadband or cellular connectivity \cite{zhao2026lightweight, sharif2026real}.
@@ -197,7 +209,7 @@ The resulting matrix $\mathbf{P}_{\text{text}} \in \mathbb{R}^{C \times 512}$ is
 \label{sec:fisher_adaptation}
 
 \subsubsection{Multiclass Fisher Linear Discriminant Formulation}
-Standard metric few-shot approaches (e.g., Prototypical Networks \cite{snell2017prototypical} or Tip-Adapter \cite{zhang2022tip}) classify queries using Euclidean or cosine distances to class centroids $\boldsymbol{\mu}_c = \frac{1}{|\tilde{\mathcal{S}}_c|}\sum_{\mathbf{z} \in \tilde{\mathcal{S}}_c}\mathbf{z}$. This implicitly assumes an isotropic, spherical covariance distribution ($\mathbf{\Sigma} = \mathbf{I}$). In foliar pathology, however, the within-class covariance is strongly anisotropic: a few dominant eigen-directions carry most of the shared vegetative variation, with a measured condition number $\kappa \approx 1.4\times10^{3}$ on the canonical support (Table~\ref{tab:aug_sensitivity}). Isotropic cosine similarity weights all directions equally and is therefore dominated by these high-variance background components, misclassifying distinct diseases of the same host species; the regularized Fisher whitening of Section~\ref{sec:shrinkage} instead rescales each direction inversely to its shrunk variance.
+Standard metric few-shot approaches (e.g., Prototypical Networks \cite{snell2017prototypical} or Tip-Adapter \cite{zhang2022tip}) classify queries using Euclidean or cosine distances to class centroids $\boldsymbol{\mu}_c = \frac{1}{|\tilde{\mathcal{S}}_c|}\sum_{\mathbf{z} \in \tilde{\mathcal{S}}_c}\mathbf{z}$. This implicitly assumes uniform variance across all directions ($\mathbf{\Sigma} = \mathbf{I}$). In foliar pathology, however, within-class variance is strongly non-uniform across directions: a few dominant eigen-directions carry most of the shared vegetative variation, with a measured condition number $\kappa \approx 1.4\times10^{3}$ on the canonical support (Table~\ref{tab:aug_sensitivity}). Standard cosine similarity weights all directions equally and is therefore dominated by these high-variance background components, misclassifying distinct diseases of the same host species. The regularized Fisher-LDA projection (Section~\ref{sec:shrinkage}) resolves this by weighting features by the inverse covariance $\hat{\mathbf{\Sigma}}^{-1}$, mathematically down-weighting shared leaf background and amplifying low-variance, discriminative lesion symptoms.
 
 Multiclass Fisher-LDA \cite{fisher1936use, rao1948utilization} finds an optimal projection matrix $\mathbf{W} \in \mathbb{R}^{C \times d}$ and bias vector $\mathbf{b} \in \mathbb{R}^C$ maximizing between-class scatter $\mathbf{S}_B$ relative to within-class scatter $\mathbf{S}_W$:
 \begin{equation}
@@ -416,7 +428,7 @@ To ensure a fair and reproducible comparison, we separate \emph{controlled re-ru
 
 \begin{table*}[htbp]
 \centering
-\caption{Controlled few-shot comparison on the PlantVillage 11-class novel subset. \textbf{All methods use identical frozen BioCLIP+DINOv2 features, identical support/query splits, seeds, and protocol}; no backbone is retrained. 11-class: 30 episodes (seed $42{+}17e$, 5-shot); 5-way $K$-shot: 50 episodes per $K$ (seed 42). Acc.\ is mean$\pm$std over episodes (\%); F1 is macro-mean (\%). Baselines are re-implemented and re-run by us; BioDINO-Edge 11-class values are the canonical reference run (Section~\ref{sec:transductive_validation}), reproduced by the provided script within 0.04\,pp (\ref{app:repro}). Prototypical Networks and SimpleShot coincide because Euclidean and cosine rankings are identical on $\ell_2$-normalized features. Bold: best mean.}
+\caption{Controlled few-shot comparison on the PlantVillage 11-class novel subset. \textbf{All methods use identical frozen BioCLIP+DINOv2 features, identical support/query splits, seeds, and protocol}; no backbone is retrained. 11-class: 30 episodes (seed $42{+}17e$, 5-shot); 5-way $K$-shot: 50 episodes per $K$ (seed 42). Acc.\ is mean $\pm$ std over episodes (\%); F1 is macro-mean (\%). Baselines are re-implemented and re-run by us; BioDINO-Edge 11-class values are the canonical reference run (Section~\ref{sec:transductive_validation}), reproduced by the provided script within 0.04\,pp (\ref{app:repro}). Prototypical Networks and SimpleShot coincide because Euclidean and cosine rankings are identical on $\ell_2$-normalized features. Bold: best mean.}
 \label{tab:comparative}
 \footnotesize
 \begin{tabularx}{\textwidth}{l *{6}{>{\centering\arraybackslash}X}}
@@ -455,7 +467,7 @@ Zhao \textit{et al.} \cite{zhao2026lightweight} & PV $\rightarrow$ PlantDoc & 1/
 
 In the controlled 11-class regime (Table~\ref{tab:comparative}), Zero-Shot CLIP/BioCLIP reaches only 19.18\% because general pretraining cannot separate fine-grained lesions from healthy leaf mesophyll, and the training-free Tip-Adapter cache reaches 49.97\%. Centroid-based Prototypical Networks and SimpleShot are already strong (93.28\%), confirming that the frozen BioCLIP+DINOv2 features are highly discriminative; BioDINO-Edge improves on them through regularized Fisher-LDA (95.08\% inductive) and closed-form transductive recalibration (97.41\%), a 2.33-point paired gain over the inductive mode on identical episodes (Section~\ref{sec:transductive_validation}). Gradient-based fine-tuning such as CLIP+LoRA \cite{hu2022lora} would require GPU backpropagation and optimizer states, which our gradient-free closed-form adaptation avoids entirely. In the easier 5-way regime the centroid baselines already reach 97.45\% (5-shot) and 98.57\% (15-shot), so the margin narrows; BioDINO-Edge remains best at every $K$ (98.77\% at 5-shot, 99.63\% at 15-shot), and its transductive gain is largest in the hardest 1-shot setting (93.42\% vs.\ 88.44\% for Prototypical Networks).
 
-For context, Table~\ref{tab:literature} lists specialized architectures \emph{as reported}: AgriFewNet~\cite{babu2025agrifewnet} (87.3/94.8/97.1/98.2\% at 1/5/10/15-shot on PlantVillage), VSF~\cite{zhou2026vsf} (90.51\% on PlantVillage and 70.61\% on PlantDoc, 5-way 5-shot), and Zhao \textit{et al.}~\cite{zhao2026lightweight} (54.24\% five-shot cross-domain). Our controlled 5-way 5-shot re-run (98.77\% on our PlantVillage subset) and our PlantDoc field-domain result (83.61\% $\pm$ 11.69\% in 5-way 5-shot; 56.35\% in 27-way all-class stress testing, chance 3.70\%) lie in the same regimes, but because the encoders, class subsets, and splits differ we treat these as in-regime context rather than a controlled head-to-head, and we draw no direct superiority claim across protocols. The 27-way stress test is reported as a separate, harder regime and is not compared against 5-way literature values.
+For context, Table~\ref{tab:literature} lists specialized architectures \emph{as reported} in prior literature: AgriFewNet~\cite{babu2025agrifewnet} (reporting 87.3\%, 94.8\%, 97.1\%, and 98.2\% at 1, 5, 10, and 15 shots on PlantVillage), VSF~\cite{zhou2026vsf} (90.51\% on PlantVillage and 70.61\% on PlantDoc in 5-way 5-shot testing), and Zhao \textit{et al.}~\cite{zhao2026lightweight} (54.24\% five-shot cross-domain accuracy). Our controlled 5-way 5-shot re-run (98.77\% on our PlantVillage subset) and our PlantDoc field-domain result (83.61\% $\pm$ 11.69\% in 5-way 5-shot; 56.35\% in 27-way all-class stress testing, chance 3.70\%) lie in comparable regimes. Because encoders, class subsets, and data splits differ across studies, we treat these published figures as in-regime context rather than a direct head-to-head baseline, drawing no strict superiority claim across protocols. The 27-way stress test is evaluated as a distinct, unconstrained setting and is not contrasted against 5-way literature benchmarks.
 
 \subsection{Per-Class Pathology Diagnostics and Epidemiological Safety}
 \label{sec:per_class}
@@ -539,7 +551,7 @@ Table~\ref{tab:ablation} reports a systematic ablation across identical 5-shot s
 % are measured directly. Source: experiments/dinov2_ablation_gate_scenario.
 \begin{table}[htbp]
 \centering
-\caption{Contribution of each foundation model to the Fisher-LDA classifier (30 identical 5-shot episodes, mean$\pm$std). The text branch is fixed (BioCLIP features, $w_{\mathrm{lda}}=0.75$); only the Fisher input varies. Ablated rows subtract the paired contribution from the full-system benchmark.}
+\caption{Contribution of each foundation model to the Fisher-LDA classifier (30 identical 5-shot episodes, mean $\pm$ std). The text branch is fixed (BioCLIP features, $w_{\mathrm{lda}}=0.75$); only the Fisher input varies. Ablated rows subtract the paired contribution from the full-system benchmark.}
 \label{tab:feature_ablation}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -638,7 +650,7 @@ The shrinkage analysis of Section~\ref{sec:shrinkage} assumes i.i.d.\ support sa
 % rows generated by make_table.py. View sweep + control: 30 episodes; type sweep: 10.
 \begin{table}[htbp]
 \centering
-\caption{Sensitivity to augmentation count and type (mean$\pm$std over episodes; $\hat{\alpha}$: mean per-class Ledoit--Wolf intensity; $\kappa$: mean condition number of the pooled within-class covariance; Ind./Trans.: inductive/transductive accuracy). The view-count sweep and replication control use all 30 episodes; the type sweep uses the first 10 episodes, with the full-pipeline row recomputed on the same subset. $v=1$ reproduces the canonical cache-only protocol.}
+\caption{Sensitivity to augmentation count and type (mean $\pm$ std over episodes; $\hat{\alpha}$: mean per-class Ledoit--Wolf intensity; $\kappa$: mean condition number of the pooled within-class covariance; Ind./Trans.: inductive/transductive accuracy). The view-count sweep and replication control use all 30 episodes; the type sweep uses the first 10 episodes, with the full-pipeline row recomputed on the same subset. $v=1$ reproduces the canonical cache-only protocol.}
 \label{tab:aug_sensitivity}
 \footnotesize
 \setlength{\tabcolsep}{2pt}
@@ -694,7 +706,7 @@ $(0.9,1.0]$ & 5    & 100.0 & 90.6 & 9.4 \\
 
 \begin{table*}[htbp]
 \centering
-\caption{Tier-separated routing reliability at $\tau=0.35$ (30 benchmark episodes, mean$\pm$std). Tier-1 accuracy and FNR are computed exclusively on directly accepted queries; Tier-2 statistics exclusively on escalated queries. Latencies are the per-path edge costs of Table~\ref{tab:device_perf}.}
+\caption{Tier-separated routing reliability at $\tau=0.35$ (30 benchmark episodes, mean $\pm$ std). Tier-1 accuracy and FNR are computed exclusively on directly accepted queries; Tier-2 statistics exclusively on escalated queries. Latencies are the per-path edge costs of Table~\ref{tab:device_perf}.}
 \label{tab:tier_routing}
 \small
 \begin{tabularx}{\textwidth}{lcccc}
@@ -784,7 +796,7 @@ Precision / delegate & INT8 / CPU (NNAPI off) \\
 
 \begin{table*}[htbp]
 \centering
-\caption{Measured on-device performance (mean$\pm$std over $N=100$ iterations; median and p95 in ms). Model load is one-time; peak RAM is the process PSS. The device cascade uses the 11-image on-device set (18\% fast-exit); the full-stream routing blend is in Table~\ref{tab:tier_routing}.}
+\caption{Measured on-device performance (mean $\pm$ std over $N=100$ iterations; median and p95 in ms). Model load is one-time; peak RAM is the process PSS. The device cascade uses the 11-image on-device set (18\% fast-exit); the full-stream routing blend is in Table~\ref{tab:tier_routing}.}
 \label{tab:device_perf}
 \small
 \begin{tabular}{lccc}

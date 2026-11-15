@@ -28,7 +28,7 @@ def create_architecture_diagram():
     plt.rcParams.update({
         'font.sans-serif': 'DejaVu Sans',
         'font.family': 'sans-serif',
-        'font.size': 8.5,
+        'font.size': 9.0,
         'axes.labelsize': 9,
         'figure.titlesize': 11
     })
@@ -72,7 +72,7 @@ def create_architecture_diagram():
 
     # Helper: Draw inner component cards with evenly distributed content
     def draw_card(x, y, w, h, bg, border, title="", items=None, radius=0.5, lw=1.0,
-                  title_color="#0F172A", title_fs=7.4, zorder=4):
+                  title_color="#0F172A", title_fs=7.8, zorder=4):
         box = patches.FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0.14,rounding_size={radius}",
                                      facecolor=bg, edgecolor=border, linewidth=lw, zorder=zorder)
         ax.add_patch(box)
@@ -100,7 +100,7 @@ def create_architecture_diagram():
     # Helper: Draw straight arrow with centered badge on the line
     def draw_arrow(x1, y1, x2, y2, color="#2563EB", lw=1.4, ls='-',
                    label="", label_pos=0.5,
-                   label_color="#1D4ED8", label_bg="white", label_fs=6.2):
+                   label_color="#1D4ED8", label_bg="white", label_fs=6.6):
         if ls == '-':
             ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
                         arrowprops=dict(arrowstyle="->,head_width=0.25,head_length=0.36",
@@ -129,7 +129,7 @@ def create_architecture_diagram():
     # Helper: Draw multi-segment 90-degree orthogonal path with arrow on final segment
     def draw_orthogonal_arrow(waypoints, color="#2563EB", lw=1.4, ls='-',
                               label="", label_seg=1, label_pos=0.5,
-                              label_color="#1D4ED8", label_bg="white", label_fs=6.1):
+                              label_color="#1D4ED8", label_bg="white", label_fs=6.5):
         if ls == '-':
             for i in range(len(waypoints) - 2):
                 ax.plot([waypoints[i][0], waypoints[i+1][0]],
@@ -183,7 +183,7 @@ def create_architecture_diagram():
               title="Live Foliar Query Stream",
               items=[
                   (r"Leaf Photos ($\mathbf{x}_q$) | Video Frames", "#0F172A", 6.9, True),
-                  ("Uncontrolled Field Acquisition", "#475569", 6.5, False),
+                  ("Uncontrolled Field Acquisition", "#334155", 6.5, False),
                   (r"Direct Input $\to$ Tier-1 DINOv2 Fast Path", "#1D4ED8", 6.6, True)
               ], title_color="#1D4ED8")
 
@@ -200,7 +200,7 @@ def create_architecture_diagram():
               title=r"Predefined Class Prompts (Offline)",
               items=[
                   (r"Fixed Ensemble: $M=3$ Templates / Class", "#0369A1", 6.8, True),
-                  (r"Taxonomic Botany: Host + Pathogen Etiology", "#475569", 6.5, False),
+                  (r"Taxonomic Botany: Host + Pathogen Etiology", "#334155", 6.5, False),
                   (r"BioCLIP Text Enc. $\phi_{\mathrm{bio}} \to \mathbf{P}_{\mathrm{text}}^{(c)}$ (Cached)", "#0F172A", 6.7, True)
               ], title_color="#0369A1", title_fs=7.1)
 
@@ -210,7 +210,7 @@ def create_architecture_diagram():
               items=[
                   (r"$\mathcal{S}_c = \{(\mathbf{x}_i, c)\}_{i=1}^5$ ($K=5$ Shots/Class, 11 Classes)", "#0F172A", 6.8, True),
                   (r"8$\times$ Multi-View Foliar Augmentation", "#C2410C", 6.7, True),
-                  ("Generates $N=440$ Synthetic Field Views", "#475569", 6.4, False)
+                  ("Generates $N=440$ Synthetic Field Views", "#334155", 6.4, False)
               ], title_color="#C2410C")
 
     # Arrow 1: Support Foliage -> Extraction (edge-to-edge)
@@ -222,7 +222,7 @@ def create_architecture_diagram():
               items=[
                   (r"DINOv2 (384-D) + BioCLIP ViT-B (512-D)", "#0F172A", 6.7, False),
                   (r"Joint Foliar Space: $\mathbf{Z} \in \mathbb{R}^{440 \times 896}$", "#9A3412", 6.9, True),
-                  (r"Visual Prototypes: $\mathbf{P}_{\mathrm{bio, vis}}^{(c)} \in \mathbb{R}^{512}$", "#475569", 6.4, False)
+                  (r"Prototypes: $\mathbf{P}_{\mathrm{dino}}$ (384-D) + $\mathbf{P}_{\mathrm{text}}$ (512-D)", "#334155", 6.4, False)
               ], title_color="#C2410C")
 
     # Arrow 2: Extraction -> Fisher-LDA
@@ -234,7 +234,7 @@ def create_architecture_diagram():
               items=[
                   (r"Analytical Shrinkage: $\hat{\mathbf{\Sigma}}^{-1}$ (Resolves $N \ll d$)", "#0F172A", 6.7, False),
                   (r"Exact Projection: $(\mathbf{W}, \mathbf{b})$ in $\approx$0.53 s (Zero Grads)", "#B45309", 6.9, True),
-                  (r"Suppresses Background Variance ($>31\times$)", "#475569", 6.4, False)
+                  (r"Whitening Spread: $\kappa(\hat{\mathbf{\Sigma}}) \approx 1.4\times10^{3}$", "#334155", 6.4, False)
               ], title_color="#92400E")
 
     # =========================================================================
@@ -257,16 +257,16 @@ def create_architecture_diagram():
               items=[
                   (r"$\mathbf{f}_{\mathrm{dino}} \in \mathbb{R}^{384}$ (Patch 14)", "#047857", 6.9, True),
                   ("Latency: 59.78 ms on CPU", "#334155", 6.7, False),
-                  ("Captures Fine Lesion Edges", "#475569", 6.4, False)
+                  ("Captures Fine Lesion Edges", "#334155", 6.4, False)
               ], title_color="#047857")
 
     # Card 3.2: Fast Prototype Matching (Cosine Similarity)
     draw_card(42.4, 32.2, 14.4, 9.0, "#FFFFFF", "#059669",
               title="Fast Prototype Matching",
               items=[
-                  (r"$\mathbf{p}_{\mathrm{dino}} = \mathrm{softmax}(\gamma \cdot \mathbf{f}\mathbf{P}_{\mathrm{dino}}^T)$", "#065F46", 6.8, True),
+                  (r"$\mathbf{p}_{\mathrm{dino}} = \mathrm{softmax}(\gamma \cdot \mathbf{f}_{\mathrm{dino}}\mathbf{P}_{\mathrm{dino}}^T)$", "#065F46", 6.8, True),
                   ("Cosine Similarity to Prototypes", "#334155", 6.6, False),
-                  (r"Zero-Covariance Fast Match ($\gamma = 20$)", "#475569", 6.4, False)
+                  (r"Zero-Covariance Fast Match ($\gamma = 20$)", "#334155", 6.4, False)
               ], title_color="#065F46", title_fs=7.2)
 
     draw_arrow(41.2, 36.7, 42.4, 36.7, color="#059669", lw=1.4)
@@ -277,7 +277,7 @@ def create_architecture_diagram():
               items=[
                   (r"$\mathcal{C} = \Delta p \cdot (1 - \mathcal{H}_{\mathrm{norm}})_+$", "#A16207", 6.9, True),
                   (r"Fast-Exit Cutoff: $\tau_{\mathrm{conf}} = 0.35$", "#C2410C", 6.8, True),
-                  ("Routes Ambiguous Queries to Tier-2", "#475569", 6.4, False)
+                  ("Routes Ambiguous Queries to Tier-2", "#334155", 6.4, False)
               ], title_color="#A16207", title_fs=7.1)
 
     draw_arrow(56.8, 36.7, 58.0, 36.7, color="#CA8A04", lw=1.4)
@@ -301,7 +301,7 @@ def create_architecture_diagram():
               items=[
                   (r"$\mathbf{f}_{\mathrm{bio}} \in \mathbb{R}^{512}$ (ViT-B/16)", "#6D28D9", 6.9, True),
                   ("Add-On Latency: +104.74 ms", "#334155", 6.5, False),
-                  ("Taxonomy Priors (TreeOfLife-10M)", "#475569", 6.5, False)
+                  ("Taxonomy Priors (TreeOfLife-10M)", "#334155", 6.5, False)
               ], title_color="#6D28D9")
 
     # Card 4.2: 896-D Feature Fusion
@@ -309,7 +309,7 @@ def create_architecture_diagram():
               title="896-D Feature Fusion",
               items=[
                   (r"$\mathbf{z}_q = [\mathbf{f}_{\mathrm{bio}} \,\|\, \mathbf{f}_{\mathrm{dino}}]$", "#5B21B6", 6.9, True),
-                  (r"Reuses Cached $\mathbf{f}_{\mathrm{dino}}$ from Tier-1", "#334155", 6.5, False)
+                  (r"Concatenates Cached $\mathbf{f}_{\mathrm{dino}}$ (Tier-1)", "#334155", 6.5, False)
               ], title_color="#5B21B6")
 
     draw_arrow(41.2, 20.5, 42.4, 20.5, color="#7C3AED", lw=1.4)
@@ -318,7 +318,7 @@ def create_architecture_diagram():
     draw_card(58.0, 16.8, 13.6, 7.5, "#F0F9FF", "#0284C7",
               title="Fisher & Cached Text Blend",
               items=[
-                  (r"$\mathbf{p}_{\mathrm{blend}} = 0.75 \mathbf{p}_{\mathrm{fish}} + 0.25 \mathbf{p}_{\mathrm{text}}$", "#0284C7", 6.6, True),
+                  (r"$\mathbf{p}_{\mathrm{blend}} = 0.75 \mathbf{p}_{\mathrm{fisher}} + 0.25 \mathbf{p}_{\mathrm{text}}$", "#0284C7", 6.6, True),
                   (r"$\mathbf{p}_{\mathrm{text}} = \mathrm{softmax}(\gamma \mathbf{f}_{\mathrm{bio}} \mathbf{P}_{\mathrm{text}}^T)$", "#0369A1", 6.4, True),
                   ("Tier-2 Total: 164.52 ms (6.1 FPS)", "#0F172A", 6.5, False)
               ], title_color="#0369A1", title_fs=7.1)
@@ -332,23 +332,35 @@ def create_architecture_diagram():
                           color="#7C3AED", lw=1.5, ls="--",
                           label=r"Ambiguous (86.0%): $\mathcal{C}(\mathbf{x}) < 0.35$" + "\n" + r"$\to$ Triggers BioCLIP Escalation",
                           label_seg=1, label_pos=0.5,
-                          label_color="#6D28D9", label_bg="#FAF5FF", label_fs=5.9)
+                          label_color="#6D28D9", label_bg="#FAF5FF", label_fs=6.2)
 
-    # Wire 3a: Cached Text Prototypes P_text from Card 2.1 (Offline Prompts) into Tier-2
-    # Starts at Card 2.1 right edge (20.8, 25.15) -> gutter (24.1) -> into Tier-2 left edge (27.6, 22.5)
-    draw_orthogonal_arrow([(20.8, 25.15), (24.1, 25.15), (24.1, 22.2), (27.6, 22.2)],
+    # Wire 3a: Cached text prototypes feed the Tier-2 blend stage.
+    draw_orthogonal_arrow([(20.8, 25.15), (24.1, 25.15), (24.1, 21.5), (26.6, 21.5)],
                           color="#0284C7", lw=1.4, ls=":",
-                          label=r"Cached $\mathbf{P}_{\mathrm{text}}^{(c)}$ (Offline)",
+                          label=r"Cached $\mathbf{P}_{\mathrm{text}}^{(c)}$ (to Blend)",
                           label_seg=1, label_pos=0.5,
-                          label_color="#0369A1", label_bg="#F0F9FF", label_fs=5.9)
+                          label_color="#0369A1", label_bg="#F0F9FF", label_fs=6.2)
 
-    # Wire 3b: Fisher Weights (W, b) from Calibration Card 2.4 to Tier-2
-    # Starts at Card 2.4 right edge (20.8, 5.0) -> gutter (24.1) -> into Tier-2 left edge (27.6, 18.0)
-    draw_orthogonal_arrow([(20.8, 5.0), (24.1, 5.0), (24.1, 18.0), (27.6, 18.0)],
+    # Wire 3b: Fisher weights feed the Tier-2 blend stage.
+    draw_orthogonal_arrow([(20.8, 5.0), (24.1, 5.0), (24.1, 19.5), (26.6, 19.5)],
                           color="#EA580C", lw=1.4, ls=":",
-                          label=r"Fisher $(\mathbf{W}, \mathbf{b})$" + "\n" + r"(Zero Grads)",
+                          label=r"Fisher $(\mathbf{W}, \mathbf{b})$ (to Blend)",
                           label_seg=1, label_pos=0.5,
-                          label_color="#C2410C", label_bg="#FFF7ED", label_fs=5.9)
+                          label_color="#C2410C", label_bg="#FFF7ED", label_fs=6.2)
+
+    # Wire 3c: DINOv2 prototypes from Phase 0 feed Tier-1 fast matching.
+    draw_orthogonal_arrow([(20.8, 11.6), (22.4, 11.6), (22.4, 31.6), (49.6, 31.6), (49.6, 32.2)],
+                          color="#EA580C", lw=1.4, ls=":",
+                          label=r"$\mathbf{P}_{\mathrm{dino}}$ (Offline)",
+                          label_seg=2, label_pos=0.5,
+                          label_color="#C2410C", label_bg="#FFF7ED", label_fs=6.2)
+
+    # Wire 3d: Cached Tier-1 DINOv2 features feed the 896-D fusion stage.
+    draw_orthogonal_arrow([(34.4, 32.2), (34.4, 28.0), (23.0, 28.0), (23.0, 15.6), (49.6, 15.6), (49.6, 16.8)],
+                          color="#059669", lw=1.3, ls=":",
+                          label=r"Cached $\mathbf{f}_{\mathrm{dino}}$",
+                          label_seg=2, label_pos=0.5,
+                          label_color="#047857", label_bg="#ECFDF5", label_fs=6.2)
 
     # --- Box 5: Soft-Anchored Recalibration Engine (Bottom-Center) ---
     # Container y: 1.6 to 12.5 (h = 10.9). Banner: Deep Ocean Cyan
@@ -363,15 +375,15 @@ def create_architecture_diagram():
               title="On-Device FIFO Buffer",
               items=[
                   (r"Anchor Gate: $p_{\mathrm{max}} \geq 0.70$", "#0369A1", 6.8, True),
-                  ("Top-20 Confident Pseudo-Anchors", "#334155", 6.5, False)
+                  ("20 Confident Pseudo-Anchors / Class", "#334155", 6.5, False)
               ], title_color="#0369A1", title_fs=7.1)
 
     # Card 5.2: Soft-Anchoring (3x Weight)
     draw_card(42.4, 2.2, 14.4, 6.8, "#FEFCE8", "#D97706",
               title=r"Soft-Anchoring ($3\times$ Penalty)",
               items=[
-                  (r"$\tilde{\mathcal{S}}_c^{\mathrm{trans}} = (\tilde{\mathcal{S}}_c \otimes 3) \cup \mathcal{Q}_{\mathrm{anc}}$", "#A16207", 6.7, True),
-                  ("Safeguards Ground-Truth Centroids", "#475569", 6.5, False)
+                  (r"$\tilde{\mathcal{S}}_c^{\mathrm{trans}} = \tilde{\mathcal{S}}_c^{(3\times)} \cup \mathcal{Q}_{\mathrm{anchor}}^{(c)}$", "#A16207", 6.7, True),
+                  ("Safeguards Ground-Truth Centroids", "#334155", 6.5, False)
               ], title_color="#A16207")
 
     draw_arrow(41.2, 5.6, 42.4, 5.6, color="#D97706", lw=1.4)
@@ -392,14 +404,14 @@ def create_architecture_diagram():
                           color="#0284C7", lw=1.4, ls="--",
                           label="Anchor Filter\n" + r"$p_{\max} \geq 0.70$",
                           label_seg=1, label_pos=0.5,
-                          label_color="#0369A1", label_bg="#F0F9FF", label_fs=5.9)
+                          label_color="#0369A1", label_bg="#F0F9FF", label_fs=6.2)
 
     # Wire 5: Updates Tier-2 Boundaries straight UP from Closed-Form Update into Fisher Projection
     # Runs at x=66.8 with zero collision with Wire 4 (x=59.2) and clearly separated vertically from Wire 4's line
     # Starts at Card 5.3 top (66.8, 9.15), ends at Card 4.3 bottom (66.8, 16.65).
     draw_arrow(66.8, 9.15, 66.8, 16.65, color="#059669", lw=1.5, ls=":",
                label=r"Updates Tier-2" + "\n" + r"Boundaries $\mathbf{W}^{\mathrm{trans}}$", label_pos=0.38,
-               label_color="#047857", label_bg="#ECFDF5", label_fs=5.9)
+               label_color="#047857", label_bg="#ECFDF5", label_fs=6.2)
 
     # =========================================================================
     # 3. COLUMN 3 (RIGHT): Field Diagnostic Output
@@ -424,7 +436,7 @@ def create_architecture_diagram():
     # Wire 6: Fast-Exit straight horizontal arrow from Routing Gate right edge (71.6) to Live Classification left edge (79.4)
     draw_arrow(71.6, 36.7, 79.4, 36.7, color="#059669", lw=1.6,
                label="Fast-Exit (14.0%)\n" + r"$\mathcal{C}(\mathbf{x}) \geq 0.35$",
-               label_pos=0.5, label_color="#047857", label_bg="#ECFDF5", label_fs=6.0)
+               label_pos=0.5, label_color="#047857", label_bg="#ECFDF5", label_fs=6.3)
 
     # Wire 7: Deep Consensus cleanly routed orthogonally (90-degree) into Immediate Classification
     # Starts at Card 4.3 right edge (71.6, 20.5), enters Card 6.1 left edge at (79.4, 34.0)
@@ -432,7 +444,7 @@ def create_architecture_diagram():
                           color="#0284C7", lw=1.5,
                           label="Deep Consensus (86.0%)\n" + r"$0.75\,\mathbf{p}_{\mathrm{fish}} + 0.25\,\mathbf{p}_{\mathrm{text}}$",
                           label_seg=1, label_pos=0.5,
-                          label_color="#0369A1", label_bg="#F0F9FF", label_fs=5.9)
+                          label_color="#0369A1", label_bg="#F0F9FF", label_fs=6.2)
 
     # Card 6.2 (Middle): Continuous Session Adaptation
     draw_card(79.4, 18.0, 18.0, 11.2, "#FFFFFF", "#0284C7",
@@ -440,7 +452,7 @@ def create_architecture_diagram():
               items=[
                   ("Dynamic Hyperplane Recalibration", "#0369A1", 6.8, True),
                   (r"Applies $\mathbf{W}^{\mathrm{trans}}$ to Next Video Frames", "#334155", 6.6, False),
-                  ("Autonomous Zero-Overhead Tracking", "#047857", 6.5, True)
+                  ("Autonomous Background Recalibration", "#047857", 6.5, True)
               ], title_color="#0369A1")
 
     # Wire 8: Updated Hyperplanes from Recalibration cleanly routed orthogonally (90-degree) into Session Log
@@ -448,7 +460,7 @@ def create_architecture_diagram():
                           color="#059669", lw=1.5,
                           label="Updated " + r"$\mathbf{W}^{\mathrm{trans}}$" + "\n" + r"($\approx$0.53 s)",
                           label_seg=1, label_pos=0.5,
-                          label_color="#047857", label_bg="#ECFDF5", label_fs=6.0)
+                          label_color="#047857", label_bg="#ECFDF5", label_fs=6.3)
 
     # Card 6.3 (Bottom): Validated Hardware Benchmark Specs
     draw_card(79.4, 2.2, 18.0, 14.0, "#064E3B", "#047857",
@@ -458,7 +470,7 @@ def create_architecture_diagram():
                   ("PlantVillage Mean: 97.41% (30-Episodes)", "#FFFFFF", 6.8, True),
                   ("PlantDoc In-the-Wild (5-Way): 83.61%", "#A7F3D0", 6.8, True),
                   ("Routing Reliability: 99.7% acc, 0.25% FNR (Tier-1)", "#E2E8F0", 6.6, False),
-                  (r"Storage Budget: $\leq$ 110 MB (APK: 22.73 MB)", "#6EE7B7", 6.8, True),
+                  (r"Storage: $\approx$107.3 MB total (APK $\approx$22.8 MB) $\leq$ 110 MB", "#6EE7B7", 6.8, True),
                   ("100% Offline Edge CPU (Tier-1: 16.7 FPS)", "#A7F3D0", 6.7, True)
               ], title_color="#A7F3D0", title_fs=7.5)
 
