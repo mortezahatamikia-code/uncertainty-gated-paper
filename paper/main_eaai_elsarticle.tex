@@ -360,53 +360,50 @@ On-device profiling is conducted on a Samsung Galaxy S24~FE handset (Exynos 2400
 
 \subsection{Comparative Baseline Performance}
 \label{sec:comparative_results}
-To ensure a reproducible comparison, we separate \emph{controlled re-runs} from \emph{literature-reported} values. Table~\ref{tab:comparative} evaluates all baselines on identical frozen BioCLIP+DINOv2 embeddings, splits, random seeds, and shot counts as BioDINO-Edge. Because backbones remain frozen, this isolates the adaptation algorithm from encoder differences. We evaluate two regimes on the PlantVillage 11-class novel subset (9{,}385 images): (i)~11-class simultaneous classification (30 Monte-Carlo episodes, seed $42+17e$, 5-shot support, all remaining images as queries), and (ii)~the standard 5-way $K$-shot episodic ladder ($K=1,5,10,15$; 50 episodes each, seed 42), which matches the measurement protocols of VSF~\cite{zhou2026vsf} (5-way 1/5-shot) and AgriFewNet~\cite{babu2025agrifewnet} (1/5/10/15-shot) so that our results can be compared \emph{in-regime}. The baselines are training-free and correctly referenced: Zero-Shot CLIP/BioCLIP~\cite{radford2021clip,stevens2024bioclip}, Tip-Adapter~\cite{zhang2022tip} ($\alpha{=}1.0,\beta{=}5.5$), Prototypical Networks~\cite{snell2017prototypical}, and SimpleShot~\cite{wang2019simpleshot}. Table~\ref{tab:literature} separately lists specialized architectures \emph{as reported} in their original publications; these use different encoders, class subsets, and splits, so they provide context only and are \emph{not} a controlled head-to-head. Prototypical Networks and SimpleShot coincide because Euclidean and cosine rankings are identical on $\ell_2$-normalized features, and the 11-class BioDINO-Edge values are the canonical reference run (Section~\ref{sec:transductive_validation}), reproduced by the provided script within 0.04\,percentage points (pp). Full splits, seeds, model versions, and hyperparameters are given in \ref{app:repro}.
+Table~\ref{tab:comparative} combines both levels of evidence but keeps them separate. Panel (a) is the controlled comparison: every baseline is re-run by us on the same frozen BioCLIP+DINOv2 features, splits, seeds, and shot counts as BioDINO-Edge, so with the encoders fixed the only variable is the adaptation algorithm. It covers two PlantVillage regimes: 11-class simultaneous classification (30 Monte-Carlo episodes, 5-shot) and the standard 5-way $K$-shot ladder ($K=1,5,10,15$) used by VSF~\cite{zhou2026vsf} and AgriFewNet~\cite{babu2025agrifewnet}, so those two methods can be read in-regime. The baselines are all training-free: Zero-Shot CLIP/BioCLIP~\cite{radford2021clip,stevens2024bioclip}, Tip-Adapter~\cite{zhang2022tip} ($\alpha{=}1.0,\beta{=}5.5$), Prototypical Networks~\cite{snell2017prototypical}, and SimpleShot~\cite{wang2019simpleshot}; the last two coincide because Euclidean and cosine rankings are identical on $\ell_2$-normalized features. The 11-class BioDINO-Edge entry is the canonical run of Section~\ref{sec:transductive_validation}, reproduced to within 0.04\,percentage points (pp). Panels (b)--(c) quote results exactly as published by the methods reviewed in Section~\ref{sec:related_work}; because their encoders, class pools, and splits differ, we compare them only within a panel and never against another regime. Exact splits, seeds, and hyperparameters are given in Appendix~\ref{app:repro}.
 
 \begin{table*}[htbp]
-\caption{Controlled few-shot comparison on the PlantVillage 11-class novel subset. Accuracy is mean $\pm$ standard deviation (std) over episodes (\%); F1 is macro-mean (\%); bold marks the best mean.}
+\caption{Comparison with related few-shot methods. Panel (a): controlled re-runs by us, all on the same frozen BioCLIP+DINOv2 features, splits, seeds, and shot counts (PlantVillage 11-class subset; mean $\pm$ std over episodes, \%). Panels (b)--(c): values quoted from the original publications (not re-run), with $\pm$ shown where the source reports it; their encoders, class pools, and splits differ, so values are comparable only within a panel and never across panels. ``All-class'' is the 11-class simultaneous regime in (a) and the 27-way stress test in (c), which has no literature counterpart. Dashes denote regimes not reported or not run; bold marks BioDINO-Edge.}
 \label{tab:comparative}
 \centering
 
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{l *{6}{>{\centering\arraybackslash}X}}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X *{5}{>{\centering\arraybackslash}p{1.85cm}} >{\centering\arraybackslash}p{1.0cm}@{}}
 \toprule
-& \multicolumn{2}{c}{\textbf{11-Class (30 ep.)}} & \multicolumn{4}{c}{\textbf{5-Way $K$-Shot (50 ep.\ each)}} \\
-\cmidrule(lr){2-3} \cmidrule(lr){4-7}
-\textbf{Method} & \textbf{Acc.} & \textbf{Macro F1} & \textbf{$K{=}1$} & \textbf{$K{=}5$} & \textbf{$K{=}10$} & \textbf{$K{=}15$} \\
+\multicolumn{5}{@{}l}{} & \multicolumn{2}{c}{\textbf{All-class}} \\
+\cmidrule(lr){6-7}
+\textbf{Method} & \textbf{$K{=}1$} & \textbf{$K{=}5$} & \textbf{$K{=}10$} & \textbf{$K{=}15$} & \textbf{Acc.} & \textbf{F1} \\
 \midrule
-Zero-Shot CLIP/BioCLIP \cite{radford2021clip,stevens2024bioclip} & 19.18 $\pm$ 0.02 & 18.49 & 38.89 $\pm$ 12.78 & 38.86 $\pm$ 12.79 & 38.83 $\pm$ 12.81 & 38.79 $\pm$ 12.83 \\
-Tip-Adapter \cite{zhang2022tip} & 49.97 $\pm$ 1.62 & 46.54 & 45.15 $\pm$ 13.42 & 68.63 $\pm$ 12.80 & 86.01 $\pm$ 7.49 & 93.23 $\pm$ 4.00 \\
-\cmidrule(lr){1-7}
-Prototypical Networks \cite{snell2017prototypical} & 93.28 $\pm$ 1.24 & 92.47 & 88.44 $\pm$ 9.13 & 97.45 $\pm$ 2.03 & 98.35 $\pm$ 1.45 & 98.57 $\pm$ 1.27 \\
-SimpleShot \cite{wang2019simpleshot} & 93.28 $\pm$ 1.24 & 92.47 & 88.44 $\pm$ 9.13 & 97.45 $\pm$ 2.03 & 98.35 $\pm$ 1.45 & 98.57 $\pm$ 1.27 \\
+\multicolumn{7}{@{}l}{\textit{(a) Controlled re-runs, PlantVillage 11-class subset (identical frozen features, splits, seeds)}}\\
+Zero-Shot CLIP/BioCLIP \cite{radford2021clip,stevens2024bioclip} & 38.89$\pm$12.78 & 38.86$\pm$12.79 & 38.83$\pm$12.81 & 38.79$\pm$12.83 & 19.18$\pm$0.02 & 18.49 \\
+Tip-Adapter \cite{zhang2022tip} & 45.15$\pm$13.42 & 68.63$\pm$12.80 & 86.01$\pm$7.49 & 93.23$\pm$4.00 & 49.97$\pm$1.62 & 46.54 \\
+Prototypical Networks \cite{snell2017prototypical} / SimpleShot \cite{wang2019simpleshot} & 88.44$\pm$9.13 & 97.45$\pm$2.03 & 98.35$\pm$1.45 & 98.57$\pm$1.27 & 93.28$\pm$1.24 & 92.47 \\
+BioDINO-Edge (inductive) & 88.45$\pm$9.12 & 97.96$\pm$1.85 & 99.10$\pm$0.87 & 99.41$\pm$0.60 & 95.08$\pm$1.27 & 94.51 \\
+\textbf{BioDINO-Edge (transductive, ours)} & \textbf{93.42$\pm$6.83} & \textbf{98.77$\pm$1.68} & \textbf{99.41$\pm$0.60} & \textbf{99.63$\pm$0.39} & \textbf{97.41$\pm$0.71} & \textbf{97.09} \\
 \midrule
-BioDINO-Edge (Inductive) & 95.08 $\pm$ 1.27 & 94.51 & 88.45 $\pm$ 9.12 & 97.96 $\pm$ 1.85 & 99.10 $\pm$ 0.87 & 99.41 $\pm$ 0.60 \\
-\textbf{BioDINO-Edge (Transductive, Ours)} & \textbf{97.41 $\pm$ 0.71} & \textbf{97.09} & \textbf{93.42 $\pm$ 6.83} & \textbf{98.77 $\pm$ 1.68} & \textbf{99.41 $\pm$ 0.60} & \textbf{99.63 $\pm$ 0.39} \\
+\multicolumn{7}{@{}l}{\textit{(b) PlantVillage 5-way $K$-shot, as reported (not re-run; different encoders and class pools)}}\\
+Zhao \textit{et al.} 2024, MAFDE-DN4 \cite{zhao2024mafde} & 57.50 & 81.41 & -- & -- & -- & -- \\
+Mu \textit{et al.} 2024, SC-FSL (38-class) \cite{mu2024few} & 78.55$\pm$0.81 & 92.90$\pm$0.47 & -- & -- & -- & -- \\
+AgriFewNet \cite{babu2025agrifewnet} & 87.30 & 94.80 & 97.10 & -- & -- & -- \\
+VSF \cite{zhou2026vsf} & 79.01 & 90.51 & -- & -- & -- & -- \\
+\midrule
+\multicolumn{7}{@{}l}{\textit{(c) PlantDoc field-domain (ours) and cross-domain (as reported), 5-way $K$-shot}}\\
+VSF, PlantDoc \cite{zhou2026vsf} & 59.82 & 70.61 & -- & -- & -- & -- \\
+Zhao \textit{et al.} 2026, PV$\to$PlantDoc \cite{zhao2026lightweight} & 42.69$\pm$0.62 & 54.24$\pm$0.72 & -- & -- & -- & -- \\
+\textbf{BioDINO-Edge (ours), PlantDoc} & -- & \textbf{83.61$\pm$11.69} & -- & -- & -- & -- \\
+\textbf{BioDINO-Edge (ours), PlantDoc 27-way} & -- & -- & -- & -- & \textbf{56.35} & \textbf{55.93} \\
 \bottomrule
 \end{tabularx}
 \end{table*}
 
-\begin{table*}[htbp]
-\caption{Specialized agricultural few-shot architectures, \emph{as reported} in the original publications (not re-run by us; PV denotes PlantVillage).}
-\label{tab:literature}
-\centering
-\footnotesize
-\begin{tabularx}{\textwidth}{l l l X}
-\toprule
-\textbf{Method} & \textbf{Dataset} & \textbf{Regime} & \textbf{Reported Acc. (\%)} \\
-\midrule
-AgriFewNet \cite{babu2025agrifewnet} & PlantVillage / New PV & 1/5/10/15-shot & 87.3 / 94.8 / 97.1 / 98.2 \\
-VSF \cite{zhou2026vsf} & PlantVillage & 5-way 1/5-shot & 79.01 / 90.51 \\
-VSF \cite{zhou2026vsf} & PlantDoc & 5-way 1/5-shot & 59.82 / 70.61 \\
-Zhao \textit{et al.} \cite{zhao2026lightweight} & PV $\rightarrow$ PlantDoc & 1/5-shot & 42.69 $\pm$ 0.62 / 54.24 $\pm$ 0.72 \\
-\bottomrule
-\end{tabularx}
-\end{table*}
 
-In the controlled 11-class regime (Table~\ref{tab:comparative}), Zero-Shot CLIP/BioCLIP achieves only 19.18\% because generic pretraining struggles to separate lesions from healthy leaf tissue, while Tip-Adapter reaches 49.97\%. Prototypical Networks and SimpleShot achieve 93.28\%, confirming the discriminative strength of the frozen features. BioDINO-Edge improves upon them via regularized Fisher-LDA (95.08\% inductive) and closed-form transductive recalibration (97.41\%), yielding a 2.33 percentage point paired gain over the inductive mode (Section~\ref{sec:transductive_validation}). Unlike gradient fine-tuning (e.g., LoRA \cite{hu2022lora}), this closed-form adaptation requires no backpropagation or optimizer state. In the 5-way regime, centroid baselines reach 97.45\% (5-shot) and 98.57\% (15-shot); BioDINO-Edge remains highest across all $K$ (98.77\% at 5-shot, 99.63\% at 15-shot), with the largest transductive gain in the 1-shot setting (93.42\% vs.\ 88.44\%).
 
-For broader context, Table~\ref{tab:literature} compiles published results from specialized agricultural few-shot architectures (AgriFewNet~\cite{babu2025agrifewnet}, VSF~\cite{zhou2026vsf}, and Zhao \textit{et al.}~\cite{zhao2026lightweight}). In comparable 5-way 5-shot regimes, BioDINO-Edge achieves 98.77\% on PlantVillage and 83.61\% on in-the-wild PlantDoc, alongside 56.35\% in the unconstrained 27-way stress test (chance 3.70\%). Because underlying backbones, class subsets, and evaluation protocols differ across publications, these published figures provide qualitative reference rather than a direct head-to-head baseline, with the 27-way stress test evaluated as an independent unconstrained benchmark.
+The frozen features are already discriminative, so most of the margin comes from adaptation rather than representation. Zero-shot CLIP/BioCLIP and Tip-Adapter trail far behind, and the centroid baselines show that the features are close to linearly separable; BioDINO-Edge adds regularized Fisher-LDA and closed-form transductive recalibration on top of the same features, gaining 2.33\,pp over its own inductive mode (Section~\ref{sec:transductive_validation}) without backpropagation, optimizer state, or a GPU. The same ordering holds along the $K$-shot ladder, where the transductive gain is largest at $K{=}1$ because support statistics are least reliable there.
+
+Panel (b) is the closest available PlantVillage comparison, although not a controlled one. BioDINO-Edge reports the highest 1- and 5-shot accuracies of the methods listed, but the margin cannot be read as a like-for-like gain: our ladder samples 5 of 11 classes from three crops, whereas Mu \textit{et al.} use all 38 PlantVillage classes with a ResNet-18 encoder. The same baseline family spans a wide range across these setups; Prototypical Networks reaches 89.70\% in their 38-class setting and 97.45\% on our frozen-feature pool, so a 7.75\,pp spread between two prototypical classifiers can arise from encoder and class pool alone. Panel (b) is therefore in-regime context, not evidence of superiority over the cited methods.
+
+Panel (c) carries the same 5-way regime to field data: BioDINO-Edge reaches 83.61\% on PlantDoc at 5-shot, against 70.61\% for VSF and 54.24\% for Zhao \textit{et al.} in the PlantVillage-to-PlantDoc transfer. These values also differ in encoder and split, so the claim is limited to in-regime performance. The 27-way stress test (56.35\%, chance 3.70\%) has no published counterpart and is not compared with any 5-way result. Yang \textit{et al.} (Pest$\to$FCDD), Kudo \textit{et al.} (relative F1 gains only), and Sharif \textit{et al.} (PlantWild) report on other benchmarks and protocols, so they are discussed qualitatively in Section~\ref{sec:related_work} rather than tabulated.
 
 \subsection{Per-Class Pathology Diagnostics and Epidemiological Safety}
 \label{sec:per_class}
@@ -828,7 +825,7 @@ We presented \textbf{BioDINO-Edge}, a gradient-free few-shot framework that adap
 \appendix
 \section{Reproducibility Details}
 \label{app:repro}
-This appendix specifies the exact splits, seeds, model versions, hyperparameters, and code needed to reproduce every reported number, and states the provenance of each value in Tables~\ref{tab:comparative}--\ref{tab:literature}.
+This appendix specifies the exact splits, seeds, model versions, hyperparameters, and code needed to reproduce every reported number, and states the provenance of each value in Table~\ref{tab:comparative}.
 
 \subsection{Datasets and Splits}
 \textbf{PlantVillage (controlled, Table~\ref{tab:comparative}).} We use the 11-class novel subset (Apple, Grape, Potato; 9{,}385 images) with frozen embeddings cached once. \emph{11-class regime:} 30 Monte-Carlo episodes; episode $e$ uses \texttt{random.Random(42+17e)}; for each class the image indices are shuffled, the first 5 form the support and all remaining images form the query (9{,}330 queries/episode; support $\cap$ query $=\emptyset$). \emph{5-way $K$-shot regime:} 50 episodes per $K\in\{1,5,10,15\}$; a single \texttt{random.Random(42)} stream samples 5 of the 11 classes per episode (\texttt{rng.sample(range(11),5)}), shuffles each class, takes the first $K$ as support and the rest as query. All methods share the identical support/query indices and frozen features within each episode, so any accuracy difference is attributable to the adaptation algorithm alone.
@@ -857,7 +854,7 @@ Table~\ref{tab:provenance} states the origin of each reported value (``Re-run'':
 Table~\ref{tab:comparative} baselines & Re-run, identical splits/seeds/features \\
 Table~\ref{tab:comparative} BioDINO 11-class & Canonical reference run (reproduced $\le$0.04\,pp) \\
 Table~\ref{tab:comparative} BioDINO 5-way & Controlled re-run (this work) \\
-Table~\ref{tab:literature} AgriFewNet/VSF/Zhao & As reported, not re-run \\
+Table~\ref{tab:comparative} panels (b)--(c), AgriFewNet/VSF/Zhao & As reported, not re-run \\
 PlantDoc 83.61\% / 56.35\% & Our PlantDoc field-domain run (protocol above) \\
 Table~\ref{tab:aug_sensitivity} sensitivity & Re-run, this work (same 30-episode protocol) \\
 \bottomrule
