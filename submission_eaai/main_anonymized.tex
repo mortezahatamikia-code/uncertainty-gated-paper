@@ -7,6 +7,8 @@
 %% \documentclass[review,12pt]{elsarticle}
 %% \documentclass[preprint,12pt]{elsarticle}
 
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{booktabs}
 \usepackage{tabularx}
@@ -57,17 +59,17 @@
 
 % Author names, affiliations, and contact details are withheld for double-anonymized review.
 \begin{abstract}
-On-device plant disease diagnosis is limited by scarce labels, foliar clutter, and the computational cost of backpropagation. We propose \textbf{BioDINO-Edge}, a gradient-free few-shot framework that adapts frozen vision foundation models without fine-tuning or graphics processing unit (GPU) acceleration. The method concatenates DINOv2 patch representations, which capture lesion contours, with BioCLIP taxonomic foliar features fused with pre-cached Latin botanical prompts. Under 5-shot support, feature dimensionality exceeds sample size ($N \ll d$), causing empirical within-class covariance to become singular. We address this with closed-form Ledoit--Wolf shrinkage of the pooled within-class scatter. Shrinkage down-weights shared vegetative variance and enables Fisher linear discriminant analysis (Fisher-LDA) projection in 0.53\,s on a mobile central processing unit (CPU).
+On-device plant disease diagnosis is held back by scarce annotations, background clutter, and edge backpropagation cost. We propose \textbf{BioDINO-Edge}, a gradient-free few-shot framework that adapts frozen vision foundation models without fine-tuning or graphics processing unit (GPU) acceleration. It combines DINOv2 lesion-contour patches with BioCLIP taxonomic embeddings aligned to cached botanical prompts in 896 dimensions. Because support is scarce relative to the high-dimensional embedding space, the empirical covariance becomes singular, and shared leaf background hides localized symptoms. BioDINO-Edge therefore applies analytical Ledoit--Wolf shrinkage to build regularized Fisher linear discriminant projections. This closed-form step suppresses shared vegetative variance and computes discriminant boundaries in 0.53\,s on a mobile central processing unit (CPU) with no backpropagation.
 
-At inference, an uncertainty gate combining normalized Shannon entropy and top-2 margin routes routine leaves through a Tier-1 path at 59.78\,ms ($\approx$16.7\,frames per second (FPS)) on a physical Android smartphone. Ambiguous samples are escalated to a multimodal Tier-2 classifier. High-confidence predictions are buffered as anchors to recalibrate Tier-2 weights transductively in closed form. The system is packaged as a standalone $\approx$22.8\,MB Android application and runs fully offline. On 11-class PlantVillage, it achieves 97.41\% $\pm$ 0.71\% 30-episode accuracy (peak 98.67\%, macro F1 98.41\%) with a 0.702\% false-negative rate. On in-the-wild PlantDoc, it attains 83.61\% $\pm$ 11.69\% in 5-way 5-shot testing and 56.35\% in 27-way evaluation.
+At inference, an uncertainty gate uses normalized Shannon entropy and top-2 margin to send routine foliage through a 59.78\,ms Tier-1 fast path ($\approx$16.7 frames per second (FPS)) on an Android handset, while only ambiguous queries go to multimodal Tier-2. High-confidence predictions are buffered as anchors to recalibrate Tier-2 projections transductively. Packaged as a standalone $\approx$22.8 megabyte (MB) Android app ($\approx$107\,MB total model storage: $\approx$23\,MB base app + $\approx$85\,MB on-demand companion) that runs fully offline, BioDINO-Edge reaches 97.41\% $\pm$ 0.71\% 30-episode accuracy (peak 98.67\%, macro F1 98.41\%) with a 0.702\% false-negative rate on 11-class PlantVillage. On in-the-wild PlantDoc, it reaches 83.61\% $\pm$ 11.69\% in 5-way 5-shot testing and 56.35\% in 27-way evaluation. Cascading frozen foundation models with closed-form adaptation therefore offers a practical, low-latency route to autonomous plant pathology at the edge without cloud dependence.
 \end{abstract}
 
 \begin{highlights}
 \item Gradient-free foliar pathology adapting frozen DINOv2 and BioCLIP encoders.
-\item Analytical Ledoit--Wolf shrinkage resolves small-sample covariance singularity.
+\item Parameter-free analytical covariance shrinkage resolves small-sample singularity on edge CPUs.
 \item Joint Shannon-margin confidence gate routes routine leaves to a 60\,ms Tier-1 path.
 \item Closed-form transductive recalibration adapts to field shifts in under 0.6\,s.
-\item Standalone $\approx$22.8MB Android app achieves 97.4\% accuracy without cloud servers.
+\item $\approx$107\,MB total model storage ($\approx$23\,MB base app + $\approx$85\,MB on-demand companion).
 \end{highlights}
 
 \begin{keyword}
@@ -81,7 +83,7 @@ Few-Shot Learning \sep Precision Agriculture \sep Plant Pathology \sep Multimoda
 % =============================================================================
 \section{Introduction}
 \label{sec:introduction}
-Crop pests and foliar diseases destroy an estimated 20\% to 40\% of global agricultural yield annually, incurring over \$220 billion in direct economic losses and severely jeopardizing food security for vulnerable populations \cite{richard2022control}. In conventional agronomic management, disease identification relies heavily on manual scouting and visual inspection by trained phytopathologists \cite{khakimov2022traditional, shoaib2023advanced}. However, manual scouting is labor-intensive, error-prone under field fatigue, geographically unscalable across vast acreages, and susceptible to misdiagnosis when distinct pathogens produce visually homologous symptoms \cite{shoaib2023advanced}.
+Crop pests and foliar diseases destroy an estimated 20\% to 40\% of global agricultural yield annually, incurring over \$220 billion in direct economic losses and severely jeopardizing food security for vulnerable populations \cite{richard2022control}. In conventional agronomic management, disease identification relies heavily on manual scouting and visual inspection by trained phytopathologists \cite{shoaib2023advanced}. However, manual scouting is labor-intensive, error-prone under field fatigue, geographically unscalable across vast acreages, and susceptible to misdiagnosis when distinct pathogens produce visually homologous symptoms \cite{shoaib2023advanced}.
 
 Deep learning and convolutional architectures have introduced automated alternatives by extracting discriminative lesion representations directly from red--green--blue (RGB) imagery \cite{shoaib2023advanced}. Nonetheless, conventional supervised paradigms require thousands of curated, expert-annotated images per pathology to train generalized classifiers \cite{shafik2023systematic}. In operational agriculture, such massive datasets are impractical: novel pathogen strains and physiological mutations emerge abruptly with seasonal shifts, while expert botanical labeling remains prohibitively expensive \cite{sun2024few}. Consequently, Few-Shot Learning (FSL) has emerged as an indispensable paradigm: adapting frozen visual backbones to novel disease categories given only a handful ($K=5$) of support leaf samples \cite{snell2017prototypical, sun2024few}.
 
