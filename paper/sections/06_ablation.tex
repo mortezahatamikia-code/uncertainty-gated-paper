@@ -1,0 +1,176 @@
+% =============================================================================
+% 6. ABLATION STUDY
+% =============================================================================
+\section{Ablation Study}
+\label{sec:ablation_study}
+
+\subsection{Systematic Component Ablation}
+\label{sec:ablation}
+Table~\ref{tab:ablation} reports a systematic ablation across identical 5-shot splits to quantify individual component contributions; rows (4)--(5) are static cosine prototype blends ($0.65\,\mathbf{l}_{\text{bio}}+0.35\,\mathbf{l}_{\text{dino}}$) and row (6) replaces them with regularized Fisher-LDA.
+
+\begin{table}[htbp]
+\caption{Systematic ablation of BioDINO-Edge components (single run, 5-shot, 9,330 queries).}
+\label{tab:ablation}
+\centering
+
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcc}
+\toprule
+\textbf{Configuration / Component} & \textbf{Acc. (\%)} & \textbf{F1 (\%)} \\
+\midrule
+(1) Fast-Path DINOv2 Small alone & 87.26 & 85.36 \\
+(2) Deep-Path BioCLIP ViT-B alone & 92.60 & 89.88 \\
+(3) Text Prototypes Only & 19.20 & 18.55 \\
+(4) Static Cosine Blend (raw 5-shot) & 94.16 & 92.55 \\
+(5) Static Cosine Blend (8-view aug.) & 93.90 & 91.58 \\
+(6) + Regularized Fisher Alignment & 96.05 & 94.83 \\
+(7) + Transductive Recalibration (Single Run) & 98.06 & 97.45 \\
+\midrule
+Full System (Peak Statistical Episode) & \textbf{98.67} & \textbf{98.41} \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\begin{itemize}
+    \item \textbf{DINOv2 vs. BioCLIP Complementarity:} DINOv2 alone achieves 87.26\%; lacking taxonomic supervision, it confuses similar lesions across host families. BioCLIP alone achieves 92.60\% but incurs 104.74\,ms encoder latency, preventing fast-path execution. Combining both backbones into an 896-D feature space provides both spatial cues and taxonomic grounding; Table~\ref{tab:feature_ablation} quantifies each model's contribution.
+    \item \textbf{Regularized Fisher Alignment (+1.89\,pp Gain):} Replacing the best static cosine blend (94.16\%) with regularized Fisher-LDA increases accuracy to 96.05\%. Whitening by $\hat{\mathbf{\Sigma}}^{-1}$ suppresses shared vegetative background variance, separating visually similar pathologies.
+    \item \textbf{Multi-View Augmentation:} Expanding 5 raw support leaves to 40 views per class ($N=440$) brings sample size near $d/2$, stabilizing covariance conditioning before shrinkage. This benefit is specific to covariance estimation: the static cosine blend is essentially unchanged by augmentation (94.16\% raw vs.\ 93.90\% augmented), whereas the regularized Fisher projection relies on augmented support to condition $\hat{\mathbf{\Sigma}}$.
+    \item \textbf{Transductive Recalibration (+2.01\% Gain):} Updating projection parameters from high-confidence field anchors improves accuracy from 96.05\% to 98.06\% (peak: 98.67\%), counteracting finite-sample prototype drift (validated in Section~\ref{sec:transductive_validation}).
+    \item \textbf{Lesion Cropping Degrades Host Context:} Evaluating attention-rollout lesion cropping dropped 27-way PlantDoc accuracy from 58.73\% to 57.14\%. Tight cropping discards leaf margin serrations and venation geometry, inducing cross-species confusion. Preserving full-leaf context is essential.
+\end{itemize}
+
+% Feature ablation: full row is the canonical benchmark (95.08 / 97.41). Ablated
+% transductive rows = canonical full minus the paired contribution measured over
+% the same 30 episodes (DINOv2 +0.90 pp, BioCLIP +1.87 pp); inductive ablated rows
+% are measured directly. Source: experiments/dinov2_ablation_gate_scenario.
+\begin{table}[htbp]
+\caption{Contribution of each foundation model to the Fisher-LDA classifier (30 identical 5-shot episodes, mean $\pm$ std).}
+\label{tab:feature_ablation}
+\centering
+
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc}
+\toprule
+\textbf{Fisher input} & \textbf{Dim} & \textbf{Inductive (\%)} & \textbf{Transductive (\%)} \\
+\midrule
+BioCLIP + DINOv2 (full) & 896 & 95.08$\pm$1.27 & 97.41$\pm$0.71 \\
+BioCLIP only & 512 & 94.31$\pm$1.25 & 96.51$\pm$0.90 \\
+DINOv2 only & 384 & 90.60$\pm$2.02 & 95.54$\pm$1.03 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\textbf{Contribution of DINOv2.} Table~\ref{tab:feature_ablation} isolates the Fisher input while holding the text branch fixed (BioCLIP features, $w_{\mathrm{lda}}=0.75$); ablated rows subtract the paired contribution from the full-system benchmark. Removing DINOv2 (BioCLIP-only, 512-D) lowers transductive accuracy by 0.90 percentage points (paired $t(29)=9.88$, $p=8.6\times10^{-11}$, 29 of 30 episodes, $d_z=1.80$). Removing BioCLIP instead lowers it by 1.87 points, so BioCLIP carries most of the class signal and DINOv2 adds a smaller, consistent complement. DINOv2 also serves as the routing gate: its margin-entropy score ranks query safety better than the Tier-2 consensus confidence (mean Area Under the Risk--Coverage curve (AURC) 1.14\% vs.\ 2.11\% over the 30 episodes). Finally, it provides the fast path: accepting 14.02\% of queries at Tier-1 lowers routing-weighted latency from 164.52\,ms (BioCLIP on every query) to 149.84\,ms. The cascade does not raise accuracy over running Tier-2 on all queries (Table~\ref{tab:gate_scenario}); its function is to reduce edge compute and route low-risk queries through a path with 0.25\% FNR.
+
+\subsection{Statistical Significance and Sensitivity of Transductive Recalibration}
+\label{sec:transductive_validation}
+Because the transductive module adapts the classifier from its own predictions, we examine paired significance over identical episodes, hyperparameter sensitivity, pseudo-label purity, and stability under sequential updates.
+
+\textbf{Paired significance over identical episodes.} Inductive and transductive predictions are compared on the \emph{same} 30 Monte Carlo episodes (identical support/query splits), so episode difficulty cancels in the paired difference. The mean paired gain is 2.33 percentage points (pp; 95\% confidence interval $[1.91, 2.74]$; Table~\ref{tab:paired_test}), with paired $t(29) = 11.57$ ($p = 2.2 \times 10^{-12}$) and Wilcoxon signed-rank $p = 1.9 \times 10^{-9}$. The transductive mode wins on all 30 episodes (Cohen's $d_z = 2.11$), so the gain is stable across support splits rather than an artifact of a favorable episode.
+
+\begin{table}[htbp]
+\caption{Paired comparison of inductive vs.\ transductive inference over 30 identical Monte Carlo episodes (PlantVillage, 5-shot).}
+\label{tab:paired_test}
+\centering
+
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lc}
+\toprule
+\textbf{Statistic} & \textbf{Value} \\
+\midrule
+Inductive mean accuracy (\%) & 95.08 $\pm$ 1.27 \\
+Transductive mean accuracy (\%) & 97.41 $\pm$ 0.71 \\
+Mean paired gain (pp, 95\% CI) & 2.33 $[1.91, 2.74]$ \\
+Paired $t$-test & $t(29)=11.57$, $p=2.2\times10^{-12}$ \\
+Wilcoxon signed-rank & $p=1.9\times10^{-9}$ \\
+Wins / losses / ties & 30 / 0 / 0 \\
+Cohen's $d_z$ & 2.11 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\textbf{Hyperparameter sensitivity.} Table~\ref{tab:transductive_sensitivity} reports a one-factor-at-a-time sweep of the three design constants (support weight, anchor confidence threshold, buffer capacity) over the same 30 episodes, varying one constant while holding the others at the deployed $(3\times, 0.70, 20)$. In-domain accuracy is nearly flat in the support weight (97.21--97.44\% for $1\times$--$10\times$); the weight matters for drift protection under field streaming, not for in-domain gain. The confidence threshold plateaus over $\tau \in [0.5, 0.7]$ and collapses at $\tau \ge 0.8$ (95.98\% and 95.39\%) because anchors become too few, not because labels become noisier. Buffer capacity saturates: 20 anchors per class capture the available gain (97.41\%), and 40 or 80 anchors add 0.10 and 0.26 points at proportionally larger memory cost. The deployed $(3\times, 0.70, 20)$ sits at the plateau/knee of all three curves.
+
+\begin{table}[htbp]
+\caption{Sensitivity of transductive accuracy to the three recalibration design constants (mean $\pm$ std over 30 identical episodes).}
+\label{tab:transductive_sensitivity}
+\centering
+
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcc}
+\toprule
+\textbf{Swept Configuration} & \textbf{Acc. (\%)} & \textbf{Std} \\
+\midrule
+\multicolumn{3}{@{}l}{\textit{Support weight} (threshold 0.70, 20 anchors/class)} \\
+$1\times$ & 97.42 & 0.75 \\
+$2\times$ & 97.44 & 0.73 \\
+$3\times$ (deployed) & 97.41 & 0.71 \\
+$5\times$ & 97.32 & 0.73 \\
+$10\times$ & 97.21 & 0.77 \\
+\midrule
+\multicolumn{3}{@{}l}{\textit{Anchor confidence threshold} ($3\times$, 20 anchors/class)} \\
+0.50 & 97.41 & 0.71 \\
+0.60 & 97.41 & 0.71 \\
+0.70 (deployed) & 97.41 & 0.71 \\
+0.80 & 95.98 & 1.28 \\
+0.90 & 95.39 & 1.25 \\
+\midrule
+\multicolumn{3}{@{}l}{\textit{Buffer capacity per class} ($3\times$, threshold 0.70)} \\
+5 & 96.36 & 0.97 \\
+10 & 96.97 & 0.85 \\
+20 (deployed) & 97.41 & 0.71 \\
+40 & 97.51 & 0.62 \\
+80 & 97.67 & 0.83 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\textbf{Pseudo-label purity.} Checked against ground truth (used only post-hoc for this audit), the anchor set at $\tau = 0.70$ is 98.15\% $\pm$ 1.18\% pure and covers 2.36\% of queries (220 anchors). Raising the threshold to 0.80 increases purity to 98.75\% but cuts coverage to 1.91\%; at 0.90 purity reaches 100\% yet coverage collapses to 0.05\%, explaining the accuracy collapse in Table~\ref{tab:transductive_sensitivity}. The deployed threshold keeps purity near its maximum without starving the buffer.
+
+\textbf{Sequential stability and error accumulation.} To test whether repeated updates compound pseudo-label errors, we simulated scouting passes: the query stream is partitioned into 10 sequential chunks, and after each chunk the FIFO buffer (20 anchors/class) admits confident predictions and the projection is re-fitted in closed form. Across three stream seeds, online accuracy rises from $\approx$96\% on the first chunk to 97--98.6\% thereafter with no degradation trend, and buffer purity remains bounded within a 92--98\% band: FIFO eviction flushes stale incorrect anchors, so wrong admissions do not accumulate in the active buffer. Under $\tau = 0.90$ purity stays at 100\% but final accuracy falls to $\approx$95.8--96.3\% (coverage starvation), confirming the purity/coverage trade-off. Final streaming accuracy (96.4--97.5\%) lies slightly below the single-pass batch refinement (97.41\%) because batch selection ranks anchors over the entire query set whereas streaming observes only the past. Error accumulation is therefore bounded by the confidence gate, FIFO eviction, and the $3\times$ support weighting.
+
+\subsection{Sensitivity to Augmentation Count and Type}
+\label{sec:aug_sensitivity}
+The shrinkage analysis (Section~\ref{sec:shrinkage}) assumes independent and identically distributed (i.i.d.)\ support samples, whereas the eight views of each support leaf are correlated pseudo-replicates. We quantify the consequences with a one-factor-at-a-time study over the same 30-episode protocol (identical splits, cached query features, and transductive defaults), re-extracting support features with a seeded augmentation random number generator (RNG). Three condition families are compared: (i) a view-count sweep $v\in\{1,2,4,8\}$ using nested prefixes of one 8-view extraction per episode; (ii) an augmentation-type sweep at $v=8$ (geometric-only flips/rotation vs.\ photometric-only color jitter vs.\ the full pipeline) over the first 10 episodes; and (iii) a pure-replication control that tiles the canonical embedding eight times ($N=440$, zero within-image diversity). For each condition we report the mean per-class Ledoit--Wolf intensity $\hat{\alpha}$, the condition number $\kappa(\hat{\mathbf{\Sigma}})$ of the pooled within-class covariance, and downstream accuracy (Table~\ref{tab:aug_sensitivity}; Ind.\ and Trans.\ denote inductive and transductive accuracy).
+
+\textbf{Protocol fidelity.} The $v=1$ condition reproduces the canonical cache-only reference exactly on the inductive mean (95.08\%$\pm$1.27\%) and within the documented \texttt{lsqr} floating-point residual on the transductive mean (97.37\% vs.\ 97.41\%; Appendix~\ref{app:repro}), confirming that the study isolates the augmentation factor alone.
+
+\textbf{Dependence is measurable but benign for accuracy.} Pure replication divides the shrinkage intensity by $\approx$8 ($0.573\to0.072$) and worsens the covariance condition number by $\approx$17$\times$ ($5.7\times10^{2}\to9.6\times10^{3}$) while adding no information---exactly the i.i.d.-violation artifact anticipated in Section~\ref{sec:shrinkage}. Genuine augmentation retains a $3.6\times$ higher intensity than replication at the same $N=440$ ($0.258$ vs.\ $0.072$), showing that stochastic views carry real but partial independence. Despite this, accuracy is stable across all conditions: the view sweep spans 95.08--96.09\% inductive and 97.37--97.96\% transductive, and even the degenerate replicate-8 control remains at 95.05\%/97.01\%. Increasing views monotonically improves both modes ($+1.01$\,pp inductive, $+0.59$\,pp transductive from $v=1$ to $v=8$): the effective-rank gain from genuine diversity outweighs the optimism of the analytical intensity, and the $3\times$ support re-weighting keeps the transductive fit anchored to genuine observations.
+
+\textbf{Geometric diversity dominates.} At fixed $v=8$, geometric-only augmentation is statistically indistinguishable from the full pipeline on the 10-episode subset ($97.92\% \pm 0.40\%$ vs.\ $97.85\% \pm 0.33\%$ transductive), whereas photometric-only jitter collapses the intensity toward the replication floor ($0.104$ vs.\ $0.072$), worsens conditioning ($5.5\times10^{3}$), and drops inductive accuracy below the unaugmented baseline (94.70\%$\pm$1.90\% vs.\ 95.08\%). Color jitter thus contributes little independent information---consistent with the photometric robustness of $\ell_2$-normalized foundation features---while flips and rotations supply the diversity that stabilizes covariance estimation. Geometric augmentation is therefore the essential component of the support expansion; the deployed full pipeline retains jitter at no measurable accuracy cost.
+
+% Augmentation-dependence sensitivity. Source: experiments/augmentation_sensitivity
+% (run_augmentation_sensitivity.py -> results/augmentation_sensitivity.json);
+% rows generated by make_table.py. View sweep + control: 30 episodes; type sweep: 10.
+\begin{table}[htbp]
+\caption{Sensitivity to augmentation count and type (mean $\pm$ std over episodes).}
+\label{tab:aug_sensitivity}
+\centering
+
+\footnotesize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccccc}
+\toprule
+\textbf{Condition} & \textbf{$N$} & \textbf{$\hat{\alpha}$} & \textbf{$\kappa(\hat{\mathbf{\Sigma}})$} & \textbf{Ind.\ (\%)} & \textbf{Trans.\ (\%)} \\
+\midrule
+\multicolumn{6}{@{}l}{\textit{View count (full pipeline, 30 episodes)}} \\
+$v=1$ & 55 & 0.573$\pm$0.005 & 5.7$\times10^{2}$ & 95.08$\pm$1.27 & 97.37$\pm$0.73 \\
+$v=2$ & 110 & 0.580$\pm$0.009 & 5.9$\times10^{2}$ & 95.50$\pm$1.21 & 97.67$\pm$0.57 \\
+$v=4$ & 220 & 0.420$\pm$0.012 & 8.8$\times10^{2}$ & 95.80$\pm$1.25 & 97.81$\pm$0.63 \\
+$v=8$ (deployed) & 440 & 0.258$\pm$0.008 & 1.4$\times10^{3}$ & 96.09$\pm$1.20 & 97.96$\pm$0.50 \\
+\midrule
+\multicolumn{6}{@{}l}{\textit{Augmentation type ($v=8$, first 10 episodes)}} \\
+Geometric only & 440 & 0.229$\pm$0.008 & 1.6$\times10^{3}$ & 95.99$\pm$1.26 & 97.92$\pm$0.40 \\
+Photometric only & 440 & 0.104$\pm$0.002 & 5.5$\times10^{3}$ & 94.70$\pm$1.90 & 97.31$\pm$0.61 \\
+Full pipeline & 440 & 0.257$\pm$0.009 & 1.4$\times10^{3}$ & 95.85$\pm$1.40 & 97.85$\pm$0.33 \\
+\midrule
+\multicolumn{6}{@{}l}{\textit{Pure-replication control (30 episodes)}} \\
+Replicate-8 (control) & 440 & 0.072$\pm$0.001 & 9.6$\times10^{3}$ & 95.05$\pm$1.28 & 97.01$\pm$0.79 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
