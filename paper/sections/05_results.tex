@@ -36,9 +36,9 @@ BioDINO-Edge (transductive, ours) & \textbf{93.42$\pm$6.83} & \textbf{98.77$\pm$
 \end{minipage}
 \end{table*}
 
-As shown in Table~\ref{tab:comparative}, closed-form Fisher-LDA projection paired with transductive refinement substantially outperforms isotropic distance baselines. In 5-way evaluation, BioDINO-Edge improves 1-shot accuracy from 88.44\% (Prototypical Networks) to 93.42\% (+4.98\,pp) and 5-shot accuracy to 98.77\%. On the 11-class simultaneous classification problem, transductive BioDINO-Edge achieves 97.41\% accuracy (macro F1 97.09\%), outperforming the centroid baseline by +4.13 percentage points. In the broader agricultural literature, methods such as MAFDE-DN4 \cite{zhao2024mafde}, SC-FSL \cite{mu2024few}, AgriFewNet \cite{babu2025agrifewnet}, and VSF \cite{zhou2026vsf} report 5-shot accuracies between 81.4\% and 94.8\% on PlantVillage. However, those frameworks sample episodes from different class pools (e.g., the full 38-class pool in SC-FSL and AgriFewNet) and rely on gradient backpropagation on server-grade GPUs, whereas BioDINO-Edge operates strictly over frozen representations on low-power edge CPUs.
+As shown in Table~\ref{tab:comparative}, closed-form Fisher-LDA projection paired with transductive refinement outperforms isotropic distance baselines. The gain is significant on the identical episodes: relative to Prototypical Networks, transductive BioDINO-Edge gains 4.09\,pp on the 11-class task (paired $t(29)=21.25$, $p=3.2\times10^{-19}$, Wilcoxon $p=1.7\times10^{-6}$, 30/0/0 wins, $d_z=3.88$) and 1.32\,pp at 5-way 5-shot (paired $t(49)=5.89$, $p=3.5\times10^{-7}$), while the gap to zero-shot BioCLIP and Tip-Adapter is 78.19 and 47.40\,pp respectively. In 5-way evaluation, BioDINO-Edge improves 1-shot accuracy from 88.44\% (Prototypical Networks) to 93.42\% (+4.98\,pp) and 5-shot accuracy to 98.77\%. On the 11-class simultaneous classification problem, transductive BioDINO-Edge achieves 97.41\% accuracy (macro F1 97.09\%), outperforming the centroid baseline by +4.13 percentage points. In the broader agricultural literature, methods such as MAFDE-DN4 \cite{zhao2024mafde}, SC-FSL \cite{mu2024few}, AgriFewNet \cite{babu2025agrifewnet}, and VSF \cite{zhou2026vsf} report 5-shot accuracies between 81.4\% and 94.8\% on PlantVillage. However, those frameworks sample episodes from different class pools (e.g., the full 38-class pool in SC-FSL and AgriFewNet) and rely on gradient backpropagation on server-grade GPUs, whereas BioDINO-Edge operates strictly over frozen representations on low-power edge CPUs.
 
-Table~\ref{tab:plantdoc_context} reports diagnostic performance under unconstrained field conditions using the PlantDoc benchmark. In 5-way 5-shot testing across 50 Monte Carlo episodes, BioDINO-Edge reaches 83.61\% accuracy. Under the 27-way all-class stress test, where all 27 field pathologies are scored simultaneously in closed form, it reaches 56.35\% accuracy (against a 3.70\% random chance baseline) and 55.93\% macro F1. In prior studies, VSF \cite{zhou2026vsf} reported 70.61\% on a 5-way PlantDoc setup, while Zhao et al.~\cite{zhao2026lightweight} evaluated cross-dataset transfer (PlantVillage $\rightarrow$ PlantDoc) achieving 54.24\% without target support. These evaluations demonstrate that coupling botanical text priors with regularized visual features provides resilient discrimination under severe field clutter without domain-specific backbone fine-tuning.
+Table~\ref{tab:plantdoc_context} reports diagnostic performance under unconstrained field conditions using the PlantDoc benchmark. In 5-way 5-shot testing across 50 Monte Carlo episodes, BioDINO-Edge reaches 84.22\% accuracy (inductive 82.05\%). Under the 27-way all-class stress test, where all 27 field pathologies are scored simultaneously, it reaches 50.79\% accuracy (against a 3.70\% random chance baseline) and 50.73\% macro F1. In prior studies, VSF \cite{zhou2026vsf} reported 70.61\% on a 5-way PlantDoc setup, while Zhao et al.~\cite{zhou2026lightweight} evaluated cross-dataset transfer (PlantVillage $\rightarrow$ PlantDoc) achieving 54.24\% without target support. In both regimes, the botanical text prior is combined with regularized visual features, and no domain-specific backbone fine-tuning is applied.
 
 \begin{table}[htbp]
 \caption{In-the-wild field evaluation of BioDINO-Edge on PlantDoc.}
@@ -48,17 +48,17 @@ Table~\ref{tab:plantdoc_context} reports diagnostic performance under unconstrai
 \setlength{\tabcolsep}{4pt}
 \begin{tabularx}{\columnwidth}{@{}>{\raggedright\arraybackslash}Xcccc@{}}
 \toprule
-\textbf{Evaluation Regime} & \textbf{Classes} & \textbf{Shots} & \textbf{Accuracy (\%)} & \textbf{Macro F1} \\
+\textbf{Evaluation Regime} & \textbf{Classes} & \textbf{Shots} & \textbf{Inductive (\%)} & \textbf{Transductive (\%)} \\
 \midrule
-5-way episodic ($\mathcal{D}_{\text{train}} \rightarrow \mathcal{D}_{\text{test}}$) & 5 & 5 & 83.61$\pm$11.69 & -- \\
-All-class stress test (simultaneous) & 27 & 5 & 56.35 & 55.93 \\
+5-way 5-shot episodic (PlantDoc train/test splits) & 5 & 5 & 82.05$\pm$11.24 & 84.22$\pm$11.24 \\
+All-class stress test (simultaneous) & 27 & 5 & 46.83 & 50.79 \\
 \bottomrule
 \end{tabularx}
 
 \vspace{3pt}
 \begin{minipage}{\columnwidth}
 \footnotesize
-\textit{Notes.} Support sets are drawn from $\mathcal{D}_{\text{train}}^{\text{PlantDoc}}$ and query leaves from $\mathcal{D}_{\text{test}}^{\text{PlantDoc}}$ ($\mathcal{S} \cap \mathcal{Q} = \emptyset$). The 5-way row reports the mean $\pm$ std across 50 Monte Carlo episodes (chance: 20.0\%). The 27-way row scores all 27 field pathologies simultaneously in a single run against a 3.70\% random chance baseline.
+\textit{Notes.} Support sets are drawn from $\mathcal{D}_{\text{train}}^{\text{PlantDoc}}$ and query leaves from $\mathcal{D}_{\text{test}}^{\text{PlantDoc}}$ ($\mathcal{S} \cap \mathcal{Q} = \emptyset$). The 5-way row reports the mean $\pm$ std across 50 Monte Carlo episodes (chance: 20.0\%); transductive macro F1 is 83.93\%. The 27-way row is a single run over 252 field queries (chance: 3.70\%), and its transductive macro F1 is 50.73\%; because it is one run, differences of a few points should not be read as significant.
 \end{minipage}
 \end{table}
 
@@ -113,7 +113,6 @@ In practical agricultural robotics, such as autonomous spray booms, overconfiden
 \begin{table*}[htbp]
 \caption{Routing policy and tier-separated performance comparison over 30 benchmark episodes.}
 \label{tab:tier_routing}
-\label{tab:gate_scenario}
 \centering
 
 \footnotesize

@@ -39,7 +39,7 @@ $\mathcal{Q}_{\text{anchor}}^{(c)}$ & High-confidence streaming query anchors ($
 
 \subsection{Pipeline Overview}
 \label{sec:system_architecture}
-BioDINO-Edge splits its workflow into an offline analytical calibration phase (Phase~0) and an adaptive two-tier runtime cascade (Phase~1), as shown in Fig.~\ref{fig:architecture}. In Phase~0, a small support set ($K = 5$ labeled leaves per class) is expanded with multi-view augmentation. Features from the frozen DINOv2 and BioCLIP backbones are then used to compute Tier-1 visual prototypes and regularized Fisher-LDA projection weights in closed form, while botanical text prototypes are pre-encoded and cached. At inference (Phase~1), each query first goes through the lightweight Tier-1 DINOv2 encoder. An uncertainty gate lets unambiguous leaves exit immediately and escalates only ambiguous queries to the deeper Tier-2 BioCLIP multimodal consensus stage. High-confidence predictions can then update the Tier-2 projections through background transductive recalibration. The following subsections detail each constituent component.
+BioDINO-Edge splits its workflow into an offline analytical calibration phase (Phase~0) and an adaptive two-tier runtime cascade (Phase~1), as shown in Fig.~\ref{fig:architecture}. In Phase~0, a small support set ($K = 5$ labeled leaves per class) is expanded with multi-view augmentation. Features from the frozen DINOv2 and BioCLIP backbones are then used to compute Tier-1 visual prototypes and regularized Fisher-LDA projection weights in closed form, while botanical text prototypes are pre-encoded and cached. At inference (Phase~1), each query first goes through the lightweight Tier-1 DINOv2 encoder. An uncertainty gate lets unambiguous leaves exit immediately and escalates only ambiguous queries to the deeper Tier-2 BioCLIP multimodal consensus stage. High-confidence predictions can then update the Tier-2 projections through background transductive recalibration.
 
 \begin{figure*}[htbp]
 \centering
@@ -61,7 +61,7 @@ Each augmented view $\tilde{\mathbf{x}} \in \tilde{\mathcal{S}}_c$ is passed thr
     \mathbf{f}_{\text{dino}} = \frac{\phi_{\text{dino}}(\tilde{\mathbf{x}})}{\|\phi_{\text{dino}}(\tilde{\mathbf{x}})\|_2} \in \mathbb{R}^{384}, \qquad
     \mathbf{f}_{\text{bio}} = \frac{\phi_{\text{bio}}(\tilde{\mathbf{x}})}{\|\phi_{\text{bio}}(\tilde{\mathbf{x}})\|_2} \in \mathbb{R}^{512}
 \end{equation}
-Concatenating the two normalized embeddings gives the 896-dimensional joint descriptor:
+Concatenating the two normalized embeddings yields the 896-dimensional joint descriptor:
 \begin{equation}
     \mathbf{z} = [\mathbf{f}_{\text{bio}} \,\|\, \mathbf{f}_{\text{dino}}] \in \mathbb{R}^{896}
 \end{equation}
@@ -72,13 +72,13 @@ Visual prototypes for each encoder are the normalized mean of the support views:
 which yields prototype matrices $\mathbf{P}_{\text{dino}} \in \mathbb{R}^{C \times 384}$ and $\mathbf{P}_{\text{bio,vis}} \in \mathbb{R}^{C \times 512}$.
 
 \subsubsection{Botanical Taxonomic Prompts and Negation Avoidance}
-BioCLIP gives a shared vision--language space, but running text decoders on device costs latency and memory. We therefore define $M = 3$ botanical prompt templates $\{T_c^{(m)}\}_{m=1}^M$ offline for each disease class $c \in \{1, \dots, C\}$. Each template covers three things:
+BioCLIP provides a shared vision--language space, but running text decoders on device costs latency and memory. We therefore define $M = 3$ botanical prompt templates $\{T_c^{(m)}\}_{m=1}^M$ offline for each disease class $c \in \{1, \dots, C\}$. Each template covers three elements:
 \begin{enumerate}
     \item \textbf{Host binomial nomenclature:} Botanical genus and species (e.g., \textit{Malus domestica}, \textit{Vitis vinifera}, \textit{Solanum tuberosum}).
     \item \textbf{Causal pathogen etiology:} Fungal, bacterial, or oomycete binomials (e.g., \textit{Venturia inaequalis}, \textit{Guignardia bidwellii}, \textit{Phytophthora infestans}).
     \item \textbf{Macroscopic lesion morphology:} Diagnostic foliar symptoms (e.g., ``olive-green velvety lesions'', ``tiger-stripe interveinal chlorosis'', ``target-board concentric rings'').
 \end{enumerate}
-Syntactic negations such as ``healthy leaf without lesions'' or ``no necrotic spots'' are excluded. Vision--language models handle negation poorly \cite{radford2021clip, yuksekgonul2023when, alhamoud2025vision}: tokens like \textit{lesion} and \textit{necrotic} dominate the embedding, which pulls healthy leaves toward diseased clusters. We avoid this by describing healthy tissue in positive terms (e.g., ``clean green foliage'', ``intact smooth leaf lamina''), which reduces false-negative bias.
+Syntactic negations such as ``healthy leaf without lesions'' or ``no necrotic spots'' are excluded. Vision--language models handle negation poorly \cite{radford2021clip, yuksekgonul2023when, alhamoud2025vision}: content words such as \textit{lesion} and \textit{necrotic} carry far larger $\ell_2$ norm than function words such as \textit{without} or \textit{no}, so the pooled sentence vector of a negated description stays biased toward the disease cluster. Measured with the BioCLIP text encoder over the 11 classes, the three healthy prototypes lie at a mean cosine of 0.695 to the eight disease prototypes when described by negation, against 0.436 for purely positive histological descriptions (``clean vibrant green lamina with smooth intact blade surface''). The same classifier reaches 12.81\% versus 19.20\% text-only accuracy, and the transductive false-negative disease escape rate rises from 1.25\% to 2.57\%; the 0.75 Fisher term absorbs most of the accuracy difference, but the safety metric still doubles. We therefore forbid negation in every template and describe healthy tissue only in positive terms (e.g., ``clean green foliage'', ``intact smooth leaf lamina'').
 
 During Phase~0, BioCLIP's text encoder $\phi_{\text{bio,txt}}(\cdot)$ encodes each prompt ensemble, and the results are averaged and $\ell_2$-normalized:
 \begin{equation}
@@ -111,7 +111,7 @@ With $N = 440$ support representations and $d = 896$ features, the support size 
     \label{eq:rank_bound}
     \text{rank}(\mathbf{S}_W) \le \min(d, N-C) = 429 < 896
 \end{equation}
-So $\mathbf{S}_W$ has a nullity of at least $896 - 429 = 467$, at least 467 of its eigenvalues are zero ($\det(\mathbf{S}_W) = 0$), and it cannot be inverted directly.
+Hence, $\mathbf{S}_W$ has a nullity of at least $896 - 429 = 467$: at least 467 of its eigenvalues are zero ($\det(\mathbf{S}_W) = 0$), and it cannot be inverted directly.
 
 \subsubsection{Analytical Ledoit--Wolf Covariance Shrinkage}
 \label{sec:shrinkage}
@@ -143,7 +143,7 @@ For an incoming leaf image $\mathbf{x}$, Tier~1 extracts the normalized DINOv2 e
     \label{eq:tier1_logits}
     \mathbf{l}_{\text{dino}} = \gamma \cdot \left(\mathbf{f}_{\text{dino}} \mathbf{P}_{\text{dino}}^T\right), \qquad \gamma = 20.0
 \end{equation}
-A softmax gives the fast posterior probabilities:
+A softmax yields the fast posterior probabilities:
 \begin{equation}
     \label{eq:tier1_softmax}
     \mathbf{p}_{\text{dino}} = \text{softmax}(\mathbf{l}_{\text{dino}}) \in \Delta^{C-1}
@@ -178,7 +178,9 @@ In 5-shot calibration, each centroid $\boldsymbol{\mu}_c$ is estimated from only
 \end{equation}
 Once the buffer fills during scouting, centroids $\boldsymbol{\mu}_c^{\text{trans}}$ and pooled scatter matrix $\mathbf{S}_W^{\text{trans}}$ are re-estimated, the shrinkage parameter $\rho^*$ is recomputed, and updated projection parameters $(\mathbf{W}^{\text{trans}}, \mathbf{b}^{\text{trans}})$ are resolved via Cholesky substitution in about 0.53\,s. This runs asynchronously in the background, so Tier~1 keeps operating with static prototypes while later Tier-2 decisions use the updated ones.
 
-Three design choices keep this update stable and efficient. First, the 0.70 confidence threshold ensures high pseudo-label purity ($\approx$98\%) while avoiding the coverage starvation that collapses accuracy at higher thresholds ($\ge$0.80). Second, the $3\times$ support weight anchors class centroids against manifold drift, ensuring that ground-truth leaves dominate over imperfect pseudo-labels. Third, the 20-anchor cap bounds update latency while preventing frequent classes from introducing sample imbalance.
+Three design choices keep this update stable and efficient. First, the 0.70 confidence threshold ensures high pseudo-label purity ($\approx$98\%) while avoiding the coverage starvation that collapses accuracy at higher thresholds ($\ge$0.80). Second, the support weight anchors class centroids against manifold drift: the ground-truth leaves are repeated $w_{\mathrm{sup}}$ times so that in the re-estimated centroid
+$\boldsymbol{\mu}_c^{\text{trans}} = (w_{\mathrm{sup}}\sum_{\mathbf{x}\in\mathcal{S}_c}\mathbf{x} + \sum_{\mathbf{q}\in\mathcal{Q}_{\text{anchor}}^{(c)}}\mathbf{q}) / (w_{\mathrm{sup}}|\mathcal{S}_c| + |\mathcal{Q}_{\text{anchor}}^{(c)}|)$
+the verified leaves outvote pseudo-labels, and $w_{\mathrm{sup}}$ is set per deployment rather than fixed globally. With five support leaves per class and up to twenty anchors, $w_{\mathrm{sup}}=3$ keeps a single support leaf worth roughly one and a half confident anchors on the 11-class benchmark, whereas the field protocol, which draws only two anchors per class, uses $w_{\mathrm{sup}}=1$ or $2$ and no confidence threshold because a fixed threshold there leaves too few eligible anchors. Third, the 20-anchor cap bounds update latency while preventing frequent classes from introducing sample imbalance.
 
 \subsection{Two-Tier Quantized Edge Model Packaging and Android Architecture}
 \label{sec:packaging}
@@ -188,6 +190,6 @@ Agricultural scouting hardware operates under constrained flash storage, and fie
 
 \textbf{Tier 2 Companion Module} (\path{biodino_companion_int8.onnx}): The companion engine occupies $\approx$85.3\,MiB on disk, containing the BioCLIP ViT-B INT8 backbone and the 896-dimensional Fisher projection matrix. It is fetched on-demand when high-precision multimodal escalation is requested, functioning completely offline once stored.
 
-Together, both binaries occupy $\approx$107.3\,MiB of flash storage, remaining compact for local installation and over-the-air (OTA) distribution over rural cellular bandwidths.
+Together, both binaries occupy $\approx$107.3\,MiB of flash storage; the base engine is installed with the application and the companion is fetched over the air on demand.
 
 % =============================================================================

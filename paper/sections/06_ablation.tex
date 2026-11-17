@@ -33,11 +33,11 @@ Full System (Peak Statistical Episode) & \textbf{98.67} & \textbf{98.41} \\
 \end{table}
 
 \begin{itemize}
-    \item \textbf{DINOv2 vs. BioCLIP Complementarity:} DINOv2 alone achieves 87.26\%; lacking taxonomic supervision, it confuses similar lesions across host families. BioCLIP alone achieves 92.60\% but incurs 104.74\,ms encoder latency, preventing fast-path execution. Combining both backbones into an 896-D feature space provides both spatial cues and taxonomic grounding; Table~\ref{tab:feature_ablation} quantifies each model's contribution.
+    \item \textbf{DINOv2 vs. BioCLIP Complementarity:} DINOv2 alone achieves 87.26\%; lacking taxonomic supervision, it confuses similar lesions across host families. BioCLIP alone achieves 92.60\% but adds 104.74\,ms of incremental deep-path latency, ruling it out for the fast path. Combining both backbones into an 896-D feature space provides both spatial cues and taxonomic grounding; Table~\ref{tab:feature_ablation} quantifies each model's contribution.
     \item \textbf{Regularized Fisher Alignment (+1.89\,pp Gain):} Replacing the best static cosine blend (94.16\%) with regularized Fisher-LDA increases accuracy to 96.05\%. Whitening by $\hat{\mathbf{\Sigma}}^{-1}$ suppresses shared vegetative background variance, separating visually similar pathologies.
     \item \textbf{Multi-View Augmentation:} Expanding 5 raw support leaves to 40 views per class ($N=440$) brings sample size near $d/2$, stabilizing covariance conditioning before shrinkage. This benefit is specific to covariance estimation: the static cosine blend is essentially unchanged by augmentation (94.16\% raw vs.\ 93.90\% augmented), whereas the regularized Fisher projection relies on augmented support to condition $\hat{\mathbf{\Sigma}}$.
-    \item \textbf{Transductive Recalibration (+2.01\% Gain):} Updating projection parameters from high-confidence field anchors improves accuracy from 96.05\% to 98.06\% (peak: 98.67\%), counteracting finite-sample prototype drift (validated in Section~\ref{sec:transductive_validation}).
-    \item \textbf{Lesion Cropping Degrades Host Context:} Evaluating attention-rollout lesion cropping dropped 27-way PlantDoc accuracy from 58.73\% to 57.14\%. Tight cropping discards leaf margin serrations and venation geometry, inducing cross-species confusion. Preserving full-leaf context is essential.
+    \item \textbf{Transductive Recalibration (+2.01\,pp Gain):} Updating projection parameters from high-confidence field anchors improves accuracy from 96.05\% to 98.06\% (peak: 98.67\%), counteracting finite-sample prototype drift (validated in Section~\ref{sec:transductive_validation}).
+    \item \textbf{Lesion Cropping Does Not Help:} Replacing each leaf with a 60\% center crop, as a proxy for attention-rollout lesion cropping, changed 27-way PlantDoc accuracy from 51.98\% to 53.17\% under transductive evaluation and from 48.02\% to 50.79\% inductively (single 252-query run, $+1.19$ and $+2.78$\,pp). Cropping therefore does not degrade accuracy in our measurements, contrary to what tighter host-context reasoning would predict; we keep full-leaf input because it preserves leaf-margin serrations and venation geometry that the qualitative failure analysis relies on, not on an accuracy claim.
 \end{itemize}
 
 % Feature ablation: full row is the canonical benchmark (95.08 / 97.41). Ablated
@@ -62,7 +62,56 @@ DINOv2 only & 384 & 90.60$\pm$2.02 & 95.54$\pm$1.03 \\
 \end{tabular*}
 \end{table}
 
-\textbf{Contribution of DINOv2.} Table~\ref{tab:feature_ablation} isolates the Fisher input while holding the text branch fixed (BioCLIP features, $w_{\mathrm{lda}}=0.75$); ablated rows subtract the paired contribution from the full-system benchmark. Removing DINOv2 (BioCLIP-only, 512-D) lowers transductive accuracy by 0.90 percentage points (paired $t(29)=9.88$, $p=8.6\times10^{-11}$, 29 of 30 episodes, $d_z=1.80$). Removing BioCLIP instead lowers it by 1.87 points, so BioCLIP carries most of the class signal and DINOv2 adds a smaller, consistent complement. DINOv2 also serves as the routing gate: its margin-entropy score ranks query safety better than the Tier-2 consensus confidence (mean Area Under the Risk--Coverage curve (AURC) 1.14\% vs.\ 2.11\% over the 30 episodes). Finally, it provides the fast path: accepting 14.02\% of queries at Tier-1 lowers routing-weighted latency from 164.52\,ms (BioCLIP on every query) to 149.84\,ms. The cascade does not raise accuracy over running Tier-2 on all queries (Table~\ref{tab:gate_scenario}); its function is to reduce edge compute and route low-risk queries through a path with 0.25\% FNR.
+\textbf{Contribution of DINOv2.} Table~\ref{tab:feature_ablation} isolates the Fisher input while holding the text branch fixed (BioCLIP features, $w_{\mathrm{lda}}=0.75$); ablated rows subtract the paired contribution from the full-system benchmark. Removing DINOv2 (BioCLIP-only, 512-D) lowers transductive accuracy by 0.90 percentage points (paired $t(29)=9.88$, $p=8.6\times10^{-11}$; it wins on 29 of 30 episodes; $d_z=1.80$). Removing BioCLIP instead lowers it by 1.87 points, so BioCLIP carries most of the class signal and DINOv2 adds a smaller, consistent complement. DINOv2 also serves as the routing gate: its margin-entropy score ranks query safety better than the Tier-2 consensus confidence (mean Area Under the Risk--Coverage curve (AURC) 1.14\% vs.\ 2.11\% over the 30 episodes). Finally, it provides the fast path: accepting 14.02\% of queries at Tier-1 lowers routing-weighted latency from 164.52\,ms (BioCLIP on every query) to 149.84\,ms. The cascade does not raise accuracy over running Tier-2 on all queries (Table~\ref{tab:tier_routing}); its function is to reduce edge compute and route low-risk queries through a path with 0.25\% FNR.
+
+\textbf{Field-domain ablation.} The same component ladder is informative on PlantDoc, where host species differ and the 27-way task is much harder (Table~\ref{tab:plantdoc_ablation}). Text prototypes alone collapse to 19.05\% accuracy and 6.45\% macro F1, because a caption cannot separate lesions on different hosts. BioCLIP visual prototypes reach 50.00\%, DINOv2 alone 40.08\%, and the static 0.65/0.35 blend of their logits 54.37\%. The regularized Fisher projection over the joint 896-D space reaches 46.83\% inductively: on field imagery, discriminant directions estimated from 135 support leaves over 27 classes are too weakly conditioned to beat a plain logit blend, and the projection only recovers above it after transductive recalibration (50.79\%). We therefore report PlantDoc as a routing and adaptation result rather than as evidence that Fisher-LDA dominates isotropic matching in the field, consistent with the single-run caveat in Table~\ref{tab:plantdoc_context}.
+
+\begin{table}[htbp]
+\caption{PlantDoc component ladder (27-way, 5-shot, single run over 252 field queries).}
+\label{tab:plantdoc_ablation}
+\centering
+
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcc}
+\toprule
+\textbf{Configuration / Component} & \textbf{Acc. (\%)} & \textbf{Macro F1 (\%)} \\
+\midrule
+(1) Text prototypes only & 19.05 & 6.45 \\
+(2) Fast-path DINOv2 Small alone & 40.08 & 36.69 \\
+(3) Deep-path BioCLIP ViT-B alone & 50.00 & 51.73 \\
+(4) Static logit blend ($0.65$ bio $+$ $0.35$ dino) & 54.37 & 54.89 \\
+(5) + Regularized Fisher alignment (inductive) & 46.83 & 45.55 \\
+(6) + Transductive recalibration & 50.79 & 50.73 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\textbf{Effect of INT8 deployment.} The controlled tables above are computed on cached full-precision embeddings, whereas the application ships INT8 binaries, so the two precisions must be compared directly. Table~\ref{tab:quantization} re-runs the complete pipeline on the FP32 and INT8 ONNX exports, rebuilding support features, prototypes, the Fisher projection, and the transductive fit from whichever precision is evaluated; the INT8 column is therefore the deployed system. On PlantVillage the transductive accuracy moves from 98.32\% to 98.08\% ($-0.24$\,pp) with the false-negative escape rate rising from 0.46\% to 0.60\%, and the Fisher term is insensitive ($+0.39$\,pp) while the pure prototype paths lose 0.26 and 0.42\,pp. On PlantDoc the pure prototype paths lose more ($-3.57$\,pp for Tier-1 and $-2.38$\,pp for BioCLIP) while the Fisher term again gains ($+0.40$\,pp), and the transductive variant ends $+0.40$\,pp above its FP32 counterpart; a 384-D cosine match against five support leaves per class has no covariance term to absorb quantization noise, whereas the discriminant projection is fitted from the same features in both columns. INT8 therefore leaves the controlled benchmark essentially intact and shifts the field result within the noise of a single 252-query run.
+
+\begin{table}[htbp]
+\caption{Full-pipeline accuracy under FP32 versus INT8 ONNX execution. Both columns use identical splits and hyperparameters; only the exported precision differs. PlantDoc rows come from the ladder run at the deployed transductive constants for that dataset.}
+\label{tab:quantization}
+\centering
+
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}llccc}
+\toprule
+\textbf{Dataset} & \textbf{Stage} & \textbf{FP32 (\%)} & \textbf{INT8 (\%)} & \textbf{$\Delta$ (pp)} \\
+\midrule
+PlantVillage (11) & Tier-1 DINOv2 & 87.33 & 87.59 & $+0.26$ \\
+ & BioCLIP alone & 92.71 & 92.29 & $-0.42$ \\
+ & Fisher ensemble & 96.29 & 96.68 & $+0.39$ \\
+ & $+$ transductive & 98.32 & 98.08 & $-0.24$ \\
+\midrule
+PlantDoc (27) & Tier-1 DINOv2 & 42.46 & 38.89 & $-3.57$ \\
+ & BioCLIP alone & 51.98 & 49.60 & $-2.38$ \\
+ & Fisher ensemble & 46.03 & 46.43 & $+0.40$ \\
+ & $+$ transductive & 51.19 & 51.59 & $+0.40$ \\
+\bottomrule
+\end{tabular*}
+\end{table}
 
 \subsection{Statistical Significance and Sensitivity of Transductive Recalibration}
 \label{sec:transductive_validation}
@@ -131,7 +180,7 @@ $10\times$ & 97.21 & 0.77 \\
 
 \textbf{Pseudo-label purity.} Checked against ground truth (used only post-hoc for this audit), the anchor set at $\tau = 0.70$ is 98.15\% $\pm$ 1.18\% pure and covers 2.36\% of queries (220 anchors). Raising the threshold to 0.80 increases purity to 98.75\% but cuts coverage to 1.91\%; at 0.90 purity reaches 100\% yet coverage collapses to 0.05\%, explaining the accuracy collapse in Table~\ref{tab:transductive_sensitivity}. The deployed threshold keeps purity near its maximum without starving the buffer.
 
-\textbf{Sequential stability and error accumulation.} To test whether repeated updates compound pseudo-label errors, we simulated scouting passes: the query stream is partitioned into 10 sequential chunks, and after each chunk the FIFO buffer (20 anchors/class) admits confident predictions and the projection is re-fitted in closed form. Across three stream seeds, online accuracy rises from $\approx$96\% on the first chunk to 97--98.6\% thereafter with no degradation trend, and buffer purity remains bounded within a 92--98\% band: FIFO eviction flushes stale incorrect anchors, so wrong admissions do not accumulate in the active buffer. Under $\tau = 0.90$ purity stays at 100\% but final accuracy falls to $\approx$95.8--96.3\% (coverage starvation), confirming the purity/coverage trade-off. Final streaming accuracy (96.4--97.5\%) lies slightly below the single-pass batch refinement (97.41\%) because batch selection ranks anchors over the entire query set whereas streaming observes only the past. Error accumulation is therefore bounded by the confidence gate, FIFO eviction, and the $3\times$ support weighting.
+\textbf{Sequential stability and error accumulation.} To test whether repeated updates compound pseudo-label errors, we simulated scouting passes: the query stream is partitioned into 10 sequential chunks, and after each chunk the FIFO buffer (20 anchors/class) admits confident predictions and the projection is re-fitted in closed form. Across three stream seeds, online accuracy rises from $\approx$96\% on the first chunk to 97--98.6\% thereafter with no degradation trend. Buffer purity remains bounded within a 92--98\% band: FIFO eviction flushes stale incorrect anchors, so wrong admissions do not accumulate in the active buffer. Under $\tau = 0.90$ purity stays at 100\% but final accuracy falls to $\approx$95.8--96.3\% (coverage starvation), confirming the purity/coverage trade-off. Final streaming accuracy (96.4--97.5\%) lies slightly below the single-pass batch refinement (97.41\%) because batch selection ranks anchors over the entire query set whereas streaming observes only the past. Error accumulation is therefore bounded by the confidence gate, FIFO eviction, and the $3\times$ support weighting.
 
 \subsection{Sensitivity to Augmentation Count and Type}
 \label{sec:aug_sensitivity}

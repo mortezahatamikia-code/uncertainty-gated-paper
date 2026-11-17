@@ -17,15 +17,15 @@
 \begin{abstract}
 On-device plant disease diagnosis is held back by scarce annotations, background clutter, and edge backpropagation cost. We propose \textbf{BioDINO-Edge}, a gradient-free few-shot framework that adapts frozen vision foundation models without fine-tuning or graphics processing unit (GPU) acceleration. It combines DINOv2 lesion-contour patches with BioCLIP taxonomic embeddings aligned to cached botanical prompts in 896 dimensions. Because support is scarce relative to the high-dimensional embedding space, the empirical covariance becomes singular, and shared leaf background hides localized symptoms. BioDINO-Edge therefore applies analytical Ledoit--Wolf shrinkage to build regularized Fisher linear discriminant projections. This closed-form step suppresses shared vegetative variance and computes discriminant boundaries in 0.53\,s on a mobile central processing unit (CPU) with no backpropagation.
 
-At inference, an uncertainty gate uses normalized Shannon entropy and top-2 margin to send routine foliage through a 59.78\,ms Tier-1 fast path ($\approx$16.7 frames per second (FPS)) on an Android handset, while only ambiguous queries go to multimodal Tier-2. High-confidence predictions are buffered as anchors to recalibrate Tier-2 projections transductively. Packaged as a modular on-device client that operates fully offline, BioDINO-Edge reaches 97.41\% $\pm$ 0.71\% 30-episode accuracy (peak 98.67\%, macro F1 98.41\%) with a 0.702\% false-negative rate on 11-class PlantVillage. On in-the-wild PlantDoc, it reaches 83.61\% $\pm$ 11.69\% in 5-way 5-shot testing and 56.35\% in 27-way evaluation. Cascading frozen foundation models with closed-form adaptation therefore offers a practical, low-latency route to autonomous plant pathology at the edge without cloud dependence.
+At inference, an uncertainty gate uses normalized Shannon entropy and top-2 margin to send routine foliage through a 59.78\,ms Tier-1 fast path ($\approx$16.7 frames per second (FPS)) on an Android handset, while only ambiguous queries go to multimodal Tier-2. High-confidence predictions are buffered as anchors to recalibrate Tier-2 projections transductively. BioDINO-Edge is packaged as a modular on-device client that operates fully offline and reaches 97.41\% $\pm$ 0.71\% 30-episode accuracy (peak 98.67\%, macro F1 98.41\%) with a 0.702\% false-negative rate on 11-class PlantVillage. On in-the-wild PlantDoc, it reaches 84.22\% $\pm$ 11.24\% in 5-way 5-shot testing and 50.79\% in 27-way evaluation. Cascading frozen foundation models with closed-form adaptation therefore offers a practical, low-latency route to autonomous plant pathology at the edge without cloud dependence.
 \end{abstract}
 
 \begin{highlights}
 \item Gradient-free foliar pathology adapting frozen DINOv2 and BioCLIP encoders.
-\item Parameter-free analytical covariance shrinkage resolves small-sample singularity on edge CPUs.
-\item Joint Shannon-margin confidence gate routes routine leaves to a 60\,ms Tier-1 path.
-\item Closed-form transductive recalibration adapts to field shifts in under 0.6\,s.
-\item Modular, fully offline on-device execution with low memory overhead ($<$500\,MB PSS).
+\item Ledoit--Wolf shrinkage resolves small-sample covariance singularity on edge CPUs.
+\item Shannon-margin gate routes routine leaves to a 59.78\,ms Tier-1 path.
+\item Closed-form transductive recalibration adapts to distribution shift in 0.53\,s.
+\item 97.41\% accuracy on PlantVillage with 0.702\% false-negative disease escapes.
 \end{highlights}
 
 \begin{keyword}
