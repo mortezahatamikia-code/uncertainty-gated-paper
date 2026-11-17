@@ -114,7 +114,7 @@ The primary contributions of this work are:
     \item \textbf{Zero-retraining laboratory-to-field transfer:} We show that combining taxonomic text priors with regularized visual features transfers directly from clean laboratory benchmarks to in-the-wild field clutter, reaching 83.61\% 5-way 5-shot accuracy on PlantDoc without backbone fine-tuning.
 \end{enumerate}
 
-The rest of the paper is organized as follows. Section~2 reviews related work on few-shot learning, vision foundation models, and edge-based plant pathology. Section~3 describes the mathematical formulation of BioDINO-Edge, including the two-tier cascade, regularized Fisher discriminant adaptation, and Shannon entropy routing. Section~4 outlines the experimental setup, benchmarks, and physical edge testbed. Section~5 presents empirical results, ablations, calibration, and hardware profiling. Section~6 discusses practical deployment and limitations, and Section~7 concludes the paper.
+The rest of the paper is organized as follows. Section~2 reviews related work on few-shot learning, vision foundation models, and edge-based plant pathology. Section~3 describes the mathematical formulation of BioDINO-Edge, including the two-tier cascade, regularized Fisher discriminant adaptation, and Shannon entropy routing. Section~4 outlines the experimental setup, benchmarks, and physical edge testbed. Section~5 presents empirical results and calibration, Section~6 reports the ablation and sensitivity studies, and Section~7 analyzes on-device efficiency. Section~8 discusses practical deployment and limitations, and Section~9 concludes the paper.
 
 \section{Related Work}
 \label{sec:related_work}
@@ -353,57 +353,82 @@ To ensure unbiased cross-domain evaluation, all hyperparameters ($\gamma = 20.0$
 On-device profiling is conducted on a Samsung Galaxy S24~FE handset (Exynos 2400e SoC, ARM64) running Android~17. Neural network inference executes strictly on the CPU via ONNX Runtime with per-channel INT8 quantization (4 intra-op threads; GPU and NNAPI delegates disabled), while closed-form linear algebra runs via the Efficient Java Matrix Library (EJML). Benchmark latencies and process memory (PSS) are averaged over 100 iterations following 10 warm-up runs, with thermal stability monitored across sustained evaluation. Detailed hardware specifications and component-level latency breakdowns are provided in Section~\ref{sec:edge_hardware} (Tables~\ref{tab:device_spec}--\ref{tab:adaptation_breakdown}).
 
 % =============================================================================
-% 4. RESULTS AND DISCUSSION
+% 5. RESULTS AND COMPARATIVE ANALYSIS
 % =============================================================================
 \section{Results and Comparative Analysis}
 \label{sec:results}
 
 \subsection{Comparative Baseline Performance}
 \label{sec:comparative_results}
-Table~\ref{tab:comparative} combines both levels of evidence but keeps them separate. Panel (a) is the controlled comparison: every baseline is re-run by us on the same frozen BioCLIP+DINOv2 features, splits, seeds, and shot counts as BioDINO-Edge, so with the encoders fixed the only variable is the adaptation algorithm. It covers two PlantVillage regimes: 11-class simultaneous classification (30 Monte-Carlo episodes, 5-shot) and the standard 5-way $K$-shot ladder ($K=1,5,10,15$) used by VSF~\cite{zhou2026vsf} and AgriFewNet~\cite{babu2025agrifewnet}, so those two methods can be read in-regime. The baselines are all training-free: Zero-Shot CLIP/BioCLIP~\cite{radford2021clip,stevens2024bioclip}, Tip-Adapter~\cite{zhang2022tip} ($\alpha{=}1.0,\beta{=}5.5$), Prototypical Networks~\cite{snell2017prototypical}, and SimpleShot~\cite{wang2019simpleshot}; the last two coincide because Euclidean and cosine rankings are identical on $\ell_2$-normalized features. The 11-class BioDINO-Edge entry is the canonical run of Section~\ref{sec:transductive_validation}, reproduced to within 0.04\,percentage points (pp). Panels (b)--(c) quote results exactly as published by the methods reviewed in Section~\ref{sec:related_work}; because their encoders, class pools, and splits differ, we compare them only within a panel and never against another regime. Exact splits, seeds, and hyperparameters are given in Appendix~\ref{app:repro}.
+Table~\ref{tab:comparative} compares BioDINO-Edge with four training-free baselines: zero-shot BioCLIP~\cite{stevens2024bioclip}, Tip-Adapter~\cite{zhang2022tip} ($\alpha=1.0$, $\beta=5.5$), and frozen-feature Prototypical Networks~\cite{snell2017prototypical} and SimpleShot~\cite{wang2019simpleshot}. The latter two share a row because Euclidean and cosine rankings coincide on normalized features. Panel (a) reports controlled re-runs for 5-way 1-shot and 5-shot accuracy and 11-class simultaneous classification; $\Delta$ is the 11-class gap to the centroid baseline. Panel (b) gives published PlantVillage results for context and supports no direct ranking because encoders and class pools differ. Protocols are given in Appendix~\ref{app:repro}, and the full shot ladder ($K=1,5,10,15$) appears in Table~\ref{tab:shot_ladder}.
 
 \begin{table*}[htbp]
-\caption{Comparison with related few-shot methods. Panel (a): controlled re-runs by us, all on the same frozen BioCLIP+DINOv2 features, splits, seeds, and shot counts (PlantVillage 11-class subset; mean $\pm$ std over episodes, \%). Panels (b)--(c): values quoted from the original publications (not re-run), with $\pm$ shown where the source reports it; their encoders, class pools, and splits differ, so values are comparable only within a panel and never across panels. ``All-class'' is the 11-class simultaneous regime in (a) and the 27-way stress test in (c), which has no literature counterpart. Dashes denote regimes not reported or not run; bold marks BioDINO-Edge.}
+\caption{Comparison with related few-shot methods on PlantVillage.}
 \label{tab:comparative}
 \centering
 
-\scriptsize
-\setlength{\tabcolsep}{2.5pt}
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X *{5}{>{\centering\arraybackslash}p{1.85cm}} >{\centering\arraybackslash}p{1.0cm}@{}}
+\footnotesize
+\setlength{\tabcolsep}{2.4pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X *{5}{>{\centering\arraybackslash}p{1.92cm}}@{}}
 \toprule
-\multicolumn{5}{@{}l}{} & \multicolumn{2}{c}{\textbf{All-class}} \\
-\cmidrule(lr){6-7}
-\textbf{Method} & \textbf{$K{=}1$} & \textbf{$K{=}5$} & \textbf{$K{=}10$} & \textbf{$K{=}15$} & \textbf{Acc.} & \textbf{F1} \\
+& \multicolumn{2}{c}{\textbf{5-way accuracy (\%)}} & \multicolumn{2}{c}{\textbf{11-class, 5-shot (\%)}} & \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+\textbf{Method} & \textbf{1-shot} & \textbf{5-shot} & \textbf{Accuracy} & \textbf{Macro F1} & \textbf{$\Delta$ (pp)} \\
 \midrule
-\multicolumn{7}{@{}l}{\textit{(a) Controlled re-runs, PlantVillage 11-class subset (identical frozen features, splits, seeds)}}\\
-Zero-Shot CLIP/BioCLIP \cite{radford2021clip,stevens2024bioclip} & 38.89$\pm$12.78 & 38.86$\pm$12.79 & 38.83$\pm$12.81 & 38.79$\pm$12.83 & 19.18$\pm$0.02 & 18.49 \\
-Tip-Adapter \cite{zhang2022tip} & 45.15$\pm$13.42 & 68.63$\pm$12.80 & 86.01$\pm$7.49 & 93.23$\pm$4.00 & 49.97$\pm$1.62 & 46.54 \\
-Prototypical Networks \cite{snell2017prototypical} / SimpleShot \cite{wang2019simpleshot} & 88.44$\pm$9.13 & 97.45$\pm$2.03 & 98.35$\pm$1.45 & 98.57$\pm$1.27 & 93.28$\pm$1.24 & 92.47 \\
-BioDINO-Edge (inductive) & 88.45$\pm$9.12 & 97.96$\pm$1.85 & 99.10$\pm$0.87 & 99.41$\pm$0.60 & 95.08$\pm$1.27 & 94.51 \\
-\textbf{BioDINO-Edge (transductive, ours)} & \textbf{93.42$\pm$6.83} & \textbf{98.77$\pm$1.68} & \textbf{99.41$\pm$0.60} & \textbf{99.63$\pm$0.39} & \textbf{97.41$\pm$0.71} & \textbf{97.09} \\
+\multicolumn{6}{@{}l}{\textit{(a) Controlled re-runs: identical frozen features, splits, seeds, and shot counts}}\\
+Zero-shot BioCLIP \cite{stevens2024bioclip} & 38.89$\pm$12.78 & 38.86$\pm$12.79 & 19.18$\pm$0.02 & 18.49 & $-74.10$ \\
+Tip-Adapter \cite{zhang2022tip} & 45.15$\pm$13.42 & 68.63$\pm$12.80 & 49.97$\pm$1.62 & 46.54 & $-43.31$ \\
+Prototypical Networks \cite{snell2017prototypical} / SimpleShot \cite{wang2019simpleshot} & 88.44$\pm$9.13 & 97.45$\pm$2.03 & 93.28$\pm$1.24 & 92.47 & $0.00$ \\
+BioDINO-Edge (inductive) & 88.45$\pm$9.12 & 97.96$\pm$1.85 & 95.08$\pm$1.27 & 94.51 & $+1.80$ \\
+BioDINO-Edge (transductive, ours) & \textbf{93.42$\pm$6.83} & \textbf{98.77$\pm$1.68} & \textbf{97.41$\pm$0.71} & \textbf{97.09} & $\mathbf{+4.13}$ \\
 \midrule
-\multicolumn{7}{@{}l}{\textit{(b) PlantVillage 5-way $K$-shot, as reported (not re-run; different encoders and class pools)}}\\
-Zhao \textit{et al.} 2024, MAFDE-DN4 \cite{zhao2024mafde} & 57.50 & 81.41 & -- & -- & -- & -- \\
-Mu \textit{et al.} 2024, SC-FSL (38-class) \cite{mu2024few} & 78.55$\pm$0.81 & 92.90$\pm$0.47 & -- & -- & -- & -- \\
-AgriFewNet \cite{babu2025agrifewnet} & 87.30 & 94.80 & 97.10 & -- & -- & -- \\
-VSF \cite{zhou2026vsf} & 79.01 & 90.51 & -- & -- & -- & -- \\
-\midrule
-\multicolumn{7}{@{}l}{\textit{(c) PlantDoc field-domain (ours) and cross-domain (as reported), 5-way $K$-shot}}\\
-VSF, PlantDoc \cite{zhou2026vsf} & 59.82 & 70.61 & -- & -- & -- & -- \\
-Zhao \textit{et al.} 2026, PV$\to$PlantDoc \cite{zhao2026lightweight} & 42.69$\pm$0.62 & 54.24$\pm$0.72 & -- & -- & -- & -- \\
-\textbf{BioDINO-Edge (ours), PlantDoc} & -- & \textbf{83.61$\pm$11.69} & -- & -- & -- & -- \\
-\textbf{BioDINO-Edge (ours), PlantDoc 27-way} & -- & -- & -- & -- & \textbf{56.35} & \textbf{55.93} \\
+\multicolumn{6}{@{}l}{\textit{(b) Published values, quoted as reported (not re-run)}}\\
+MAFDE-DN4 \cite{zhao2024mafde} & 57.50 & 81.41 & -- & -- & -- \\
+SC-FSL, 38-class pool \cite{mu2024few} & 78.55$\pm$0.81 & 92.90$\pm$0.47 & -- & -- & -- \\
+AgriFewNet, 38-class pool \cite{babu2025agrifewnet} & 87.30 & 94.80 & -- & -- & -- \\
+VSF \cite{zhou2026vsf} & 79.01 & 90.51 & -- & -- & -- \\
 \bottomrule
 \end{tabularx}
+
+\vspace{3pt}
+\begin{minipage}{\textwidth}
+\footnotesize
+\textit{Notes.} Panel (a) reports re-runs by us: every baseline uses the same support/query splits, seeds, and shot counts as BioDINO-Edge, so the adaptation rule is the only variable. Zero-shot BioCLIP and Tip-Adapter use BioCLIP image--text features; the centroid and Fisher classifiers use joint BioCLIP+DINOv2 features. Values are mean $\pm$ std over episodes. $\Delta$ is the 11-class accuracy difference from the centroid baseline, computed from the tabulated means. Panel (b) quotes values from the original publications, which we did not re-run. SC-FSL and AgriFewNet sample their 5-way episodes from the full 38-class PlantVillage pool, whereas panel (a) draws from our 11-class subset, so their episodes are harder and the two panels are not directly comparable. MAFDE-DN4 and VSF do not state a class pool in the accessible text. Dashes mark values not reported; bold marks the best value in each column.
+\end{minipage}
 \end{table*}
 
 
 
-The frozen features are already discriminative, so most of the margin comes from adaptation rather than representation. Zero-shot CLIP/BioCLIP and Tip-Adapter trail far behind, and the centroid baselines show that the features are close to linearly separable; BioDINO-Edge adds regularized Fisher-LDA and closed-form transductive recalibration on top of the same features, gaining 2.33\,pp over its own inductive mode (Section~\ref{sec:transductive_validation}) without backpropagation, optimizer state, or a GPU. The same ordering holds along the $K$-shot ladder, where the transductive gain is largest at $K{=}1$ because support statistics are least reliable there.
+The controlled comparison in Table~\ref{tab:comparative} shows that transductive refinement improves accuracy over both the centroid baseline and inductive BioDINO-Edge on the shared frozen features, with a larger gain at 1-shot than at 5-shot in the 5-way setting (93.42\% versus 88.45\%, and 98.77\% versus 97.96\%). Because the controlled baselines are inductive, these results do not by themselves establish an advantage over other transductive methods. The published results in panel (b) from MAFDE-DN4~\cite{zhao2024mafde}, SC-FSL~\cite{mu2024few}, AgriFewNet~\cite{babu2025agrifewnet}, and VSF~\cite{zhou2026vsf} use different encoders and class pools, SC-FSL for instance sampling from a 38-class pool rather than our 11, and therefore serve only as context, not as a direct comparison.
 
-Panel (b) is the closest available PlantVillage comparison, although not a controlled one. BioDINO-Edge reports the highest 1- and 5-shot accuracies of the methods listed, but the margin cannot be read as a like-for-like gain: our ladder samples 5 of 11 classes from three crops, whereas Mu \textit{et al.} use all 38 PlantVillage classes with a ResNet-18 encoder. The same baseline family spans a wide range across these setups; Prototypical Networks reaches 89.70\% in their 38-class setting and 97.45\% on our frozen-feature pool, so a 7.75\,pp spread between two prototypical classifiers can arise from encoder and class pool alone. Panel (b) is therefore in-regime context, not evidence of superiority over the cited methods.
+PlantDoc results are reported separately in Table~\ref{tab:plantdoc_context}. BioDINO-Edge uses labeled support from the PlantDoc training split and reaches 83.61\% in 5-way 5-shot evaluation. VSF~\cite{zhou2026vsf} provides a published PlantDoc reference, and Zhao et al.~\cite{zhao2026lightweight} study PlantVillage-to-PlantDoc transfer; both serve as context, not a controlled ranking. The 27-way stress test reaches 56.35\% accuracy (chance 3.70\%) and has no matching literature entry.
 
-Panel (c) carries the same 5-way regime to field data: BioDINO-Edge reaches 83.61\% on PlantDoc at 5-shot, against 70.61\% for VSF and 54.24\% for Zhao \textit{et al.} in the PlantVillage-to-PlantDoc transfer. These values also differ in encoder and split, so the claim is limited to in-regime performance. The 27-way stress test (56.35\%, chance 3.70\%) has no published counterpart and is not compared with any 5-way result. Yang \textit{et al.} (Pest$\to$FCDD), Kudo \textit{et al.} (relative F1 gains only), and Sharif \textit{et al.} (PlantWild) report on other benchmarks and protocols, so they are discussed qualitatively in Section~\ref{sec:related_work} rather than tabulated.
+\begin{table*}[htbp]
+\caption{PlantDoc field-domain results by evaluation setting.}
+\label{tab:plantdoc_context}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{3.0cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{2.0cm} >{\centering\arraybackslash}p{2.3cm} >{\centering\arraybackslash}p{2.0cm}@{}}
+\toprule
+\textbf{Method} & \textbf{Support / query source} & \textbf{Classes} & \textbf{1-shot} & \textbf{5-shot} & \textbf{Macro F1} \\
+\midrule
+\multicolumn{6}{@{}l}{\textit{(a) BioDINO-Edge, this study (re-run)}}\\
+BioDINO-Edge (transductive) & PlantDoc train / PlantDoc test & 5 & -- & \textbf{83.61$\pm$11.69} & -- \\
+BioDINO-Edge (transductive) & PlantDoc train / PlantDoc test & 27 & -- & 56.35 & 55.93 \\
+\midrule
+\multicolumn{6}{@{}l}{\textit{(b) Published values, quoted as reported (not re-run)}}\\
+VSF \cite{zhou2026vsf} & PlantDoc & 5 & 59.82 & 70.61 & -- \\
+Zhao et al.\ \cite{zhao2026lightweight} & PlantVillage $\rightarrow$ PlantDoc & 5 & 42.69$\pm$0.62 & 54.24$\pm$0.72 & -- \\
+\bottomrule
+\end{tabularx}
+
+\vspace{3pt}
+\begin{minipage}{\textwidth}
+\footnotesize
+\textit{Notes.} All accuracy and F1 values are percentages. Panel (a): BioDINO-Edge draws support from the PlantDoc training split and queries from the PlantDoc test split, so support and query sets are disjoint. The 5-way row averages 50 Monte Carlo episodes (mean $\pm$ std); the 27-way row scores all 27 classes at once in a single run, against a 3.70\% chance rate (20\% for 5-way). Macro F1 is reported only where the source provides it. Panel (b): values are quoted from the original publications and were not re-run. VSF reports on PlantDoc with its own support protocol; Zhao et al.\ transfer from PlantVillage without PlantDoc support. Their encoders, class pools, and support protocols differ from panel (a) and from each other, so values are comparable only within panel (b). Dashes mark values not reported. Bold marks the best 5-shot accuracy in panel (a).
+\end{minipage}
+\end{table*}
 
 \subsection{Per-Class Pathology Diagnostics and Epidemiological Safety}
 \label{sec:per_class}
@@ -444,12 +469,115 @@ Visually similar pathologies on the same host (e.g., Grape Esca vs. Grape Black 
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.75\columnwidth]{fig_confusion.pdf}
-\caption{Row-normalized confusion matrix of BioDINO-Edge (transductive, canonical single run; 9,330 PlantVillage test queries across 11 classes spanning Apple, Grape, and Potato). Rows represent ground-truth categories and columns indicate predicted classes, with diagonal entries denoting per-class recall (\%). Residual errors are concentrated strictly within same-host pathologies, while cross-species confusion is negligible (0.021\%).}
+\includegraphics[width=0.82\columnwidth]{fig_confusion.pdf}
+\caption{Row-normalized confusion matrix of BioDINO-Edge under transductive inference on the canonical PlantVillage evaluation split (9,330 test queries across 11 classes spanning Apple, Grape, and Potato). Rows represent ground-truth classes, while columns indicate predicted classes. Diagonal entries correspond to per-class recall (\%). Residual misclassifications occur predominantly among pathologies affecting the same host species, whereas cross-species confusion remains negligible (0.021\%).}
 \label{fig:confusion}
 \end{figure}
 
-\subsection{Systematic Component Ablation Study}
+\subsection{Predictive Uncertainty, Calibration, and Routing Reliability}
+\label{sec:calibration}
+In automated spraying, an overconfident misdiagnosis can trigger unnecessary chemical application, so confidence must be audited independently of accuracy \cite{minderer2021revisiting}. Temperature scaling is fitted on an independent stratified 50\% split of the 9,330-query PlantVillage stream (4,662 calibration / 4,668 evaluation queries) by minimizing negative log-likelihood on the calibration split \cite{guo2017calibration}. Expected Calibration Error (ECE) and Maximum Calibration Error (MCE) use $M=10$ equal-width bins; we also report equal-mass binning and MCE over bins with $n \geq 30$ to expose small-bin artifacts. Routing uses the uncalibrated Tier-1 posterior; temperature scaling is a post-hoc audit and does not affect the gate score or threshold.
+
+\textbf{Tier-1 calibration.} Raw gate probabilities are under-confident (ECE 32.07\%, MCE 38.07\%; held-out ECE 31.76\%). A scalar logit temperature fitted on the calibration split ($T=0.267$) reduces held-out ECE to 1.20\% (MCE 16.71\%; Fig.~\ref{fig:reliability}a--b).
+
+\textbf{Tier-2 calibration.} The refined Tier-2 consensus is also under-confident (ECE 19.45\%), with most error in the dominant bin $(0.7,0.8]$: 7,102 queries at 98.0\% accuracy and 77.5\% mean confidence (Table~\ref{tab:reliability_bins}). The equal-width MCE (44.26\%) comes from bins containing at most nine samples; equal-mass binning lowers it to 21.53\%, and bins with $n\geq30$ give 20.49\%. Logit temperature scaling cannot remove this residual because the consensus is a fixed $0.75/0.25$ blend of Fisher logits and BioCLIP text probabilities (held-out ECE 19.33\%$\to$19.83\%). A power transform with $T=0.50$ instead concentrates mass in one or two bins, giving low ECE (0.48\%) but an equal-width MCE of 80.85\% (Fig.~\ref{fig:reliability}d). The large MCE therefore reflects a single-sample bin rather than widespread miscalibration. Tier-2 is therefore treated as uncalibrated, and routing reliability is assessed through tier-separated error rates and selective risk.
+
+\begin{table}[htbp]
+\caption{Per-bin reliability of the uncalibrated refined Tier-2 consensus (equal-width bins, full 9,330-query stream; empty bins omitted).}
+\label{tab:reliability_bins}
+\centering
+
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Confidence bin} & \textbf{$n$} & \textbf{Acc.\ (\%)} & \textbf{Conf.\ (\%)} & \textbf{$|$Gap$|$ (pp)} \\
+\midrule
+$(0.4,0.5]$ & 1    & 0.0   & 44.3 & 44.3 \\
+$(0.5,0.6]$ & 6    & 50.0  & 52.5 & 2.5 \\
+$(0.6,0.7]$ & 9    & 44.4  & 65.6 & 21.2 \\
+$(0.7,0.8]$ & 7102 & 98.0  & 77.5 & 20.5 \\
+$(0.8,0.9]$ & 2207 & 98.6  & 82.4 & 16.1 \\
+$(0.9,1.0]$ & 5    & 100.0 & 90.6 & 9.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Tier-separated routing reliability.} Table~\ref{tab:tier_routing} reports each tier over 30 benchmark episodes at $\tau=0.35$. Tier-1 accepts 14.02\%$\pm$2.25\% of queries at 99.69\%$\pm$0.41\% accuracy with a 0.25\%$\pm$0.52\% false-negative rate (FNR); the remaining 85.98\% are resolved by Tier-2 at 96.98\%$\pm$0.83\% (FNR 0.87\%$\pm$0.39\%). The cascade reaches 97.36\%$\pm$0.69\% accuracy (FNR 0.79\%$\pm$0.36\%, F1 97.01\%$\pm$0.64\%) at 149.84$\pm$2.36\,ms weighted latency. In the canonical run, the 936 accepted queries reach 99.79\% accuracy (FNR 0.25\%) versus 97.83\% (FNR 0.81\%) for the 8,394 escalated queries (cascaded 98.03\%), a roughly tenfold difference in error (0.21\% vs.\ 2.17\%).
+
+\begin{table*}[htbp]
+\caption{Tier-separated routing reliability at $\tau=0.35$ (30 benchmark episodes, mean $\pm$ std).}
+\label{tab:tier_routing}
+\centering
+
+\footnotesize
+\begin{tabularx}{\textwidth}{Xcccc}
+\toprule
+\textbf{Routing path} & \textbf{Coverage (\%)} & \textbf{Accuracy (\%)} & \textbf{FNR (\%)} & \textbf{Latency (ms)} \\
+\midrule
+Tier-1 fast-exit (accepted) & 14.02$\pm$2.25 & 99.69$\pm$0.41 & 0.25$\pm$0.52 & 59.78 \\
+Tier-2 (escalated) & 85.98$\pm$2.25 & 96.98$\pm$0.83 & 0.87$\pm$0.39 & 164.52 \\
+\midrule
+\textbf{Cascaded system} & 100 & 97.36$\pm$0.69 & 0.79$\pm$0.36 & 149.84$\pm$2.36 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\textbf{Cascade versus single-tier classification.} Table~\ref{tab:gate_scenario} compares the deployed cascade with Tier-2 on all queries and with selective gating. At full coverage the cascade and single-tier BioCLIP accuracies are indistinguishable (97.36\% vs.\ 97.37\%); the cascade reduces latency (149.84 vs.\ 164.52\,ms). Selective abstention raises accepted-set accuracy at reduced coverage: at $\tau=0.10$, 62.17\% of queries are answered at 98.63\% accuracy and 0.44\% FNR in 124.90\,ms. The deployed system classifies every query.
+
+% Gate-scenario comparison. Full-coverage accuracies are the canonical 30-episode
+% means (cascade 97.36, refined Tier-2-on-all 97.37). Selective-mode rows are
+% measured over the same 30 episodes. Source: experiments/dinov2_ablation_gate_scenario.
+\begin{table}[htbp]
+\caption{Routing-policy comparison (30-episode mean).}
+\label{tab:gate_scenario}
+\centering
+
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc}
+\toprule
+\textbf{Routing policy} & \textbf{Cov. (\%)} & \textbf{Acc. (\%)} & \textbf{FNR (\%)} & \textbf{Lat. (ms)} \\
+\midrule
+Cascade, $\tau=0.35$ (deployed) & 100 & 97.36 & 0.79 & 149.84 \\
+BioCLIP Tier-2 on all & 100 & 97.37 & 0.77 & 164.52 \\
+Selective, $\tau=0.05$ & 79.96 & 98.05 & 0.59 & 143.53 \\
+Selective, $\tau=0.10$ & 62.17 & 98.63 & 0.44 & 124.90 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\textbf{Risk--coverage analysis.} Fig.~\ref{fig:risk_coverage} plots selective risk against coverage for three confidence scores following the risk--coverage framework \cite{geifman2017selective}, summarized by the area under the risk--coverage curve (AURC, the mean selective risk over coverage). Because scalar summaries can misrank selective systems \cite{traub2024overcoming}, we also report the full curves and the operating point. The entropy-penalized gate score $C(x)$ ranks queries more safely than the raw Tier-1 softmax peak (AURC 3.33\% vs.\ 3.95\%), and refined Tier-2 confidence reaches 1.82\%. At $\tau=0.35$, the gate accepts 10.03\% of the single-run stream at 0.21\% selective risk.
+
+\textbf{Threshold provenance and sensitivity.} The threshold was selected on held-out development episodes (0--14 tuning, 15--29 testing), not on the reported test episodes. On held-out test episodes, $\tau=0.15$ gives 46.4\% fast-exit at 96.96\%$\pm$0.59\% cascaded accuracy (98.25\% Tier-1 accepted), $\tau=0.25$ gives 25.6\% at 97.30\%$\pm$0.74\% (99.49\%), and $\tau=0.35$ gives 14.1\% at 97.33\%$\pm$0.79\% (99.84\%$\pm$0.24\%). We adopt $\tau=0.35$, the smallest threshold at which accepted-tier accuracy saturates (99.84\%, FNR 0.25\%). The tuning curve is flat beyond this point ($\tau=0.55$: 97.32\% test accuracy), while fast-exit coverage falls to 3.4\%. Blended latency rises from 115.9 to 137.7 to 149.8\,ms across the three thresholds (Fig.~\ref{fig:tau_sensitivity}), summarizing the coverage--safety--latency trade-off.
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=0.70\textwidth]{fig_reliability.pdf}
+\caption{Reliability diagrams (equal-width bins, full benchmark stream; per-bin sample counts annotated, colored bars indicate empirical accuracy, and hatched gray bars show the accuracy--confidence calibration gap). (a) Uncalibrated Tier-1 gate probabilities are under-confident (Expected Calibration Error (ECE) = 32.07\%). (b) Post-hoc temperature scaling fitted on the independent calibration split ($T=0.27$) aligns Tier-1 (held-out ECE = 1.20\%). (c) Refined Tier-2 consensus remains under-confident in its dominant bin (ECE = 19.45\%; Maximum Calibration Error (MCE) = 44.26\% from a single-sample bin). (d) A power transform ($T=0.50$) collapses probability mass into one bin: low ECE (0.48\%) but severe MCE (80.85\%).}
+\label{fig:reliability}
+\end{figure*}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.75\columnwidth]{fig_risk_coverage.pdf}
+\caption{Risk--coverage curves for Tier-1 max-probability, the Shannon gate score $C(x)$, and the refined Tier-2 consensus confidence (canonical single run). Lower curves indicate superior selective classification performance. The entropy-penalized gate score achieves lower area under the risk--coverage curve (AURC) than raw max-probability (3.33\% vs.\ 3.95\%); the deployed operating point ($\tau=0.35$, diamond) accepts 10.0\% fast-exit coverage at 0.21\% selective risk.}
+\label{fig:risk_coverage}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.75\columnwidth]{fig_tau_sensitivity.pdf}
+\caption{Routing-threshold sensitivity across $\tau \in [0.05, 0.95]$ (single run, refined Tier-2). The left axis (blue) displays fast-exit coverage (\%), while the right axis shows cascaded and Tier-1 accepted accuracies (\%). The deployed threshold $\tau=0.35$ (vertical dashed line) marks the operating point where Tier-1 accepted accuracy saturates near 100\% (99.84\%) while preserving 10.0\% fast-exit coverage (averaging 14.0\% over 30 episodes); held-out episode sweeps (0--14 tune / 15--29 test) confirm stability.}
+\label{fig:tau_sensitivity}
+\end{figure}
+
+% =============================================================================
+% 6. ABLATION STUDY
+% =============================================================================
+\section{Ablation Study}
+\label{sec:ablation_study}
+
+\subsection{Systematic Component Ablation}
 \label{sec:ablation}
 Table~\ref{tab:ablation} reports a systematic ablation across identical 5-shot splits to quantify individual component contributions; rows (4)--(5) are static cosine prototype blends ($0.65\,\mathbf{l}_{\text{bio}}+0.35\,\mathbf{l}_{\text{dino}}$) and row (6) replaces them with regularized Fisher-LDA.
 
@@ -619,102 +747,11 @@ Replicate-8 (control) & 440 & 0.072$\pm$0.001 & 9.6$\times10^{3}$ & 95.05$\pm$1.
 \end{tabular*}
 \end{table}
 
-\subsection{Predictive Uncertainty, Calibration, and Routing Reliability}
-\label{sec:calibration}
-In safety-critical agricultural automation such as robotic spraying, an overconfident misdiagnosis triggers unwarranted chemical application. The routing gate therefore requires a direct reliability audit, as calibration depends on architecture and training formulation rather than accuracy alone \cite{minderer2021revisiting}. Temperature is fitted on an independent stratified 50\% split of the 9,330-query PlantVillage stream (4,662 calibration / 4,668 evaluation queries), minimizing negative log-likelihood on the calibration split only \cite{guo2017calibration}. Expected Calibration Error (ECE) and Maximum Calibration Error (MCE) use $M=10$ equal-width confidence bins; to expose small-bin artifacts we also report equal-mass (adaptive) binning and MCE over bins with $n \geq 30$. The deployed gate consumes the \emph{uncalibrated} Tier-1 posterior: temperature scaling is a post-hoc audit applied after routing and never changes the gate score or the threshold.
-
-\textbf{Tier-1 calibration.} The raw gate probabilities are under-confident (full-stream ECE 32.07\%, MCE 38.07\%; held-out ECE 31.76\%). A scalar logit temperature fitted on the calibration split ($T=0.267$) reduces held-out ECE to 1.20\% (MCE 16.71\%; Fig.~\ref{fig:reliability}a--b). Routing itself uses the raw scores, so we verify the gate directly below rather than relying on ECE.
-
-\textbf{Tier-2 calibration.} The refined Tier-2 consensus is also under-confident (ECE 19.45\%), and most of the error sits in the dominant bin $(0.7,0.8]$: 7,102 queries at 98.0\% accuracy but 77.5\% mean confidence (Table~\ref{tab:reliability_bins}). The equal-width MCE of 44.26\% comes from bins with at most nine samples (one query in $(0.4,0.5]$); equal-mass binning lowers it to 21.53\%, and bins with $n\geq30$ give 20.49\%. Scalar logit temperature scaling cannot remove this residual: the consensus is a fixed $0.75/0.25$ blend of Fisher logits and BioCLIP text probabilities, so softening the logits alone leaves the blend miscalibrated (the fitted $T$ hits the optimizer bound and held-out ECE moves 19.33\%$\to$19.83\%). A power transform $\mathrm{softmax}(\log p / T)$ with $T=0.50$ instead collapses nearly all mass into one or two bins, producing a small ECE (0.48\%) but an equal-width MCE of 80.85\% (Fig.~\ref{fig:reliability}d); a freshly fitted power temperature ($T=0.54$) reproduces this (held-out ECE 0.24\%, MCE 88.74\%). The large equal-width MCE therefore reflects a single-sample bin rather than widespread miscalibration. We therefore do not claim that Tier-2 is well calibrated; routing reliability is instead verified through tier-separated error rates and selective risk.
-
-\begin{table}[htbp]
-\caption{Per-bin reliability of the uncalibrated refined Tier-2 consensus (equal-width bins, full 9,330-query stream; empty bins omitted).}
-\label{tab:reliability_bins}
-\centering
-
-\footnotesize
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Confidence bin} & \textbf{$n$} & \textbf{Acc.\ (\%)} & \textbf{Conf.\ (\%)} & \textbf{$|$Gap$|$ (pp)} \\
-\midrule
-$(0.4,0.5]$ & 1    & 0.0   & 44.3 & 44.3 \\
-$(0.5,0.6]$ & 6    & 50.0  & 52.5 & 2.5 \\
-$(0.6,0.7]$ & 9    & 44.4  & 65.6 & 21.2 \\
-$(0.7,0.8]$ & 7102 & 98.0  & 77.5 & 20.5 \\
-$(0.8,0.9]$ & 2207 & 98.6  & 82.4 & 16.1 \\
-$(0.9,1.0]$ & 5    & 100.0 & 90.6 & 9.4 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\textbf{Tier-separated routing reliability.} Table~\ref{tab:tier_routing} reports the two tiers independently over 30 benchmark episodes at $\tau=0.35$. Tier-1 directly accepts 14.02\%$\pm$2.25\% of queries at 99.69\%$\pm$0.41\% accuracy and a 0.25\%$\pm$0.52\% false-negative rate (FNR); the escalated 85.98\% are resolved by Tier-2 at 96.98\%$\pm$0.83\% accuracy (FNR 0.87\%$\pm$0.39\%), yielding cascaded accuracy 97.36\%$\pm$0.69\% (FNR 0.79\%$\pm$0.36\%, F1 97.01\%$\pm$0.64\%) and routing-weighted latency 149.84$\pm$2.36\,ms. In the canonical single run, the 936 accepted queries achieve 99.79\% accuracy (FNR 0.25\%) versus 97.83\% (FNR 0.81\%) for the 8,394 escalated queries (cascaded 98.03\%). The accepted subset thus has roughly tenfold lower error (0.21\% vs.\ 2.17\%), and its accuracy is measured only on directly accepted queries, independent of Tier-2.
-
-\begin{table*}[htbp]
-\caption{Tier-separated routing reliability at $\tau=0.35$ (30 benchmark episodes, mean $\pm$ std).}
-\label{tab:tier_routing}
-\centering
-
-\footnotesize
-\begin{tabularx}{\textwidth}{Xcccc}
-\toprule
-\textbf{Routing path} & \textbf{Coverage (\%)} & \textbf{Accuracy (\%)} & \textbf{FNR (\%)} & \textbf{Latency (ms)} \\
-\midrule
-Tier-1 fast-exit (accepted) & 14.02$\pm$2.25 & 99.69$\pm$0.41 & 0.25$\pm$0.52 & 59.78 \\
-Tier-2 (escalated) & 85.98$\pm$2.25 & 96.98$\pm$0.83 & 0.87$\pm$0.39 & 164.52 \\
-\midrule
-\textbf{Cascaded system} & 100 & 97.36$\pm$0.69 & 0.79$\pm$0.36 & 149.84$\pm$2.36 \\
-\bottomrule
-\end{tabularx}
-\end{table*}
-
-\textbf{Cascade versus single-tier classification.} Table~\ref{tab:gate_scenario} compares the deployed cascade against running Tier-2 on every query and against a selective gate+BioCLIP mode that abstains on low-gate queries. At full coverage the cascade and the single-tier BioCLIP classifier are statistically indistinguishable (97.36\% vs.\ 97.37\%); the cascade's benefit is latency (149.84 vs.\ 164.52\,ms), not accuracy. Abstaining on the lowest-gate queries raises accuracy and lowers the false-negative rate on the accepted subset, at the cost of coverage: at $\tau=0.10$ the system answers 62.17\% of queries at 98.63\% accuracy and 0.44\% FNR in 124.90\,ms. This selective mode is optional; the deployed system classifies every query.
-
-% Gate-scenario comparison. Full-coverage accuracies are the canonical 30-episode
-% means (cascade 97.36, refined Tier-2-on-all 97.37). Selective-mode rows are
-% measured over the same 30 episodes. Source: experiments/dinov2_ablation_gate_scenario.
-\begin{table}[htbp]
-\caption{Routing-policy comparison (30-episode mean).}
-\label{tab:gate_scenario}
-\centering
-
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc}
-\toprule
-\textbf{Routing policy} & \textbf{Cov. (\%)} & \textbf{Acc. (\%)} & \textbf{FNR (\%)} & \textbf{Lat. (ms)} \\
-\midrule
-Cascade, $\tau=0.35$ (deployed) & 100 & 97.36 & 0.79 & 149.84 \\
-BioCLIP Tier-2 on all & 100 & 97.37 & 0.77 & 164.52 \\
-Selective, $\tau=0.05$ & 79.96 & 98.05 & 0.59 & 143.53 \\
-Selective, $\tau=0.10$ & 62.17 & 98.63 & 0.44 & 124.90 \\
-\bottomrule
-\end{tabular*}
-\end{table}
-
-\textbf{Risk--coverage analysis.} Fig.~\ref{fig:risk_coverage} plots selective risk against coverage for three confidence scores, following the risk--coverage framework for selective classification \cite{geifman2017selective}, and summarizes each curve by the area under the risk--coverage curve (AURC, the mean selective risk over all coverage levels). Since scalar summaries such as AURC can misrank selective systems \cite{traub2024overcoming}, we also show the full curves and the deployed operating point. The entropy-penalized gate score $C(x)$ ranks queries more safely than the raw Tier-1 softmax peak (AURC 3.33\% vs.\ 3.95\%); the refined Tier-2 confidence reaches AURC 1.82\%. At the deployed threshold ($\tau=0.35$), the gate accepts 10.03\% of the single-run stream at 0.21\% selective risk, in the low-risk region of the curve.
-
-\textbf{Threshold provenance and sensitivity.} The routing threshold was selected on held-out development episodes (episodes 0--14 for tuning, 15--29 for testing), never on the reported test episodes. On the held-out test episodes, $\tau=0.15$ gives 46.4\% fast-exit at 96.96\%$\pm$0.59\% cascaded accuracy (98.25\% Tier-1 accepted accuracy), $\tau=0.25$ gives 25.6\% at 97.30\%$\pm$0.74\% (99.49\%), and $\tau=0.35$ gives 14.1\% at 97.33\%$\pm$0.79\% (99.84\%$\pm$0.24\%). We adopt $\tau=0.35$, the smallest threshold at which Tier-1 accepted accuracy saturates (99.84\%, FNR 0.25\%); lower thresholds accept less reliable fast exits. The tuning curve is flat beyond 0.35 (the tune-optimal $\tau=0.55$ yields 97.32\% test accuracy, indistinguishable from 97.33\% at 0.35), but fast-exit coverage falls to 3.4\%. Blended latency rises from 115.9 to 137.7 to 149.8\,ms across the three thresholds (Fig.~\ref{fig:tau_sensitivity}), tracing the coverage--safety--latency trade-off.
-
-\begin{figure*}[htbp]
-\centering
-\includegraphics[width=0.70\textwidth]{fig_reliability.pdf}
-\caption{Reliability diagrams (equal-width bins, full benchmark stream; per-bin sample counts annotated, colored bars indicate empirical accuracy, and hatched gray bars show the accuracy--confidence calibration gap). (a) Uncalibrated Tier-1 gate probabilities are under-confident (Expected Calibration Error (ECE) = 32.07\%). (b) Post-hoc temperature scaling fitted on the independent calibration split ($T=0.27$) aligns Tier-1 (held-out ECE = 1.20\%). (c) Refined Tier-2 consensus remains under-confident in its dominant bin (ECE = 19.45\%; Maximum Calibration Error (MCE) = 44.26\% from a single-sample bin). (d) A power transform ($T=0.50$) collapses probability mass into one bin: low ECE (0.48\%) but severe MCE (80.85\%).}
-\label{fig:reliability}
-\end{figure*}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.75\columnwidth]{fig_risk_coverage.pdf}
-\caption{Risk--coverage curves for Tier-1 max-probability, the Shannon gate score $C(x)$, and the refined Tier-2 consensus confidence (canonical single run). Lower curves indicate superior selective classification performance. The entropy-penalized gate score achieves lower area under the risk--coverage curve (AURC) than raw max-probability (3.33\% vs.\ 3.95\%); the deployed operating point ($\tau=0.35$, diamond) accepts 10.0\% fast-exit coverage at 0.21\% selective risk.}
-\label{fig:risk_coverage}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.75\columnwidth]{fig_tau_sensitivity.pdf}
-\caption{Routing-threshold sensitivity across $\tau \in [0.05, 0.95]$ (single run, refined Tier-2). The left axis (blue) displays fast-exit coverage (\%), while the right axis shows cascaded and Tier-1 accepted accuracies (\%). The deployed threshold $\tau=0.35$ (vertical dashed line) marks the operating point where Tier-1 accepted accuracy saturates near 100\% (99.84\%) while preserving 10.0\% fast-exit coverage (averaging 14.0\% over 30 episodes); held-out episode sweeps (0--14 tune / 15--29 test) confirm stability.}
-\label{fig:tau_sensitivity}
-\end{figure}
+% =============================================================================
+% 7. EFFICIENCY ANALYSIS
+% =============================================================================
+\section{Efficiency Analysis}
+\label{sec:efficiency}
 
 \subsection{Edge Hardware Latency and Memory Footprint}
 \label{sec:edge_hardware}
@@ -797,7 +834,7 @@ As broken down in Table~\ref{tab:adaptation_breakdown}, offline adaptation compl
 On the physical handset, Tier-1 executes in 59.78\,ms ($\approx$16.7\,FPS) and a fully escalated Tier-2 query costs 164.52\,ms end-to-end ($\approx$6.1\,FPS), with the BioCLIP encoder adding 104.74\,ms to the cached Tier-1 pass. Weighting these execution paths by the 14.0\% full-stream fast-exit fraction yields a mean cascaded latency of 149.84\,ms ($\approx$6.7\,FPS, Table~\ref{tab:tier_routing}). Under a 600\,s sustained soak, throughput settles to 4.26\,FPS as the SoC reaches thermal status~3, indicating that 16.7\,FPS represents a cool-start burst rate. The confidence gate's primary advantage is therefore safety and energy efficiency: the fast-exited subset is resolved at 99.7\% accuracy with a 0.25\% false-negative rate (Section~\ref{sec:calibration}), while ambiguous queries receive full multimodal analysis. Peak process memory is 497.45\,MB PSS (385.02\,MB native heap), dominated by the ONNX Runtime execution arena, while the standalone Android application (APK) occupies $\approx$22.8\,MB and operates entirely offline.
 
 % =============================================================================
-% 5. PRACTICAL DISCUSSION AND LIMITATIONS
+% 8. PRACTICAL DISCUSSION AND LIMITATIONS
 % =============================================================================
 \section{Engineering Applications, Practical Deployment, and Limitations}
 \label{sec:discussion}
@@ -813,7 +850,7 @@ A further practical limitation concerns degraded inputs. Severe defocus blur att
 \textbf{Scope and threats to validity.} The edge measurements come from a single physical device (Samsung Galaxy S24~FE) with CPU-only INT8 ONNX Runtime; absolute latency and memory will differ on other SoCs, although the algorithmic cost and the delegate-agnostic pipeline do not. The controlled comparison (Table~\ref{tab:comparative}) isolates the adaptation algorithm on identical frozen features and re-runs the training-free inductive baselines; iterative transductive FSL methods (Section~\ref{sec:related_work}) are referenced but not re-run, so the reported transductive gain is measured against our own inductive mode rather than against those methods. The PlantDoc protocol uses labeled target-domain support; a true source$\rightarrow$target cross-domain transfer (e.g., PlantVillage$\rightarrow$PlantDoc), quantitative image-quality stress tests, and multi-device profiling remain future work.
 
 % =============================================================================
-% 6. CONCLUSION
+% 9. CONCLUSION
 % =============================================================================
 \section{Conclusion}
 \label{sec:conclusion}
@@ -828,9 +865,39 @@ We presented \textbf{BioDINO-Edge}, a gradient-free few-shot framework that adap
 This appendix specifies the exact splits, seeds, model versions, hyperparameters, and code needed to reproduce every reported number, and states the provenance of each value in Table~\ref{tab:comparative}.
 
 \subsection{Datasets and Splits}
-\textbf{PlantVillage (controlled, Table~\ref{tab:comparative}).} We use the 11-class novel subset (Apple, Grape, Potato; 9{,}385 images) with frozen embeddings cached once. \emph{11-class regime:} 30 Monte-Carlo episodes; episode $e$ uses \texttt{random.Random(42+17e)}; for each class the image indices are shuffled, the first 5 form the support and all remaining images form the query (9{,}330 queries/episode; support $\cap$ query $=\emptyset$). \emph{5-way $K$-shot regime:} 50 episodes per $K\in\{1,5,10,15\}$; a single \texttt{random.Random(42)} stream samples 5 of the 11 classes per episode (\texttt{rng.sample(range(11),5)}), shuffles each class, takes the first $K$ as support and the rest as query. All methods share the identical support/query indices and frozen features within each episode, so any accuracy difference is attributable to the adaptation algorithm alone.
+\textbf{PlantVillage (controlled, Table~\ref{tab:comparative}).} We use the 11-class novel subset (Apple, Grape, Potato; 9{,}385 images) with frozen embeddings cached once. \emph{11-class regime:} 30 Monte-Carlo episodes; episode $e$ uses \texttt{random.Random(42+17e)}; for each class the image indices are shuffled, the first 5 form the support and all remaining images form the query (9{,}330 queries/episode; support $\cap$ query $=\emptyset$). \emph{5-way $K$-shot regime:} 50 episodes per $K\in\{1,5,10,15\}$; a single \texttt{random.Random(42)} stream samples 5 of the 11 classes per episode (\texttt{rng.sample(range(11),5)}), shuffles each class, takes the first $K$ as support and the rest as query. All methods share identical support/query indices and cached backbone outputs within each episode. Zero-shot BioCLIP and Tip-Adapter use the BioCLIP branches; the centroid and Fisher classifiers use joint BioCLIP+DINOv2 features. Comparisons within the latter group isolate the adaptation rule.
 
 \textbf{PlantDoc (field domain, labeled target-domain support).} 5-way 5-shot: 50 episodes, \texttt{random.Random(42)}, \texttt{rng.sample(range(27),5)}; 5 support leaves/class drawn from the training split, all test images of the sampled classes as queries. 27-way: 135 support leaves (5/class, 8-view augmented to 1{,}080 feature vectors) and 252 field queries. The full PlantDoc dataset is obtained from its original source (not redistributed here); the controlled PlantVillage re-runs require only the cached embeddings and the provided script.
+
+\subsection{Full Shot Ladder}
+\label{app:shot_ladder}
+Table~\ref{tab:shot_ladder} retains the 10-shot and 15-shot results omitted from the main comparison, alongside the 1-shot and 5-shot entries for reference. Controlled results use 50 episodes per shot count and the splits specified above. Zero-shot BioCLIP uses no support labels; its small variation across shot counts reflects changes in the query set. Published values remain separate because the underlying encoders and class pools differ. No numerical values have been recomputed for this table.
+
+\begin{table*}[htbp]
+\caption{Full PlantVillage 5-way shot ladder (accuracy, \%). Controlled results are mean $\pm$ std over 50 episodes per setting. Published results are retained as reported and provide context only. Dashes indicate unreported settings.}
+\label{tab:shot_ladder}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}X c c c c@{}}
+\toprule
+\textbf{Method} & \textbf{1-shot} & \textbf{5-shot} & \textbf{10-shot} & \textbf{15-shot} \\
+\midrule
+\multicolumn{5}{@{}l}{\textit{Controlled evaluations, 11-class pool}} \\
+Zero-shot BioCLIP & 38.89$\pm$12.78 & 38.86$\pm$12.79 & 38.83$\pm$12.81 & 38.79$\pm$12.83 \\
+Tip-Adapter & 45.15$\pm$13.42 & 68.63$\pm$12.80 & 86.01$\pm$7.49 & 93.23$\pm$4.00 \\
+Prototypical Networks / SimpleShot & 88.44$\pm$9.13 & 97.45$\pm$2.03 & 98.35$\pm$1.45 & 98.57$\pm$1.27 \\
+BioDINO-Edge (inductive) & 88.45$\pm$9.12 & 97.96$\pm$1.85 & 99.10$\pm$0.87 & 99.41$\pm$0.60 \\
+BioDINO-Edge (transductive) & 93.42$\pm$6.83 & 98.77$\pm$1.68 & 99.41$\pm$0.60 & 99.63$\pm$0.39 \\
+\midrule
+\multicolumn{5}{@{}l}{\textit{Published results (context only)}} \\
+MAFDE-DN4 \cite{zhao2024mafde} & 57.50 & 81.41 & -- & -- \\
+SC-FSL \cite{mu2024few} & 78.55$\pm$0.81 & 92.90$\pm$0.47 & -- & -- \\
+AgriFewNet \cite{babu2025agrifewnet} & 87.30 & 94.80 & 97.10 & -- \\
+VSF \cite{zhou2026vsf} & 79.01 & 90.51 & -- & -- \\
+\bottomrule
+\end{tabularx}
+\end{table*}
 
 \subsection{Models and Hyperparameters}
 Frozen backbones (no fine-tuning): DINOv2 ViT-S/14 (\texttt{timm} \path{vit_small_patch14_dinov2}, 384-D) and BioCLIP ViT-B/16 (\texttt{open\_clip} \path{hf-hub:imageomics/bioclip}, 512-D); joint feature $z=[\,\text{bio}\,\|\,\text{dino}\,]\in\mathbb{R}^{896}$. Fixed constants: logit scale $\gamma=20.0$, Fisher blend $w_{\text{lda}}=0.75$, routing gate $\tau=0.35$; transductive support weight $3\times$, max anchors 20/class, confidence threshold 0.70; Tip-Adapter $\alpha=1.0,\beta=5.5$. Fisher-LDA uses Ledoit--Wolf shrinkage (\texttt{sklearn LDA solver=lsqr, shrinkage=auto}). The estimator applies Ledoit--Wolf per class in standardized feature space and pools the shrunk within-class covariances with class priors; the augmentation sensitivity study (Section~\ref{sec:aug_sensitivity}) reports the mean per-class intensity. At 5-way 1-shot the raw support has $N=C=5$ and the within-class scatter vanishes; we resolve the singularity with a data-driven ridge floor (mean support feature variance) added to the Ledoit--Wolf covariance, which reduces Fisher to regularized nearest-centroid (the correct degenerate limit). For $N>C$ the canonical sklearn estimator is used unchanged.
@@ -839,7 +906,7 @@ Frozen backbones (no fine-tuning): DINOv2 ViT-S/14 (\texttt{timm} \path{vit_smal
 Reference environment: Python 3.12.1, torch 2.6.0 (Compute Unified Device Architecture (CUDA) 12.4 build; all reported experiments execute on CPU), scikit-learn 1.9.1, numpy 2.5.4, scipy 1.18.1, timm 1.0.30, open\_clip 3.3.0. The controlled comparison is reproduced by \path{run_controlled_baselines.py} in \path{experiments/baseline_comparison/} (output \path{controlled_baseline_results.json}); the canonical PlantVillage reference run by \path{benchmark_engine.py} (\path{pipeline/}) and \path{run_transductive_validation.py} (\path{experiments/transductive_validation/}); the augmentation sensitivity study by \path{run_augmentation_sensitivity.py} (\path{experiments/augmentation_sensitivity/}, output \path{results/augmentation_sensitivity.json}; augmentation RNG re-seeded per episode and pass from the episode seed with fixed offsets). Code and pinned release: \url{https://github.com/reyhane-code/BioDINO-Edge-android}.
 
 \subsection{Provenance and Numerical Reproducibility}
-Table~\ref{tab:provenance} states the origin of each reported value (``Re-run'': computed by us with the provided script on the stated protocol; ``As reported'': quoted from the original publication, not re-run). The controlled script reproduces the canonical inductive accuracy exactly (95.08\%) and the transductive accuracy within 0.04\,pp (97.37\% re-run vs.\ 97.41\% reference); the residual is floating-point sensitivity of the iterative least-squares (\texttt{lsqr}) LDA solve across library versions, far below the episode standard deviation (0.71\,pp). The centroid/cosine baselines involve no iterative solve and reproduce exactly. We report the canonical reference values for the 11-class regime to remain consistent with the paired-significance and sensitivity analyses (Sections~\ref{sec:transductive_validation}--\ref{sec:calibration}).
+Table~\ref{tab:provenance} states the origin of each reported value (``Re-run'': computed by us with the provided script on the stated protocol; ``As reported'': quoted from the original publication, not re-run). The controlled script reproduces the canonical inductive accuracy exactly (95.08\%) and the transductive accuracy within 0.04\,pp (97.37\% re-run vs.\ 97.41\% reference); the residual is floating-point sensitivity of the iterative least-squares (\texttt{lsqr}) LDA solve across library versions, far below the episode standard deviation (0.71\,pp). The centroid/cosine baselines involve no iterative solve and reproduce exactly. We report the canonical reference values for the 11-class regime to remain consistent with the paired-significance and sensitivity analyses (Sections~\ref{sec:ablation}--\ref{sec:aug_sensitivity}).
 
 \begin{table}[htbp]
 \caption{Provenance of reported values.}
@@ -851,10 +918,11 @@ Table~\ref{tab:provenance} states the origin of each reported value (``Re-run'':
 \toprule
 \textbf{Value} & \textbf{Provenance} \\
 \midrule
-Table~\ref{tab:comparative} baselines & Re-run, identical splits/seeds/features \\
+Table~\ref{tab:comparative} baselines & Re-run, shared splits/seeds; feature branches follow each method \\
 Table~\ref{tab:comparative} BioDINO 11-class & Canonical reference run (reproduced $\le$0.04\,pp) \\
 Table~\ref{tab:comparative} BioDINO 5-way & Controlled re-run (this work) \\
-Table~\ref{tab:comparative} panels (b)--(c), AgriFewNet/VSF/Zhao & As reported, not re-run \\
+Table~\ref{tab:comparative} panel (b), Table~\ref{tab:shot_ladder} literature rows & As reported, not re-run \\
+Table~\ref{tab:plantdoc_context} VSF/Zhao & As reported, not re-run \\
 PlantDoc 83.61\% / 56.35\% & Our PlantDoc field-domain run (protocol above) \\
 Table~\ref{tab:aug_sensitivity} sensitivity & Re-run, this work (same 30-episode protocol) \\
 \bottomrule
