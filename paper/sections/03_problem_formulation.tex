@@ -15,10 +15,11 @@ Operating directly within commercial orchards and fields imposes four concrete o
     \begin{equation}
         g_{\text{lat}}(\mathbf{x}) = t_{\text{inf}}(\mathbf{x}) - T_{\max} \le 0
     \end{equation}
-    \item \textbf{Memory and Gradient Budget ($g_{\text{RAM}} \le 0, \, g_{\text{grad}} = 0$):} Edge microprocessors share volatile memory across operating systems and sensor drivers. Peak proportional set size (PSS) must remain within $M_{\max} = 2.0$\,GB. Furthermore, backpropagation, autograd graphs, and optimizer states are prohibited on device to prevent thermal throttling:
+    \item \textbf{Memory and Gradient Budget ($g_{\text{RAM}} \le 0, \, g_{\text{grad}} = 0$):} Edge processors share volatile memory across operating systems and sensor drivers. Peak proportional set size (PSS) must remain within $M_{\max} = 2.0$\,GB. Furthermore, backpropagation, autograd graphs, and optimizer states are prohibited on device to prevent thermal throttling. We therefore bound the backward pass by a compute--memory budget rather than by the value of the gradient itself, since $\nabla_\theta \mathcal{L} = 0$ describes a stationary point and says nothing about whether a backward pass was executed:
     \begin{equation}
-        g_{\text{RAM}} = M_{\text{peak}} - M_{\max} \le 0, \qquad g_{\text{grad}} = \|\nabla_\theta \mathcal{L}\| = 0
+        g_{\text{RAM}} = M_{\text{peak}} - M_{\max} \le 0, \qquad g_{\text{grad}} = F_{\text{bwd}} + M_{\text{opt}} = 0,
     \end{equation}
+    where $F_{\text{bwd}}$ is the floating-point work of a backward pass and $M_{\text{opt}}$ the optimizer state memory, both identically zero for a closed-form estimator.
     \item \textbf{False-Negative Risk Bound ($g_{\text{FNR}} \le 0$):} In agricultural crop protection, classifying an infected leaf as healthy (false negative) causes untreated pathogen spread. The false-negative rate on disease classes must remain below an operational tolerance $\epsilon_{\text{fnr}} = 0.01$ (1\%):
     \begin{equation}
         g_{\text{FNR}} = \text{FNR}_{\text{disease}} - \epsilon_{\text{fnr}} \le 0
