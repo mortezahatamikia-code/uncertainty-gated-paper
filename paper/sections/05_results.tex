@@ -46,18 +46,20 @@ BioDINO-Edge (transductive, ours) & \textbf{93.42$\pm$6.83} & \textbf{98.77$\pm$
 
 Table~\ref{tab:fair_baselines} closes two gaps that would otherwise undermine the comparison. First, zero-shot BioCLIP and Tip-Adapter in Table~\ref{tab:comparative} see only the 512-D BioCLIP branch, so a reviewer could attribute our margin to the extra encoder rather than to the adaptation rule; we therefore re-run Tip-Adapter and two linear probes on the same 896-D features. Second, our transductive mode is compared against inductive baselines by construction, so we re-run three standard transductive few-shot methods on identical episodes.
 
-The outcome is mixed and we report it as measured. Against every inductive comparator on 896-D features, the gain is large and consistent: +3.58\,pp over Ridge, +3.78 over multinomial logistic regression, +4.12 over Prototypical Networks, +41.80 over 896-D Tip-Adapter (30/0/0 episodes each). Against transductive label propagation the picture reverses: LaplacianShot reaches 97.93\% against our 97.41\% on the 11-class task ($-0.53$\,pp, paired $p=1.0\times10^{-3}$, losing 25 of 30 episodes) and 99.27\% against 98.78\% at 5-way 5-shot. TIM and BD-CSPN both fall below us (+6.01 and +2.59\,pp in our favour).
+The outcome is mixed and we report it as measured. Against every inductive comparator on 896-D features, the gain is large and consistent: +3.58\,pp over Ridge, +3.78 over multinomial logistic regression, +4.12 over Prototypical Networks, +41.80 over 896-D Tip-Adapter (30/0/0 episodes each). Against transductive label propagation the picture reverses: LaplacianShot reaches 98.49\%$\pm$0.59 against our 97.41\%$\pm$0.73 on the 11-class task ($-1.08$\,pp, paired $p=1.4\times10^{-7}$, losing 27 of 30 episodes) and 99.50\% against 98.78\% at 5-way 5-shot. TIM and BD-CSPN both fall below us (+6.01 and +2.59\,pp in our favour).
 
-We also tested whether the Fisher projection can be combined with propagation, since that would have been the strongest possible configuration. Projecting through the fitted discriminant before building the affinity graph \emph{degrades} it (91.68\% versus 97.93\%), and summing raw and projected affinities recovers only 96.40\%. The projection collapses 896 dimensions onto $C$ discriminant directions, which preserves class separation but destroys the local neighbourhood structure that propagation exploits.
+Two implementation notes matter for reading this table. Our first pass substituted soft label propagation for LaplacianShot; the published method instead minimises a quadratic binary assignment by majorize-minimise, and that solver is stronger by roughly half a point, so all LaplacianShot numbers here come from the binary solver with $\lambda$ selected on a disjoint seed stream. The 5-way figures use 50 episodes and the 11-class figures 30, matching the protocol of Table~\ref{tab:comparative}.
 
-\textbf{The batch requirement changes the comparison.} LaplacianShot's advantage is a small-batch-free advantage: label propagation builds a $k$-nearest-neighbour graph over the pooled support and query set, so it cannot label a leaf until the whole query set is visible. A phone diagnoses one leaf, returns an answer, and forgets it. We therefore measured both methods on identical random query subsets of decreasing size (Table~\ref{tab:batchsize}), which is the operating condition of a shutter-triggered field device. The ordering reverses sharply. At 100 queries LaplacianShot reaches 76.90\% against our 95.27\%; at 25 queries it falls to 55.33\% against 96.13\%. Only when the entire 9{,}330-query set is available at once does it edge ahead (97.87\% versus 97.59\%). The mechanism is direct: with few queries the $k$NN graph is sparse and mostly disconnected, so labels propagate within isolated islands seeded by whatever support leaves happen to be nearby, and the balanced-marginal assumption that makes propagation work at scale is estimated from too few samples. Recalibration depends far less on batch size because each leaf is scored by the discriminant fitted on the support set; the residual 2.3\,pp drop from 97.59\% to 95.27\% comes from its anchor buffer drawing on fewer pseudo-labels, not from any graph structure.
+We also tested whether the Fisher projection can be combined with propagation, since that would have been the strongest possible configuration. Running the same Laplacian solver in the projected subspace \emph{degrades} it (92.84\% versus 98.57\% on 896-D, 10 episodes), and concatenating raw with projected features recovers almost nothing (98.53\%). The projection collapses 896 dimensions onto $C$ discriminant directions, which preserves class separation but destroys the local neighbourhood structure that the pairwise Laplacian term exploits.
 
-This reframes the contribution rather than rescuing it. LaplacianShot, BD-CSPN, and TIM are batch transductive methods: they assume the lab protocol where the test set is a fixed pool. BioDINO-Edge is incremental, and Section~\ref{sec:ablation} quantifies the streaming behaviour. We therefore report both regimes and claim neither state of the art in the batch setting nor equivalence in it: in the fixed-pool protocol LaplacianShot is genuinely stronger, and the residual 0.53\,pp gap is not something this paper closes.
+\textbf{The batch requirement changes the comparison.} LaplacianShot's advantage is a whole-pool advantage: the pairwise term is a graph over the query set, so the method cannot label a leaf until a batch exists. We therefore ran the solver under three deployment strategies on the same episodes and the same query ordering, using 600 queries per episode so the growing-buffer variant stays tractable (Table~\ref{tab:batchsize}). Labelling one leaf at a time with no buffer degenerates to nearest-prototype and costs 3.00\,pp. A growing buffer recovers most of the loss but not all: at 25 buffered queries it is 9.62\,pp behind, at 100 it is 5.96\,pp behind, and at 200 it is 2.65\,pp behind (8/0 episodes each). Only when the entire query set is present does it draw level and then lead, which is what the full-pool rows above show.
 
-The algebraic cost also differs in direction depending on scale, and not always in our favour. On this desktop CPU the full 9{,}330-query batch costs 1.50\,s for propagation against 0.66\,s for recalibration, so we are 2.3$\times$ cheaper at that size. But at 252 queries over 27 classes propagation costs 70\,ms against our 889\,ms, because the discriminant is fitted over 135 support leaves in 27 classes and the Cholesky solve is $O(d^3)$ in a 896-dimensional space regardless of how few queries there are. For the field regime, where a scouting pass sees a few hundred leaves, the on-device cost of recalibration is therefore dominated by the fixed fit, not by the number of queries. These are desktop CPU timings and are not device measurements; the phone numbers in Section~\ref{sec:edge_hardware} are the ones to quote for deployment.
+This reframes the contribution rather than rescuing it. LaplacianShot, BD-CSPN, and TIM are batch transductive methods: they assume the lab protocol where the test set is a fixed pool. BioDINO-Edge is incremental, and Section~\ref{sec:ablation} quantifies the streaming behaviour. We therefore report both regimes and claim neither state of the art in the batch setting nor equivalence in it: in the fixed-pool protocol LaplacianShot is genuinely stronger by 1.08\,pp, and that gap is not something this paper closes.
+
+The algebraic cost also differs in direction depending on scale, and not always in our favour. On this desktop CPU the full 9{,}330-query batch costs 1.50\,s for propagation against 0.66\,s for recalibration, so we are 2.3$\times$ cheaper at that size. But at 252 queries over 27 classes propagation costs 70\,ms against our 889\,ms, because the discriminant is fitted over 135 support leaves in 27 classes and the Cholesky solve is $O(d^3)$ in a 896-dimensional space regardless of how few queries there are. For the field regime, where a scouting pass sees a few hundred leaves, the on-device cost of recalibration is dominated by the fixed fit, not by the number of queries. These are desktop CPU timings and are not device measurements; the phone numbers in Section~\ref{sec:edge_hardware} are the ones to quote for deployment.
 
 \begin{table}[htbp]
-\caption{Accuracy versus the number of queries visible at decision time (11-class, 5-shot, 10 episodes $\times$ 3 random subsets, paired).}
+\caption{Deployment strategies for the transductive step (11-class, 5-shot, 8 episodes $\times$ 600 queries, paired).}
 \label{tab:batchsize}
 \centering
 
@@ -65,22 +67,20 @@ The algebraic cost also differs in direction depending on scale, and not always 
 \setlength{\tabcolsep}{4pt}
 \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc}
 \toprule
-\textbf{Queries visible} & \textbf{LaplacianShot (\%)} & \textbf{BioDINO-Edge (\%)} & \textbf{$\Delta$ (pp)} \\
+\textbf{Strategy} & \textbf{LaplacianShot (\%)} & \textbf{BioDINO-Edge (\%)} & \textbf{$\Delta$ (pp)} \\
 \midrule
-25 & 55.33 & \textbf{96.13} & $+40.80$ \\
-50 & 63.47 & \textbf{95.60} & $+32.13$ \\
-100 & 76.90 & \textbf{95.27} & $+18.37$ \\
-250 & 87.11 & \textbf{96.64} & $+9.53$ \\
-500 & 90.68 & \textbf{96.87} & $+6.19$ \\
-1{,}000 & 92.76 & \textbf{97.19} & $+4.43$ \\
-All (9{,}330) & \textbf{97.87} & 97.59 & $-0.28$ \\
+One leaf at a time (no buffer) & 93.12 & \textbf{96.12} & $+3.00$ \\
+Growing buffer, 25 & 86.50 & \textbf{96.12} & $+9.62$ \\
+Growing buffer, 100 & 90.17 & \textbf{96.12} & $+5.96$ \\
+Growing buffer, 200 & 93.48 & \textbf{96.12} & $+2.65$ \\
+Whole query set (lab protocol) & \textbf{96.38} & 96.12 & $-0.25$ \\
 \bottomrule
 \end{tabular*}
 
 \vspace{3pt}
 \begin{minipage}{\columnwidth}
 \footnotesize
-\textit{Notes.} Each cell labels the same random query subset using only the support set and that subset. Both methods see identical subsets, and the full-batch row reproduces the 11-class entry of Table~\ref{tab:fair_baselines} to within the 10-episode subsample. Propagation cannot operate on a single leaf, so its small-batch rows are not a tuning artifact but the method's definition.
+\textit{Notes.} $\Delta>0$ favours BioDINO-Edge; every row is significant at $p<0.01$ except the whole-pool row ($p=0.68$). Recalibration uses the same anchors in all rows, so its column is constant by construction. Absolute values here are lower than in Table~\ref{tab:fair_baselines} because each episode contributes a 600-query subset rather than the full 9{,}330, which reduces the accuracy estimate by roughly a point for both methods.
 \end{minipage}
 \end{table}
 
@@ -106,7 +106,7 @@ BioDINO-Edge inductive (896-D) & 88.45$\pm$9.12 & 97.96$\pm$1.87 & 95.08$\pm$1.2
 \multicolumn{5}{@{}l}{\textit{Transductive: same features, same episodes}}\\
 BD-CSPN (896-D) & -- & 98.22$\pm$1.58 & 94.82$\pm$0.59 & 93.66 \\
 TIM (896-D) & -- & 96.43$\pm$2.47 & 91.40$\pm$1.38 & 89.20 \\
-LaplacianShot (896-D) & -- & \textbf{99.27$\pm$1.04} & \textbf{97.93$\pm$0.37} & \textbf{97.23} \\
+LaplacianShot (896-D) & -- & \textbf{99.50$\pm$0.82} & \textbf{98.49$\pm$0.59} & \textbf{98.70} \\
 BioDINO-Edge transductive (896-D) & \textbf{93.42$\pm$6.83} & \underline{98.78$\pm$1.69} & \underline{97.41$\pm$0.73} & \underline{97.09} \\
 \bottomrule
 \end{tabularx}
@@ -114,7 +114,7 @@ BioDINO-Edge transductive (896-D) & \textbf{93.42$\pm$6.83} & \underline{98.78$\
 \vspace{3pt}
 \begin{minipage}{\textwidth}
 \footnotesize
-\textit{Notes.} Every row uses the cached frozen embeddings of \ref{app:repro} and the identical support/query splits and seeds of Table~\ref{tab:comparative} (30 episodes at 11-class, 50 at 5-way). Tip-Adapter keeps $\alpha=1.0$, $\beta=5.5$; Ridge uses $\alpha=1.0$; logistic regression is $\ell_2$-regularized at $C=1.0$; LaplacianShot uses $\alpha=0.99$ with a symmetric 10-nearest-neighbour cosine affinity and 200 propagation steps; TIM optimizes the query logits directly for 150 steps ($\beta=1.0$); BD-CSPN rectifies prototypes with a support-size prior of 5. Bold marks the best value per column and underline the second best. LaplacianShot exceeds transductive BioDINO-Edge by 0.53\,pp in the 11-class column; the paired test is reported in Section~\ref{sec:significance}.
+\textit{Notes.} Every row uses the cached frozen embeddings of \ref{app:repro} and the identical support/query splits and seeds of Table~\ref{tab:comparative} (30 episodes at 11-class, 50 at 5-way). Tip-Adapter keeps $\alpha=1.0$, $\beta=5.5$; Ridge uses $\alpha=1.0$; logistic regression is $\ell_2$-regularized at $C=1.0$; LaplacianShot uses the published majorize-minimise binary-assignment solver ($\lambda=2.0$, selected on a disjoint seed stream, 10-nearest-neighbour query graph, 50 iterations); TIM optimizes the query logits directly for 150 steps ($\beta=1.0$); BD-CSPN rectifies prototypes with a support-size prior of 5. Bold marks the best value per column and underline the second best. LaplacianShot exceeds transductive BioDINO-Edge by 1.08\,pp in the 11-class column; the paired test is reported in Section~\ref{sec:significance}.
 \end{minipage}
 \end{table*}
 
@@ -181,7 +181,7 @@ Standardized effect size (Cohen's $d_z$) ($\uparrow$) & \textbf{2.11} (Extremely
 \end{minipage}
 \end{table}
 
-\textbf{Engineering interpretation of statistical tests.} The comparison that matters most is against the strongest method, not against the weakest. Transductive BioDINO-Edge beats LaplacianShot on 5 of 30 episodes and loses 25, with a mean deficit of 0.53\,pp ($p=1.0\times10^{-3}$; Table~\ref{tab:fair_baselines}); at 5-way 5-shot the deficit is 0.49\,pp ($p=0.043$). This is a real, reproducible difference, not episode noise, and we do not conceal it. Against the inductive comparators the same tests favour us decisively: +4.12\,pp over Prototypical Networks on identical episodes ($t(29)=21.25$, $p=3.2\times10^{-19}$, 30/0/0 wins, $d_z=3.88$), +3.58\,pp over a Ridge probe ($p=7.0\times10^{-19}$), and +41.80\,pp over 896-D Tip-Adapter. Against BD-CSPN the gain is +2.59\,pp and against TIM +6.01\,pp, so propagation alone is not sufficient; the specific Laplacian affinity used by LaplacianShot is what crosses the line. Comparing transductive recalibration against our own inductive baseline (Table~\ref{tab:paired_test}) yields a mean paired improvement of +2.33\,pp ($p=2.2\times10^{-12}$, Wilcoxon $p=1.9\times10^{-9}$). With a win/loss record of 30/0/0 and Cohen's $d_z=2.11$, closed-form pseudo-label recalibration consistently resolves prototype misalignment; the operative limitation is that it does so without ever building a query-set affinity graph, which is the source of the residual gap.
+\textbf{Engineering interpretation of statistical tests.} The comparison that matters most is against the strongest method, not against the weakest. Transductive BioDINO-Edge beats LaplacianShot on 3 of 30 episodes and loses 27, with a mean deficit of 1.08\,pp ($p=1.4\times10^{-7}$; Table~\ref{tab:fair_baselines}); at 5-way 5-shot the deficit is 0.72\,pp ($p=2.7\times10^{-3}$, 11/39). This is a real, reproducible difference, not episode noise, and we do not conceal it. Against the inductive comparators the same tests favour us decisively: +4.12\,pp over Prototypical Networks on identical episodes ($t(29)=21.25$, $p=3.2\times10^{-19}$, 30/0/0 wins, $d_z=3.88$), +3.58\,pp over a Ridge probe ($p=7.0\times10^{-19}$), and +41.80\,pp over 896-D Tip-Adapter. Against BD-CSPN the gain is +2.59\,pp and against TIM +6.01\,pp, so propagation alone is not sufficient; the specific Laplacian objective is what crosses the line. Comparing transductive recalibration against our own inductive baseline (Table~\ref{tab:paired_test}) yields a mean paired improvement of +2.33\,pp ($p=2.2\times10^{-12}$, Wilcoxon $p=1.9\times10^{-9}$). With a win/loss record of 30/0/0 and Cohen's $d_z=2.11$, closed-form pseudo-label recalibration consistently resolves prototype misalignment; the operative limitation is that it does so without a query-set graph, which is the source of the residual gap in the batch regime.
 
 % -----------------------------------------------------------------------------
 % 5.3 Systematic Component Ablation
