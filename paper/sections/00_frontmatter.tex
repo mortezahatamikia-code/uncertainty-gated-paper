@@ -22,10 +22,10 @@ At inference, an uncertainty gate uses normalized Shannon entropy and top-2 marg
 
 \begin{highlights}
 \item Gradient-free foliar pathology adapting frozen DINOv2 and BioCLIP encoders.
-\item Ledoit--Wolf shrinkage resolves small-sample covariance singularity on edge CPUs.
-\item Shannon-margin gate routes routine leaves to a 59.78\,ms Tier-1 path.
-\item Closed-form transductive recalibration adapts to distribution shift in 0.53\,s.
-\item 97.41\% accuracy on PlantVillage with 0.702\% false-negative disease escapes.
+\item Closed-form adaptation stably learns from scarce samples without backpropagation.
+\item Uncertainty gate pairs a 60\,ms fast visual path with a 165\,ms deep companion tier.
+\item Background recalibration adapts to field shifts in 0.53\,s without inference delay.
+\item 97.41\% accuracy on PlantVillage with false-negative rate below 0.75\%.
 \end{highlights}
 
 \begin{keyword}

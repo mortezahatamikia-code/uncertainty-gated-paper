@@ -1,0 +1,92 @@
+% =============================================================================
+% 3. PROBLEM FORMULATION AND ENGINEERING PRELIMINARIES
+% =============================================================================
+\section{Problem Formulation and Engineering Preliminaries}
+\label{sec:problem_formulation}
+
+\subsection{Physical System Setup and Operational Boundaries}
+\label{sec:physical_setup}
+The target deployment setting for on-device foliar diagnosis is illustrated in Fig.~\ref{fig:architecture}. An automated agricultural platform---such as a handheld scouting terminal or an autonomous ground vehicle traversing crop rows---captures RGB images of plant leaves via an onboard CMOS sensor ($\mathbf{x} \in \mathbb{R}^{H \times W \times 3}$). The edge compute unit evaluates each leaf to predict its pathology state $\hat{y} \in \{1, \dots, C\}$. The output drives downstream decisions: generating targeted spray triggers for precision nozzles or flagging infected plants for agronomist inspection.
+
+Operating directly within commercial orchards and fields imposes four concrete operational constraints:
+\begin{enumerate}
+    \item \textbf{Offline Execution Constraint ($g_{\text{net}} = 0$):} Farmland environments frequently lack reliable cellular or cloud connectivity. All inference, calibration, and memory management must execute locally on device without network requests.
+    \item \textbf{Computational Latency Constraint ($g_{\text{lat}} \le 0$):} Real-time scouting platforms moving at typical field speeds require per-leaf evaluation latencies below $T_{\max} = 170$\,ms (maintaining at least 6--10 frames per second), with routine foliage processed under 100\,ms:
+    \begin{equation}
+        g_{\text{lat}}(\mathbf{x}) = t_{\text{inf}}(\mathbf{x}) - T_{\max} \le 0
+    \end{equation}
+    \item \textbf{Memory and Gradient Budget ($g_{\text{RAM}} \le 0, \, g_{\text{grad}} = 0$):} Edge microprocessors share volatile memory across operating systems and sensor drivers. Peak proportional set size (PSS) must remain within $M_{\max} = 2.0$\,GB. Furthermore, backpropagation, autograd graphs, and optimizer states are prohibited on device to prevent thermal throttling:
+    \begin{equation}
+        g_{\text{RAM}} = M_{\text{peak}} - M_{\max} \le 0, \qquad g_{\text{grad}} = \|\nabla_\theta \mathcal{L}\| = 0
+    \end{equation}
+    \item \textbf{False-Negative Risk Bound ($g_{\text{FNR}} \le 0$):} In agricultural crop protection, classifying an infected leaf as healthy (false negative) causes untreated pathogen spread. The false-negative rate on disease classes must remain below an operational tolerance $\epsilon_{\text{fnr}} = 0.01$ (1\%):
+    \begin{equation}
+        g_{\text{FNR}} = \text{FNR}_{\text{disease}} - \epsilon_{\text{fnr}} \le 0
+    \end{equation}
+\end{enumerate}
+
+\subsection{Mathematical Notation and Objective}
+\label{sec:notation}
+In foliar few-shot learning, the target model adapts to novel classes from a small support set $\mathcal{S} = \{(\mathbf{x}_i, y_i)\}_{i=1}^{N_s}$, containing $K$ labeled images for each of $C$ novel disease classes ($N_s = C \cdot K$, with $y_i \in \{1, \dots, C\}$). The novel classes are disjoint from any base training categories ($\mathcal{Y}_{\text{base}} \cap \mathcal{Y}_{\text{novel}} = \emptyset$). Given an unannotated query leaf $\mathbf{x}_q \in \mathcal{Q}$, the objective is to learn a decision rule $f(\cdot; \mathcal{S})$ that maximizes diagnostic accuracy on held-out test foliage while satisfying the operational boundaries:
+\begin{equation}
+    \max_f \; \mathbb{E}_{(\mathbf{x}, y) \sim \mathcal{D}_{\text{test}}} \left[ \mathbb{I}(f(\mathbf{x}; \mathcal{S}) = y) \right] \quad \text{s.t.} \quad g_{\text{lat}} \le 0, \; g_{\text{RAM}} \le 0, \; g_{\text{grad}} = 0, \; g_{\text{FNR}} \le 0
+\end{equation}
+Table~\ref{tab:notation} summarizes the mathematical notations used throughout the paper.
+
+\begin{table*}[htbp]
+\caption{Summary of mathematical notations and descriptions used in BioDINO-Edge.}
+\label{tab:notation}
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Notation} & \textbf{Mathematical Description and Operational Meaning} \\
+\midrule
+$C, K$ & Number of disease classes ($C=11$ in PlantVillage, $C=27$ in PlantDoc) and shots per class ($K=5$). \\
+$\phi_{\text{dino}}(\cdot)$ & Frozen DINOv2 Small ($14\times 14$ patches) visual backbone extracting $\mathbf{f}_{\text{dino}} \in \mathbb{R}^{384}$. \\
+$\phi_{\text{bio}}(\cdot)$ & Frozen BioCLIP ViT-B/16 visual encoder extracting $\mathbf{f}_{\text{bio}} \in \mathbb{R}^{512}$. \\
+$\mathbf{z} \in \mathbb{R}^{896}$ & Concatenated joint foliar descriptor: $\mathbf{z} = [\mathbf{f}_{\text{bio}} \,\|\, \mathbf{f}_{\text{dino}}] \in \mathbb{R}^{896}$. \\
+$\mathbf{P}_{\text{dino}}$ & Visual prototype matrix for Tier-1 fast cosine matching ($\mathbb{R}^{C \times 384}$). \\
+$\mathbf{P}_{\text{text}}$ & Botanical taxonomic text prototype matrix for Tier-2 multimodal consensus ($\mathbb{R}^{C \times 512}$). \\
+$\mathbf{S}_W, \hat{\mathbf{\Sigma}}$ & Empirical pooled within-class scatter matrix and Ledoit--Wolf regularized covariance matrix. \\
+$\rho^*, \nu$ & Optimal analytical shrinkage intensity $\rho^* \in (0, 1]$ and mean trace scaling factor $\nu$. \\
+$\mathbf{W}, \mathbf{b}$ & Fisher-LDA discriminant projection weight matrix ($\mathbb{R}^{C \times 896}$) and class bias vector ($\mathbb{R}^C$). \\
+$\mathcal{C}(\mathbf{x})$ & Shannon-margin confidence score gating query routing between Tier-1 and Tier-2. \\
+$\tau, \tau_{\text{conf}}$ & Confidence escalation routing threshold ($\tau = 0.35$, calibrated on held-out development episodes). \\
+$w_{\text{lda}}$ & Multimodal consensus blend weight ($w_{\text{lda}} = 0.75$, weighting Fisher-LDA visual versus taxonomic text posteriors in Tier~2). \\
+$\gamma$ & Inverse temperature logit scaling parameter ($\gamma = 20.0$). \\
+$\mathcal{Q}_{\text{anchor}}^{(c)}$ & High-confidence streaming query anchors ($\max_c p_c \ge 0.70$) for transductive recalibration. \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection{Theoretical Preliminaries}
+\label{sec:preliminaries}
+
+\subsubsection{Isotropic Metric Matching and Background Variance}
+Conventional metric-based few-shot learners classify queries by measuring the Euclidean distance or cosine similarity to class centroids:
+\begin{equation}
+    \hat{y}_q = \arg\min_{c \in \{1, \dots, C\}} \|\phi(\mathbf{x}_q) - \mathbf{c}_c\|_2^2, \qquad \mathbf{c}_c = \frac{1}{|\mathcal{S}_c|}\sum_{\mathbf{x} \in \mathcal{S}_c} \phi(\mathbf{x})
+\end{equation}
+This formulation implicitly assumes that feature variance is isotropic and identically distributed across all latent dimensions ($\mathbf{\Sigma}_c = \sigma^2 \mathbf{I}$). In foliar pathology, this assumption leads to systematic errors. Foliar images contain shared morphological structures---such as healthy green chlorophyll pigmentation, background leaf venation, and specular surface reflection---that span high-variance directions in the feature space. Because isotropic metrics weight all dimensions equally, distances are dominated by non-pathological variations rather than subtle, low-variance necrotic lesion characteristics.
+
+\subsubsection{Small-Sample Covariance Singularity}
+Fisher Linear Discriminant Analysis accounts for feature covariance by finding projection directions that maximize between-class scatter $\mathbf{S}_B$ relative to within-class scatter $\mathbf{S}_W$. The multiclass optimal projection requires inverting the pooled covariance estimate:
+\begin{equation}
+    \mathbf{W} \propto \mathbf{S}_W^{-1} [\boldsymbol{\mu}_1 - \bar{\boldsymbol{\mu}}, \dots, \boldsymbol{\mu}_C - \bar{\boldsymbol{\mu}}]^T
+\end{equation}
+However, in few-shot agricultural deployment, the total number of support examples $N_s$ is substantially smaller than the feature dimension $d$ ($N_s \ll d$). For $K=5$ and $C=11$, the sample size without augmentation is $N_s = 55$, while the joint feature dimension is $d = 896$. The empirical within-class scatter matrix $\mathbf{S}_W$ has rank at most $N_s - C < d$, rendering it mathematically singular and non-invertible. Standard pseudoinverse approaches or diagonal loading introduce numerical instability and arbitrary scaling, demonstrating the need for an exact, closed-form shrinkage estimator.
+
+\subsubsection{Selective Classification Framework}
+To satisfy real-time latency while containing diagnostic error, we frame foliar diagnosis within selective classification. A selective classifier is defined by a pair $(f, g)$, where $f: \mathcal{X} \to \mathcal{Y}$ is the base prediction function and $g: \mathcal{X} \to \{0, 1\}$ is a qualification function:
+\begin{equation}
+    (f, g)(\mathbf{x}) = \begin{cases}
+        f(\mathbf{x}), & \text{if } g(\mathbf{x}) = 1 \\
+        \text{escalate or abstain}, & \text{if } g(\mathbf{x}) = 0
+    \end{cases}
+\end{equation}
+The qualification function $g(\mathbf{x})$ is governed by a confidence estimator $\mathcal{C}(\mathbf{x})$ thresholded at $\tau$:
+\begin{equation}
+    g(\mathbf{x}) = \mathbb{I}(\mathcal{C}(\mathbf{x}) \ge \tau)
+\end{equation}
+The performance of a selective architecture is characterized by its coverage $\Phi(\tau) = \mathbb{E}[g(\mathbf{x})]$ and its selective risk $R(f, g) = \mathbb{E}[\ell(f(\mathbf{x}), y) \mid g(\mathbf{x}) = 1]$. In our edge setting, queries with $g(\mathbf{x})=1$ exit immediately at the lightweight Tier-1 stage, whereas queries with $g(\mathbf{x})=0$ are escalated to Tier-2 multimodal consensus, bounding overall system risk while minimizing computational latency.

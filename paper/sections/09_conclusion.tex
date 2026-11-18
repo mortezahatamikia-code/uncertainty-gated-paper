@@ -1,6 +1,18 @@
-% 9. CONCLUSION
 % =============================================================================
-\section{Conclusion}
+% 8. CONCLUSION AND FUTURE DIRECTIONS
+% =============================================================================
+\section{Conclusion and Future Directions}
 \label{sec:conclusion}
-We presented \textbf{BioDINO-Edge}, a gradient-free few-shot framework that adapts frozen DINOv2 and BioCLIP foundation models for on-device plant disease diagnosis without backpropagation. Closed-form Ledoit--Wolf shrinkage resolves small-sample covariance singularity ($N \ll d$), down-weighting shared vegetative background variance and enabling Fisher-LDA projection in $\approx$0.53\,s on a mobile CPU. An adaptive confidence gate combining normalized Shannon entropy and top-2 margin routes routine foliage to a 59.78\,ms Tier-1 path ($\approx$16.7\,FPS), escalating ambiguous queries to a multimodal Tier-2 classifier with closed-form transductive recalibration. The system ships as a modular Android client and executes both tiers on the phone CPU without network access. It reaches 97.41\% $\pm$ 0.71\% accuracy on PlantVillage with a 0.702\% false-negative rate, and 84.22\% $\pm$ 11.24\% in 5-way 5-shot testing on PlantDoc.
 
+This paper presented \textbf{BioDINO-Edge}, an on-device few-shot framework for foliar plant disease diagnosis that operates without gradient computation or backpropagation. By coupling frozen vision foundation models (DINOv2 Small) with botanical vision--language encoders (BioCLIP ViT-B/16), the architecture forms a joint 896-dimensional descriptor capturing localized lesion morphology alongside taxonomic context. Regularized Fisher-LDA with Ledoit--Wolf shrinkage resolves the small-sample covariance singularity ($N \ll d$), completing parameter adaptation in 533.99\,ms on an ARM64 CPU. At inference, a dual-metric Shannon-margin uncertainty gate routes routine foliage through a 59.78\,ms Tier-1 path while reserving deeper multimodal consensus and transductive recalibration for ambiguous queries, reducing overall latency to 149.84\,ms per leaf. Across 30 benchmark episodes, BioDINO-Edge achieved 97.41\% $\pm$ 0.71\% accuracy on PlantVillage with a 0.702\% false-negative rate, and reached 84.22\% $\pm$ 11.24\% in 5-way 5-shot field evaluation on PlantDoc.
+
+\subsection{Engineering Limitations}
+Several practical limitations remain relevant for agricultural deployment:
+\begin{enumerate}
+    \item \textbf{Canopy Illumination Shifts:} Severe specular reflection from wet foliage and direct solar glare can alter localized color distributions, occasionally causing healthy leaves with reflective sheen to be flagged as ambiguous by the Tier-1 gate.
+    \item \textbf{Motion and Focus Artifacts:} When cameras operate on moving tractors or handheld scouting rigs, severe motion blur or incorrect focal distance degrades patch-level textural features, necessitating an optical quality pre-filtering check prior to feature extraction.
+    \item \textbf{Out-of-Vocabulary Pathologies:} While the botanical text prompt matrix $\mathbf{P}_{\text{text}}$ leverages taxonomic descriptions, novel emerging strains whose symptom morphology deviates substantially from published histological profiles require manual template calibration by an agronomist before deployment.
+\end{enumerate}
+
+\subsection{Future Directions}
+Future work will focus on two technical directions. First, we plan to compile the frozen visual backbones to dedicated edge Neural Processing Units (NPUs) using mixed-precision INT4/INT8 quantization via Qualcomm QNN and MediaTek NeuroPilot delegates. Because NPU architectures process dense matrix operations with low power consumption, this can reduce Tier-2 latency below 30\,ms and support continuous video-rate diagnosis. Second, we aim to integrate BioDINO-Edge directly into the closed-loop controller of an autonomous robotic sprayer, linking real-time foliar classification to selective variable-rate nozzle actuation in commercial crop fields.

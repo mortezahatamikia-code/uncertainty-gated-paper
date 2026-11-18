@@ -64,7 +64,7 @@ DINOv2 only & 384 & 90.60$\pm$2.02 & 95.54$\pm$1.03 \\
 
 \textbf{Contribution of DINOv2.} Table~\ref{tab:feature_ablation} isolates the Fisher input while holding the text branch fixed (BioCLIP features, $w_{\mathrm{lda}}=0.75$); ablated rows subtract the paired contribution from the full-system benchmark. Removing DINOv2 (BioCLIP-only, 512-D) lowers transductive accuracy by 0.90 percentage points (paired $t(29)=9.88$, $p=8.6\times10^{-11}$; it wins on 29 of 30 episodes; $d_z=1.80$). Removing BioCLIP instead lowers it by 1.87 points, so BioCLIP carries most of the class signal and DINOv2 adds a smaller, consistent complement. DINOv2 also serves as the routing gate: its margin-entropy score ranks query safety better than the Tier-2 consensus confidence (mean Area Under the Risk--Coverage curve (AURC) 1.14\% vs.\ 2.11\% over the 30 episodes). Finally, it provides the fast path: accepting 14.02\% of queries at Tier-1 lowers routing-weighted latency from 164.52\,ms (BioCLIP on every query) to 149.84\,ms. The cascade does not raise accuracy over running Tier-2 on all queries (Table~\ref{tab:tier_routing}); its function is to reduce edge compute and route low-risk queries through a path with 0.25\% FNR.
 
-\textbf{Field-domain ablation.} The same component ladder is informative on PlantDoc, where host species differ and the 27-way task is much harder (Table~\ref{tab:plantdoc_ablation}). Text prototypes alone collapse to 19.05\% accuracy and 6.45\% macro F1, because a caption cannot separate lesions on different hosts. BioCLIP visual prototypes reach 50.00\%, DINOv2 alone 40.08\%, and the static 0.65/0.35 blend of their logits 54.37\%. The regularized Fisher projection over the joint 896-D space reaches 46.83\% inductively: on field imagery, discriminant directions estimated from 135 support leaves over 27 classes are too weakly conditioned to beat a plain logit blend, and the projection only recovers above it after transductive recalibration (50.79\%). We therefore report PlantDoc as a routing and adaptation result rather than as evidence that Fisher-LDA dominates isotropic matching in the field, consistent with the single-run caveat in Table~\ref{tab:plantdoc_context}.
+\textbf{Field-domain ablation.} The same component ladder is informative on PlantDoc, where host species differ and the 27-way task is much harder (Table~\ref{tab:plantdoc_ablation}). Text prototypes alone reach 34.92\% accuracy and 29.34\% macro F1, because botanical captions alone cannot separate subtle foliar lesions across unconstrained field foliage without leaf imagery. BioCLIP visual prototypes reach 51.98\%, DINOv2 alone 42.46\%, and the static 0.65/0.35 blend of their logits 53.17\%. The regularized Fisher projection over the joint 896-D space reaches 46.03\% inductively: on field imagery, discriminant directions estimated from 135 support leaves over 27 classes are too weakly conditioned to beat a plain logit blend, and the projection recovers to 51.19\% after transductive recalibration (51.59\% under deployed INT8 execution). We therefore report PlantDoc as a routing and adaptation result rather than as evidence that Fisher-LDA dominates isotropic matching in the field, consistent with the single-run caveat in Table~\ref{tab:plantdoc_context}.
 
 \begin{table}[htbp]
 \caption{PlantDoc component ladder (27-way, 5-shot, single run over 252 field queries).}
@@ -77,12 +77,12 @@ DINOv2 only & 384 & 90.60$\pm$2.02 & 95.54$\pm$1.03 \\
 \toprule
 \textbf{Configuration / Component} & \textbf{Acc. (\%)} & \textbf{Macro F1 (\%)} \\
 \midrule
-(1) Text prototypes only & 19.05 & 6.45 \\
-(2) Fast-path DINOv2 Small alone & 40.08 & 36.69 \\
-(3) Deep-path BioCLIP ViT-B alone & 50.00 & 51.73 \\
-(4) Static logit blend ($0.65$ bio $+$ $0.35$ dino) & 54.37 & 54.89 \\
-(5) + Regularized Fisher alignment (inductive) & 46.83 & 45.55 \\
-(6) + Transductive recalibration & 50.79 & 50.73 \\
+(1) Text prototypes only & 34.92 & 29.34 \\
+(2) Fast-path DINOv2 Small alone & 42.46 & 39.05 \\
+(3) Deep-path BioCLIP ViT-B alone & 51.98 & 53.55 \\
+(4) Static logit blend ($0.65$ bio $+$ $0.35$ dino) & 53.17 & 53.25 \\
+(5) + Regularized Fisher alignment (inductive) & 46.03 & 45.04 \\
+(6) + Transductive recalibration & 51.19 & 51.11 \\
 \bottomrule
 \end{tabular*}
 \end{table}
