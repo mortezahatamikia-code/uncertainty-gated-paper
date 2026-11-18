@@ -48,7 +48,41 @@ Table~\ref{tab:fair_baselines} closes two gaps that would otherwise undermine th
 
 The outcome is mixed and we report it as measured. Against every inductive comparator on 896-D features, the gain is large and consistent: +3.58\,pp over Ridge, +3.78 over multinomial logistic regression, +4.12 over Prototypical Networks, +41.80 over 896-D Tip-Adapter (30/0/0 episodes each). Against transductive label propagation the picture reverses: LaplacianShot reaches 97.93\% against our 97.41\% on the 11-class task ($-0.53$\,pp, paired $p=1.0\times10^{-3}$, losing 25 of 30 episodes) and 99.27\% against 98.78\% at 5-way 5-shot. TIM and BD-CSPN both fall below us (+6.01 and +2.59\,pp in our favour).
 
-We also tested whether the Fisher projection can be combined with propagation, since that would have been the strongest possible configuration. Projecting through the fitted discriminant before building the affinity graph \emph{degrades} it (91.68\% versus 97.93\%), and summing raw and projected affinities recovers only 96.40\%. The projection collapses 896 dimensions onto $C$ discriminant directions, which preserves class separation but destroys the local neighbourhood structure that propagation exploits. We therefore do not claim state-of-the-art transductive accuracy: label propagation is the stronger estimator here, and the contribution of this work is that a closed-form, anchor-based recalibration reaches within 0.53\,pp of it while satisfying the on-device constraints of Section~\ref{sec:problem_formulation}---no affinity graph over the query set, no iterative solve, and 0.53\,s of algebra on the phone.
+We also tested whether the Fisher projection can be combined with propagation, since that would have been the strongest possible configuration. Projecting through the fitted discriminant before building the affinity graph \emph{degrades} it (91.68\% versus 97.93\%), and summing raw and projected affinities recovers only 96.40\%. The projection collapses 896 dimensions onto $C$ discriminant directions, which preserves class separation but destroys the local neighbourhood structure that propagation exploits.
+
+\textbf{The batch requirement changes the comparison.} LaplacianShot's advantage is a small-batch-free advantage: label propagation builds a $k$-nearest-neighbour graph over the pooled support and query set, so it cannot label a leaf until the whole query set is visible. A phone diagnoses one leaf, returns an answer, and forgets it. We therefore measured both methods on identical random query subsets of decreasing size (Table~\ref{tab:batchsize}), which is the operating condition of a shutter-triggered field device. The ordering reverses sharply. At 100 queries LaplacianShot reaches 76.90\% against our 95.27\%; at 25 queries it falls to 55.33\% against 96.13\%. Only when the entire 9{,}330-query set is available at once does it edge ahead (97.87\% versus 97.59\%). The mechanism is direct: with few queries the $k$NN graph is sparse and mostly disconnected, so labels propagate within isolated islands seeded by whatever support leaves happen to be nearby, and the balanced-marginal assumption that makes propagation work at scale is estimated from too few samples. Recalibration depends far less on batch size because each leaf is scored by the discriminant fitted on the support set; the residual 2.3\,pp drop from 97.59\% to 95.27\% comes from its anchor buffer drawing on fewer pseudo-labels, not from any graph structure.
+
+This reframes the contribution rather than rescuing it. LaplacianShot, BD-CSPN, and TIM are batch transductive methods: they assume the lab protocol where the test set is a fixed pool. BioDINO-Edge is incremental, and Section~\ref{sec:ablation} quantifies the streaming behaviour. We therefore report both regimes and claim neither state of the art in the batch setting nor equivalence in it: in the fixed-pool protocol LaplacianShot is genuinely stronger, and the residual 0.53\,pp gap is not something this paper closes.
+
+The algebraic cost also differs in direction depending on scale, and not always in our favour. On this desktop CPU the full 9{,}330-query batch costs 1.50\,s for propagation against 0.66\,s for recalibration, so we are 2.3$\times$ cheaper at that size. But at 252 queries over 27 classes propagation costs 70\,ms against our 889\,ms, because the discriminant is fitted over 135 support leaves in 27 classes and the Cholesky solve is $O(d^3)$ in a 896-dimensional space regardless of how few queries there are. For the field regime, where a scouting pass sees a few hundred leaves, the on-device cost of recalibration is therefore dominated by the fixed fit, not by the number of queries. These are desktop CPU timings and are not device measurements; the phone numbers in Section~\ref{sec:edge_hardware} are the ones to quote for deployment.
+
+\begin{table}[htbp]
+\caption{Accuracy versus the number of queries visible at decision time (11-class, 5-shot, 10 episodes $\times$ 3 random subsets, paired).}
+\label{tab:batchsize}
+\centering
+
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc}
+\toprule
+\textbf{Queries visible} & \textbf{LaplacianShot (\%)} & \textbf{BioDINO-Edge (\%)} & \textbf{$\Delta$ (pp)} \\
+\midrule
+25 & 55.33 & \textbf{96.13} & $+40.80$ \\
+50 & 63.47 & \textbf{95.60} & $+32.13$ \\
+100 & 76.90 & \textbf{95.27} & $+18.37$ \\
+250 & 87.11 & \textbf{96.64} & $+9.53$ \\
+500 & 90.68 & \textbf{96.87} & $+6.19$ \\
+1{,}000 & 92.76 & \textbf{97.19} & $+4.43$ \\
+All (9{,}330) & \textbf{97.87} & 97.59 & $-0.28$ \\
+\bottomrule
+\end{tabular*}
+
+\vspace{3pt}
+\begin{minipage}{\columnwidth}
+\footnotesize
+\textit{Notes.} Each cell labels the same random query subset using only the support set and that subset. Both methods see identical subsets, and the full-batch row reproduces the 11-class entry of Table~\ref{tab:fair_baselines} to within the 10-episode subsample. Propagation cannot operate on a single leaf, so its small-batch rows are not a tuning artifact but the method's definition.
+\end{minipage}
+\end{table}
 
 \begin{table*}[htbp]
 \caption{Fair-baseline comparison on identical episodes. Upper block: inductive comparators on the same 896-D BioCLIP+DINOv2 features used by BioDINO-Edge. Lower block: transductive methods run on those features. Semi-supervised propagation sees the whole query set at once; BioDINO-Edge sees only confident anchors.}
