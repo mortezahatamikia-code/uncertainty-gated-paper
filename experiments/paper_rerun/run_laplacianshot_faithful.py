@@ -92,7 +92,8 @@ def laplacianshot(s, sy, q, C, lam=0.75, k=10, iters=50):
     return Y.argmax(1)
 
 
-def fisher_anchor(s, sy, q, q_bio, text_protos, C):
+def fisher_anchor(s, sy, q, q_bio, text_protos, C,
+                  support_weight=3, max_anchors=20, conf_threshold=0.70):
     from core_math import compute_fisher_ensemble_probs, refine_transductive
     qt = torch.tensor(q, dtype=torch.float32)
     W, b, _ = fit_fisher_lda(s, sy, device="cpu")
@@ -103,8 +104,9 @@ def fisher_anchor(s, sy, q, q_bio, text_protos, C):
     rp, _, _ = refine_transductive(
         support_features=s, support_labels=sy, query_features=qt,
         initial_preds=prob.argmax(-1).numpy(), confidences=prob.max(dim=-1).values,
-        text_prob=txt, n_classes=C, support_weight=3, max_anchors=20,
-        conf_threshold=0.70, device="cpu", w_lda=0.75)
+        text_prob=txt, n_classes=C, support_weight=support_weight,
+        max_anchors=max_anchors, conf_threshold=conf_threshold,
+        device="cpu", w_lda=0.75)
     return rp
 
 

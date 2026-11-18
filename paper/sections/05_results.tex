@@ -54,7 +54,7 @@ We also tested whether the Fisher projection can be combined with propagation, s
 
 \textbf{The batch requirement changes the comparison.} LaplacianShot's advantage is a whole-pool advantage: the pairwise term is a graph over the query set, so the method cannot label a leaf until a batch exists. We therefore ran the solver under three deployment strategies on the same episodes and the same query ordering, using 600 queries per episode so the growing-buffer variant stays tractable (Table~\ref{tab:batchsize}). Labelling one leaf at a time with no buffer degenerates to nearest-prototype and costs 3.00\,pp. A growing buffer recovers most of the loss but not all: at 25 buffered queries it is 9.62\,pp behind, at 100 it is 5.96\,pp behind, and at 200 it is 2.65\,pp behind (8/0 episodes each). Only when the entire query set is present does it draw level and then lead, which is what the full-pool rows above show. The buffer narrows the gap steadily rather than eliminating it, so we do not claim that a small buffer restores parity: on this evidence parity requires the full pool.
 
-This reframes the contribution rather than rescuing it. LaplacianShot, BD-CSPN, and TIM are batch transductive methods: they assume the lab protocol where the test set is a fixed pool. BioDINO-Edge is incremental, and Section~\ref{sec:ablation} quantifies the streaming behaviour. We therefore report both regimes and claim neither state of the art in the batch setting nor equivalence in it: in the fixed-pool protocol LaplacianShot is genuinely stronger by 1.08\,pp, and that gap is not something this paper closes.
+This reframes the contribution rather than rescuing it. LaplacianShot, BD-CSPN, and TIM are batch transductive methods: they assume the lab protocol where the test set is a fixed pool. BioDINO-Edge is incremental, and Section~\ref{sec:ablation} quantifies the streaming behaviour. We therefore report both regimes and claim neither state of the art in the batch setting nor equivalence in it: in the fixed-pool protocol on the controlled split, LaplacianShot is genuinely stronger by 1.08\,pp, and that gap is not something this paper closes on that benchmark. On the field benchmark the comparison reverses sharply (Table~\ref{tab:plantdoc_laplacian}).
 
 The algebraic cost also differs in direction depending on scale, and not always in our favour. On this desktop CPU the full 9{,}330-query batch costs 1.50\,s for propagation against 0.66\,s for recalibration, so we are 2.3$\times$ cheaper at that size. But at 252 queries over 27 classes propagation costs 70\,ms against our 889\,ms, because the discriminant is fitted over 135 support leaves in 27 classes and the Cholesky solve is $O(d^3)$ in a 896-dimensional space regardless of how few queries there are. For the field regime, where a scouting pass sees a few hundred leaves, the on-device cost of recalibration is dominated by the fixed fit, not by the number of queries. These are desktop CPU timings and are not device measurements; the phone numbers in Section~\ref{sec:edge_hardware} are the ones to quote for deployment.
 
@@ -142,7 +142,32 @@ All-class stress test (simultaneous) & 27 & 5 & \underline{46.03} & \textbf{51.1
 \end{minipage}
 \end{table}
 
-\textbf{Engineering interpretation of field deployment.} PlantDoc presents severe environmental challenges: heterogeneous illumination, overlapping diseased canopies, and variable camera distances. While prior cross-dataset transfer models such as Zhao et al.~\cite{zhao2026lightweight} report 54.24\% on PlantDoc without target support, BioDINO-Edge rapidly adapts directly to target-domain field support without retraining. Combining cached botanical text prototypes with analytical Fisher projections provides a stable diagnostic anchor even in complex multi-leaf field scenes.
+\textbf{Engineering interpretation of field deployment.} PlantDoc presents severe environmental challenges: heterogeneous illumination, overlapping diseased canopies, and variable camera distances. While prior cross-dataset transfer models such as Zhao et al.~\cite{zhao2026lightweight} report 54.24\% on PlantDoc without target support, BioDINO-Edge adapts directly to target-domain field support without retraining. Combining cached botanical text prototypes with analytical Fisher projections provides a stable diagnostic anchor even in complex multi-leaf field scenes.
+
+\textbf{The ordering reverses on the field benchmark.} The PlantVillage result above favors LaplacianShot in the fixed-pool protocol, so we repeated the comparison on PlantDoc, where the paper's deployment claim actually lives (Table~\ref{tab:plantdoc_laplacian}). Here the ranking inverts decisively: BioDINO-Edge reaches 50.79\% against 32.14\% in the 27-way stress test, and 85.01\% against 62.72\% in 5-way 5-shot (paired $p=7.5\times10^{-16}$, winning 50 of 50 episodes). The reason is visible in the component ladder: on PlantDoc the text prior and the regularized discriminant carry a large share of the signal, whereas LaplacianShot uses only cosine similarity to visual prototypes and has no botanical branch. We report both datasets rather than only the favourable one, and the honest summary is that LaplacianShot is stronger on the controlled laboratory split and substantially weaker on the field split.
+
+\begin{table}[htbp]
+\caption{Transductive comparison on the field benchmark (PlantDoc, deployed INT8 binaries, identical support and features).}
+\label{tab:plantdoc_laplacian}
+\centering
+
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccc}
+\toprule
+\textbf{Regime} & \textbf{LaplacianShot (\%)} & \textbf{BioDINO-Edge (\%)} & \textbf{$\Delta$ (pp)} \\
+\midrule
+27-way, 252 field queries & 32.14 & \textbf{50.79} & $+18.65$ \\
+5-way 5-shot, 50 episodes & 62.72 & \textbf{85.01} & $+22.29$ \\
+\bottomrule
+\end{tabular*}
+
+\vspace{3pt}
+\begin{minipage}{\columnwidth}
+\footnotesize
+\textit{Notes.} Both methods receive the same 135 support leaves (8-view augmented to 1{,}080 vectors) and the same 896-D features. LaplacianShot uses $\lambda=2.0$ and the query-graph solver of Section~\ref{sec:comparative_results}; BioDINO-Edge uses the deployed field constants ($w_{\sup}=1$, 2 anchors/class, no confidence threshold) of Section~\ref{sec:experiments_setup}. The 5-way row is a paired mean over 50 episodes ($p=7.5\times10^{-16}$, 50/0 win/loss) recomputed inside one harness so that both columns are comparable; its ``ours'' entry (85.01\%) reproduces the pipeline reference of Table~\ref{tab:plantdoc_context} (84.22\%) to within 0.8\,pp, the difference coming from restricting episodes to classes with at least two test leaves. The 27-way row is a single run and differences should be read with the single-run caveat of Table~\ref{tab:plantdoc_context}.
+\end{minipage}
+\end{table}
 
 % -----------------------------------------------------------------------------
 % 5.2 Statistical Significance and Hypothesis Testing
