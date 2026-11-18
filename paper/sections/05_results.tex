@@ -118,7 +118,7 @@ BioDINO-Edge transductive (896-D) & \textbf{93.42$\pm$6.83} & \underline{98.78$\
 \end{minipage}
 \end{table*}
 
-Table~\ref{tab:plantdoc_context} extends this evaluation to unconstrained field imagery via the PlantDoc benchmark~\cite{singh2020plantdoc}. In 5-way 5-shot episodic testing over 50 Monte Carlo episodes, BioDINO-Edge achieves 84.22\%$\pm$11.24\% accuracy (transductive macro F1 83.93\%). In the simultaneous 27-class stress test over 252 field test leaves, it attains 51.19\% accuracy and 51.11\% macro F1 (against a 3.70\% random chance floor), placing the discriminative projection only after recalibration ahead of a plain logit blend (Table~\ref{tab:plantdoc_ablation}).
+Table~\ref{tab:plantdoc_context} extends this evaluation to unconstrained field imagery via the PlantDoc benchmark~\cite{singh2020plantdoc}. In 5-way 5-shot episodic testing over 50 Monte Carlo episodes, BioDINO-Edge achieves 84.22\%$\pm$11.24\% accuracy (transductive macro F1 83.93\%). In the simultaneous 27-class stress test over 252 field test leaves, it attains 50.79\% accuracy and 51.04\% macro F1 (against a 3.70\% random chance floor), placing the discriminative projection only after recalibration ahead of a plain logit blend (Table~\ref{tab:plantdoc_ablation}).
 
 \begin{table}[htbp]
 \caption{In-the-wild field evaluation of BioDINO-Edge on PlantDoc.}
@@ -131,7 +131,7 @@ Table~\ref{tab:plantdoc_context} extends this evaluation to unconstrained field 
 \textbf{Evaluation Regime} & \textbf{Classes} & \textbf{Shots} & \textbf{Inductive (\%) ($\uparrow$)} & \textbf{Transductive (\%) ($\uparrow$)} \\
 \midrule
 5-way 5-shot episodic (PlantDoc train/test splits) & 5 & 5 & \underline{82.05$\pm$11.24} & \textbf{84.22$\pm$11.24} \\
-All-class stress test (simultaneous) & 27 & 5 & \underline{46.03} & \textbf{51.19} \\
+All-class stress test (simultaneous) & 27 & 5 & \underline{47.22} & \textbf{50.79} \\
 \bottomrule
 \end{tabularx}
 
@@ -268,9 +268,9 @@ DINOv2 alone & 384 & 90.60$\pm$2.02 & 95.54$\pm$1.03 \\
 
 Table~\ref{tab:feature_ablation} shows that removing DINOv2 degrades transductive accuracy by 0.90\,pp ($t(29)=9.88$, $p=8.6\times10^{-11}$, winning on 29 of 30 episodes). Removing BioCLIP degrades it by 1.87\,pp. Hence, BioCLIP provides global taxonomic separation, while DINOv2 supplies localized boundary discriminators and powers the 59.78\,ms early-exit gate.
 
-\textbf{Why the Fisher projection loses to a static blend in the field.} On the 27-way PlantDoc task the ordering inverts: the static logit blend reaches 53.17\% while the regularized Fisher projection reaches 46.03\% ($-7.14$\,pp) and recovers only to 51.19\% after recalibration (Table~\ref{tab:plantdoc_ablation}). This is the sharpest limitation in the paper and it has a concrete cause. Fisher-LDA estimates a single pooled within-class covariance over all 27 classes from 1{,}080 augmented support vectors. Each class contributes five independent leaves, so the between-class means are estimated from five samples while the covariance is shared across classes whose field appearance differs by host species, camera distance, and background. Under those conditions the pooled covariance is dominated by between-host nuisance variance, and whitening by $\hat{\mathbf{\Sigma}}^{-1}$ amplifies directions that separate hosts rather than pathologies. A static cosine blend applies no covariance estimate at all, so it carries no such estimation error---the same reason a diagonal probe is hard to beat when $N_s$ per class is small.
+\textbf{Why the Fisher projection loses to a static blend in the field.} On the 27-way PlantDoc task the ordering inverts: the static logit blend reaches 51.59\% while the regularized Fisher projection reaches 47.22\% ($-4.37$\,pp) and recovers only to 50.79\% after recalibration (Table~\ref{tab:plantdoc_ablation}). This is the sharpest limitation in the paper and it has a concrete cause. Fisher-LDA estimates a single pooled within-class covariance over all 27 classes from 1{,}080 augmented support vectors. Each class contributes five independent leaves, so the between-class means are estimated from five samples while the covariance is shared across classes whose field appearance differs by host species, camera distance, and background. Under those conditions the pooled covariance is dominated by between-host nuisance variance, and whitening by $\hat{\mathbf{\Sigma}}^{-1}$ amplifies directions that separate hosts rather than pathologies. A static cosine blend applies no covariance estimate at all, so it carries no such estimation error---the same reason a diagonal probe is hard to beat when $N_s$ per class is small.
 
-We did not add a PlantDoc hyperparameter sweep, so we do not claim to have diagnosed the cause experimentally; the pooled-covariance reading above is the mechanism consistent with the measurements, not a proven one. What the ladder does establish is the size of the effect: the deficit is $-7.14$\,pp inductively and narrows to $-1.98$\,pp once transductive anchors are admitted, so the projection is usable in the field only in combination with recalibration. We therefore treat Fisher-LDA as the right estimator for the controlled 11-class regime, where $N-C=429$ degrees of freedom support it, and report the field regime as a routing and adaptation result in which the simpler blend remains the stronger inductive classifier. A covariance-pooling scheme that estimates host-specific scatter, or a per-class shrinkage schedule, is the natural next step and is left to future work.
+We did not add a PlantDoc hyperparameter sweep, so we do not claim to have diagnosed the cause experimentally; the pooled-covariance reading above is the mechanism consistent with the measurements, not a proven one. What the ladder does establish is the size of the effect: the deficit is $-4.37$\,pp inductively and narrows to $-0.80$\,pp once transductive anchors are admitted, so the projection is usable in the field only in combination with recalibration. We therefore treat Fisher-LDA as the right estimator for the controlled 11-class regime, where $N-C=429$ degrees of freedom support it, and report the field regime as a routing and adaptation result in which the simpler blend remains the stronger inductive classifier. A covariance-pooling scheme that estimates host-specific scatter, or a per-class shrinkage schedule, is the natural next step and is left to future work.
 
 \begin{table}[htbp]
 \caption{PlantDoc component ladder (27-way, 5-shot, single run over 252 field queries).}
@@ -283,23 +283,23 @@ We did not add a PlantDoc hyperparameter sweep, so we do not claim to have diagn
 \toprule
 \textbf{Configuration / Component} & \textbf{Acc. (\%) ($\uparrow$)} & \textbf{Macro F1 (\%) ($\uparrow$)} \\
 \midrule
-(1) Text prototypes only & 34.92 & 29.34 \\
-(2) Fast-path DINOv2 Small alone & 42.46 & 39.05 \\
-(3) Deep-path BioCLIP ViT-B alone & 51.98 & \textbf{53.55} \\
-(4) Static logit blend ($0.65$ bio $+$ $0.35$ dino) & \textbf{53.17} & \underline{53.25} \\
-(5) $+$ Regularized Fisher alignment (inductive) & 46.03 & 45.04 \\
-(6) $+$ Transductive recalibration & \underline{51.19} & 51.11 \\
+(1) Text prototypes only & 33.73 & 29.37 \\
+(2) Fast-path DINOv2 Small alone & 40.08 & 36.90 \\
+(3) Deep-path BioCLIP ViT-B alone & 50.00 & \textbf{50.68} \\
+(4) Static logit blend ($0.65$ bio $+$ $0.35$ dino) & \textbf{51.59} & \underline{51.62} \\
+(5) $+$ Regularized Fisher alignment (inductive) & 47.22 & 45.87 \\
+(6) $+$ Transductive recalibration & \underline{50.79} & \underline{51.04} \\
 \bottomrule
 \end{tabular*}
 
 \vspace{3pt}
 \begin{minipage}{\columnwidth}
 \footnotesize
-\textit{Notes.} Support is 135 leaves expanded to 1{,}080 views; the query set is 252 field images. Rows (1)--(4) are inductive cosine or logit rules over prototypes; row (5) fits the regularized discriminant on the 896-D joint space; row (6) adds closed-form anchor recalibration. The INT8 columns of Table~\ref{tab:quantization} run the same ladder on the deployed binaries.
+\textit{Notes.} Support is 135 leaves expanded to 1{,}080 views; the query set is 252 field images. Rows (1)--(4) are inductive cosine or logit rules over prototypes; row (5) fits the regularized discriminant on the 896-D joint space; row (6) adds closed-form anchor recalibration. All rows are the deployed INT8 binaries, so these values are directly comparable with the transductive entry of Table~\ref{tab:plantdoc_context} and with Table~\ref{tab:plantdoc_laplacian}. The FP32 counterparts appear in Table~\ref{tab:quantization}: full precision raises the transductive row to 51.19\%, which is why an earlier version of this table carried that value.
 \end{minipage}
 \end{table}
 
-\textbf{Quantization resilience: FP32 vs.\ INT8.} To verify that post-training quantization does not impair mathematical stability, Table~\ref{tab:quantization} compares the complete pipeline executed in full-precision FP32 against INT8 ONNX binaries, rebuilding support features, prototypes, the discriminant, and the transductive fit from whichever precision is evaluated. On PlantVillage the transductive accuracy moves from 98.32\% to 98.08\% ($-0.24$\,pp) with false negatives shifting from 0.46\% to 0.60\%, and the discriminant term is insensitive ($+0.39$\,pp) while the pure prototype paths lose 0.26 and 0.42\,pp. On PlantDoc the prototype paths degrade more ($-3.57$\,pp for Tier-1, $-2.38$ for BioCLIP) whereas the discriminant term again gains ($+0.40$\,pp) and the recalibrated variant ends $+0.40$\,pp above its FP32 counterpart; a 384-D cosine match against five support leaves per class has no covariance term to absorb quantization noise, while the projection is fitted from the same features in both columns. INT8 therefore leaves the controlled benchmark essentially intact and shifts the field result within the noise of a single 252-query run.
+\textbf{Quantization resilience: FP32 vs.\ INT8.} To verify that post-training quantization does not impair mathematical stability, Table~\ref{tab:quantization} compares the complete pipeline executed in full-precision FP32 against INT8 ONNX binaries, rebuilding support features, prototypes, the discriminant, and the transductive fit from whichever precision is evaluated. On PlantVillage the transductive accuracy moves from 98.32\% to 98.08\% ($-0.24$\,pp) with false negatives shifting from 0.46\% to 0.60\%, and the discriminant term is insensitive ($+0.39$\,pp) while the pure prototype paths lose 0.26 and 0.42\,pp. On PlantDoc the prototype paths degrade ($-1.59$\,pp for BioCLIP, $-0.79$ for Tier-1) and so does the discriminant ($-1.99$\,pp), while the recalibrated variant loses only 0.40\,pp; a 384-D cosine match against five support leaves per class has no covariance term to absorb quantization noise, while the projection is fitted from the same features in both columns. INT8 therefore leaves the controlled benchmark essentially intact and costs about half a point once recalibration is applied in the field.
 
 \begin{table}[htbp]
 \caption{Full-pipeline diagnostic accuracy under FP32 versus INT8 ONNX execution across identical splits and parameters.}
@@ -317,10 +317,10 @@ PlantVillage (11) & Tier-1 DINOv2 & 87.33 & 87.59 & $+0.26$ \\
  & Fisher ensemble & 96.29 & 96.68 & $+0.39$ \\
  & $+$ transductive & 98.32 & 98.08 & $-0.24$ \\
 \midrule
-PlantDoc (27) & Tier-1 DINOv2 & 42.46 & 38.89 & $-3.57$ \\
- & BioCLIP alone & 51.98 & 49.60 & $-2.38$ \\
- & Fisher ensemble & 46.03 & 46.43 & $+0.40$ \\
- & $+$ transductive & 51.19 & 51.59 & $+0.40$ \\
+PlantDoc (27) & Tier-1 DINOv2 & 40.87 & 40.08 & $-0.79$ \\
+ & BioCLIP alone & 51.59 & 50.00 & $-1.59$ \\
+ & Fisher ensemble & 49.21 & 47.22 & $-1.99$ \\
+ & $+$ transductive & 51.19 & 50.79 & $-0.40$ \\
 \bottomrule
 \end{tabular*}
 
