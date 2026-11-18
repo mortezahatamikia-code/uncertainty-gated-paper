@@ -81,6 +81,27 @@ pairwise term needs. The `both` variant ties raw, so it adds nothing.
 
 Not including it would be a *worse* methodological error than losing to it.
 
+## PlantDoc: the dataset the paper actually deploys on
+
+Script: `run_laplacianshot_plantdoc.py`
+Artifact: `results/laplacianshot_plantdoc_2026-11-18.json`
+Deployed INT8 binaries, same 135 support leaves (8-view -> 1080), same 896-D
+features, PlantDoc constants (w_sup=1, 2 anchors/class, no threshold).
+
+| Regime | LaplacianShot | BioDINO-Edge | delta |
+|---|---|---|---|
+| 27-way, 252 field queries | 32.14 | **50.79** | +18.65 |
+| 5-way 5-shot, 50 episodes | 62.72 | **85.01** | +22.29 (p=7.5e-16, 50/0) |
+
+The ranking INVERTS on the field benchmark. Reason: LaplacianShot matches to
+visual prototypes by cosine only and has no botanical text branch; on PlantDoc
+the text prior carries a large share of the signal (see the ladder: text-only
+34.92, BioCLIP 51.98, blend 53.17).
+
+Note: this run's "ours" 5-way entry is 85.01 vs the pipeline reference 84.22.
+The 0.8 pp difference comes from restricting episodes to classes with >= 2 test
+leaves. Both are reported; the table note says so.
+
 ## Historical note for reviewers
 
 LaplacianShot: ICML 2020 (PMLR v119), arXiv June 2020. Not a 2026 method; it is
