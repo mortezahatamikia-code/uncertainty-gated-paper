@@ -3,11 +3,11 @@
 % =============================================================================
 \section{Proposed Methodology: BioDINO-Edge}
 \label{sec:methodology}
-Building upon the theoretical framework and operational constraints established in Section~\ref{sec:problem_formulation}, BioDINO-Edge addresses few-shot foliar diagnosis through closed-form discriminative projection over frozen foundation representations, paired with an uncertainty-gated cascaded inference pipeline for smartphone-class edge hardware.
+Building upon the theoretical framework and operational constraints established in Section~\ref{sec:problem_formulation}, BioDINO-Edge addresses few-shot plant disease diagnosis through closed-form discriminative projection over frozen foundation representations, paired with an uncertainty-gated cascaded inference pipeline for resource-constrained edge hardware.
 
 \subsection{Pipeline Overview}
 \label{sec:system_architecture}
-BioDINO-Edge splits its workflow into an offline analytical calibration phase (Phase~0) and an adaptive two-tier runtime cascade (Phase~1), as shown in Fig.~\ref{fig:architecture}. In Phase~0, a small support set ($K = 5$ labeled leaves per class) is expanded with multi-view augmentation. Features from the frozen DINOv2 and BioCLIP backbones are then used to compute Tier-1 visual prototypes and regularized Fisher-LDA projection weights in closed form, while botanical text prototypes are pre-encoded and cached. At inference (Phase~1), each query first goes through the lightweight Tier-1 DINOv2 encoder. An uncertainty gate lets unambiguous leaves exit immediately and escalates only ambiguous queries to the deeper Tier-2 BioCLIP multimodal consensus stage. High-confidence predictions can then update the Tier-2 projections through background transductive recalibration. Table~\ref{tab:notation} summarizes the mathematical notations and descriptions used across the framework.
+BioDINO-Edge splits its workflow into an offline analytical calibration phase (Phase~0) and an adaptive two-tier runtime cascade (Phase~1), as shown in Fig.~\ref{fig:architecture}. In Phase~0, a small support set ($K = 5$ labeled leaves per class) is expanded with multi-view augmentation. Features from the frozen DINOv2 and BioCLIP backbones are then used to compute Tier-1 visual prototypes and regularized Fisher-LDA projection weights in closed form, while botanical text prototypes are pre-encoded and cached. At inference (Phase~1), each query first goes through the lightweight Tier-1 DINOv2 encoder. An uncertainty gate lets clear leaves exit immediately and escalates only ambiguous queries to the deeper Tier-2 multimodal stage. High-confidence predictions can then update the Tier-2 projections through background transductive recalibration. Table~\ref{tab:notation} summarizes the mathematical notations and descriptions used across the framework.
 
 \begin{table*}[htbp]
 \caption{Summary of mathematical notations and descriptions used in BioDINO-Edge.}
@@ -45,7 +45,7 @@ $\mathcal{Q}_{\text{anchor}}^{(c)}$ & High-confidence streaming query buffer ($\
 BioDINO-Edge couples two frozen backbones. DINOv2 provides patch-level features of leaf surface texture and lesion boundaries, while BioCLIP provides organismal taxonomic priors. Concatenating their $\ell_2$-normalized outputs yields an 896-dimensional descriptor that encodes localized symptoms alongside host context.
 
 \subsubsection{Few-Shot Multi-View Support Augmentation}
-Covariance estimation is ill-conditioned when $K = 5$, so each support leaf $\mathbf{x} \in \mathcal{S}_c$ is resized to $224 \times 224$ pixels, normalized, and passed through an 8-view stochastic augmentation pipeline approximating field variations. The pipeline applies random horizontal and vertical flips, rotations within $\pm 15^\circ$, and color jitter (brightness, contrast, and saturation factors of $0.2$). Eight views per image yield $|\tilde{\mathcal{S}}_c| = 8K = 40$ augmented views per class, producing $N = 40C = 440$ total support representations for $C = 11$. This expansion brings the support sample size close to half the joint feature dimension ($d/2 = 448$), which stabilizes the covariance condition number. Although augmented views are correlated pseudo-replicates rather than independent samples, regularized shrinkage prevents numerical degeneracy and guarantees positive-definiteness.
+To overcome covariance ill-conditioning when reference data are scarce ($K = 5$), each support leaf $\mathbf{x} \in \mathcal{S}_c$ is resized to $224 \times 224$ pixels, normalized, and passed through an 8-view stochastic augmentation pipeline approximating field variations. The pipeline applies random horizontal and vertical flips, rotations within $\pm 15^\circ$, and color jitter (brightness, contrast, and saturation factors of $0.2$). Eight views per image yield $|\tilde{\mathcal{S}}_c| = 8K = 40$ augmented views per class, producing $N = 40C = 440$ total support representations for $C = 11$. This expansion brings the support sample size close to half the joint feature dimension ($d/2 = 448$), which stabilizes the covariance condition number. Although augmented views are not strictly independent, regularized shrinkage prevents numerical degeneracy and guarantees positive-definiteness.
 
 \subsubsection{Dual-Foundation Embedding Fusion}
 Each augmented view $\tilde{\mathbf{x}} \in \tilde{\mathcal{S}}_c$ is passed through the frozen backbones. DINOv2 Small ($14\times 14$ patches) \cite{oquab2023dinov2} and BioCLIP ViT-B/16 \cite{stevens2024bioclip} extract $\ell_2$-normalized feature vectors:
@@ -57,20 +57,20 @@ Concatenating the two normalized embeddings yields the 896-dimensional joint des
 \begin{equation}
     \mathbf{z} = [\mathbf{f}_{\text{bio}} \,\|\, \mathbf{f}_{\text{dino}}] \in \mathbb{R}^{896}
 \end{equation}
-Visual prototypes for each encoder are the normalized mean of the support views:
+Visual prototypes for the Tier-1 classifier are computed as the normalized mean of the support views:
 \begin{equation}
-    \mathbf{P}_{\text{enc}}^{(c)} = \text{Normalize}\left(\frac{1}{|\tilde{\mathcal{S}}_c|}\sum_{\tilde{\mathbf{x}} \in \tilde{\mathcal{S}}_c} \mathbf{f}_{\text{enc}}(\tilde{\mathbf{x}})\right), \quad \text{enc} \in \{\text{dino}, \text{bio}\}
+    \mathbf{P}_{\text{dino}}^{(c)} = \text{Normalize}\left(\frac{1}{|\tilde{\mathcal{S}}_c|}\sum_{\tilde{\mathbf{x}} \in \tilde{\mathcal{S}}_c} \mathbf{f}_{\text{dino}}(\tilde{\mathbf{x}})\right)
 \end{equation}
-which yields prototype matrices $\mathbf{P}_{\text{dino}} \in \mathbb{R}^{C \times 384}$ and $\mathbf{P}_{\text{bio,vis}} \in \mathbb{R}^{C \times 512}$.
+yielding the Tier-1 visual prototype matrix $\mathbf{P}_{\text{dino}} \in \mathbb{R}^{C \times 384}$.
 
 \subsubsection{Botanical Taxonomic Prompts and Negation Avoidance}
 BioCLIP provides a shared vision--language space, but running text decoders on device costs latency and memory. We therefore define $M = 3$ botanical prompt templates $\{T_c^{(m)}\}_{m=1}^M$ offline for each disease class $c \in \{1, \dots, C\}$. Each template covers three elements:
 \begin{enumerate}
-    \item \textbf{Host binomial nomenclature:} Botanical genus and species (e.g., \textit{Malus domestica}, \textit{Vitis vinifera}, \textit{Solanum tuberosum}).
-    \item \textbf{Causal pathogen etiology:} Fungal, bacterial, or oomycete binomials (e.g., \textit{Venturia inaequalis}, \textit{Guignardia bidwellii}, \textit{Phytophthora infestans}).
-    \item \textbf{Macroscopic lesion morphology:} Diagnostic foliar symptoms (e.g., ``olive-green velvety lesions'', ``tiger-stripe interveinal chlorosis'', ``target-board concentric rings'').
+    \item \textbf{Host species:} Botanical genus and species (e.g., \textit{Malus domestica}, \textit{Vitis vinifera}, \textit{Solanum tuberosum}).
+    \item \textbf{Pathogen name:} Scientific name of the causal agent (e.g., \textit{Venturia inaequalis}, \textit{Guignardia bidwellii}, \textit{Phytophthora infestans}).
+    \item \textbf{Visible symptoms:} Diagnostic foliar symptoms (e.g., ``olive-green velvety lesions'', ``tiger-stripe interveinal chlorosis'', ``target-board concentric rings'').
 \end{enumerate}
-Syntactic negations such as ``healthy leaf without lesions'' or ``no necrotic spots'' are excluded. Vision--language models handle negation poorly \cite{radford2021clip, yuksekgonul2023when, alhamoud2025vision}: content words such as \textit{lesion} and \textit{necrotic} carry far larger $\ell_2$ norm than function words such as \textit{without} or \textit{no}, so the pooled sentence vector of a negated description stays biased toward the disease cluster. Measured with the BioCLIP text encoder over the 11 classes, the three healthy prototypes lie at a mean cosine of 0.695 to the eight disease prototypes when described by negation, against 0.436 for purely positive histological descriptions (``clean vibrant green lamina with smooth intact blade surface''). The same classifier reaches 12.81\% versus 19.20\% text-only accuracy, and the transductive false-negative disease escape rate rises from 1.25\% to 2.57\%; the 0.75 Fisher term absorbs most of the accuracy difference, but the safety metric still doubles. We therefore forbid negation in every template and describe healthy tissue only in positive terms (e.g., ``clean green foliage'', ``intact smooth leaf lamina'').
+Syntactic negations such as ``healthy leaf without lesions'' or ``no necrotic spots'' are excluded. Vision--language models handle negation poorly \cite{radford2021clip, yuksekgonul2023when, alhamoud2025vision}: content words such as \textit{lesion} and \textit{necrotic} carry far larger $\ell_2$ norm than function words such as \textit{without} or \textit{no}, so the pooled sentence vector of a negated description stays biased toward the disease cluster. Measured with the BioCLIP text encoder over the 11 classes, the three healthy prototypes lie at a mean cosine of 0.695 to the eight disease prototypes when described by negation, against 0.436 for purely positive histological descriptions (``clean vibrant green lamina with smooth intact blade surface''). As demonstrated in Section~\ref{sec:ablation}, omitting negations prevents healthy prototypes from collapsing into disease clusters and substantially reduces false-negative disease escape. We therefore exclude negation in every template and describe healthy tissue strictly using affirmative descriptions (e.g., ``clean green foliage'', ``intact smooth leaf lamina'').
 
 During Phase~0, BioCLIP's text encoder $\phi_{\text{bio,txt}}(\cdot)$ encodes each prompt ensemble, and the results are averaged and $\ell_2$-normalized:
 \begin{equation}
@@ -82,7 +82,7 @@ The resulting matrix $\mathbf{P}_{\text{text}} \in \mathbb{R}^{C \times 512}$ is
 \label{sec:fisher_adaptation}
 
 \subsubsection{Multiclass Fisher Linear Discriminant Formulation}
-Standard nearest-centroid and cosine-similarity classifiers implicitly assume uniform variance across all feature directions ($\mathbf{\Sigma} = \mathbf{I}$). That assumption does not hold for leaves: shared vegetative structure (such as venation and lamina) creates high-variance directions that obscure lesion differences between diseases on the same host. Multiclass Fisher Linear Discriminant Analysis (Fisher-LDA) \cite{fisher1936use, rao1948utilization} resolves this by weighting features by $\hat{\mathbf{\Sigma}}^{-1}$, which down-weights those shared directions and amplifies low-variance directions containing discriminative lesion symptoms.
+Standard nearest-centroid and cosine-similarity classifiers implicitly assume uniform variance across all feature directions ($\mathbf{\Sigma} = \mathbf{I}$). That assumption does not hold for leaves: shared vegetative structure (such as venation and lamina) creates high-variance directions that mask lesion differences between diseases on the same host. Multiclass Fisher Linear Discriminant Analysis (Fisher-LDA) \cite{fisher1936use, rao1948utilization} resolves this by weighting features by $\hat{\mathbf{\Sigma}}^{-1}$, which down-weights those shared directions and amplifies low-variance directions containing discriminative lesion symptoms.
 
 Fisher-LDA computes a linear projection matrix $\mathbf{W} \in \mathbb{R}^{C \times d}$ and bias vector $\mathbf{b} \in \mathbb{R}^C$ that maximize between-class scatter $\mathbf{S}_B$ relative to within-class scatter $\mathbf{S}_W$:
 \begin{equation}
@@ -93,7 +93,7 @@ Fisher-LDA computes a linear projection matrix $\mathbf{W} \in \mathbb{R}^{C \ti
 where $\hat{\mathbf{\Sigma}}$ is the regularized pooled within-class covariance matrix ($d = 896$) and class priors are uniform ($\pi_c = 1/C$).
 
 \subsubsection{Small-Sample Singularity \texorpdfstring{($N \ll d$)}{(N << d)}}
-Evaluating \eqref{eq:fisher_weights} requires inverting the empirical pooled within-class scatter matrix over all $C = 11$ classes:
+Evaluating Eq.~\eqref{eq:fisher_weights} requires inverting the empirical pooled within-class scatter matrix over all $C = 11$ classes:
 \begin{equation}
     \label{eq:within_class_scatter}
     \mathbf{S}_W = \frac{1}{N-C}\sum_{c=1}^C \sum_{\mathbf{z} \in \tilde{\mathcal{S}}_c} (\mathbf{z}-\boldsymbol{\mu}_c)(\mathbf{z}-\boldsymbol{\mu}_c)^T \in \mathbb{R}^{d \times d}
@@ -107,7 +107,7 @@ Hence, $\mathbf{S}_W$ has a nullity of at least $896 - 429 = 467$: at least 467 
 
 \subsubsection{Analytical Ledoit--Wolf Covariance Shrinkage}
 \label{sec:shrinkage}
-To restore invertibility without heuristic tuning (such as searching over $\mathbf{S}_W + \epsilon \mathbf{I}$), we apply analytical Ledoit--Wolf shrinkage \cite{ledoit2004well}, which contracts $\mathbf{S}_W$ toward a well-conditioned spherical target:
+To restore invertibility without manual hyperparameter tuning (such as searching over a grid of ridge penalties $\mathbf{S}_W + \epsilon \mathbf{I}$), we apply analytical Ledoit--Wolf shrinkage \cite{ledoit2004well}, which contracts $\mathbf{S}_W$ toward a spherical target $\nu \mathbf{I}_d$:
 \begin{equation}
     \hat{\mathbf{\Sigma}} = (1 - \rho^*)\mathbf{S}_W + \rho^* \nu \mathbf{I}_d, \qquad \nu = \frac{1}{d}\text{Tr}(\mathbf{S}_W)
     \label{eq:lw_target}
@@ -117,14 +117,14 @@ The optimal shrinkage intensity $\rho^* \in (0, 1]$ is determined in closed form
     \rho^* = \min\left(1, \frac{\sum_{i=1}^N \|(\mathbf{z}_i - \boldsymbol{\mu}_{c_i})(\mathbf{z}_i - \boldsymbol{\mu}_{c_i})^T - \mathbf{S}_W\|_F^2}{N^2 \left[\text{Tr}(\mathbf{S}_W^2) - \frac{1}{d}\text{Tr}^2(\mathbf{S}_W)\right]}\right)
     \label{eq:lw_shrinkage}
 \end{equation}
-This shifts zero eigenvalues to positive values $\tilde{\lambda}_i = (1 - \rho^*)\lambda_i + \rho^* \nu \ge \rho^* \nu > 0$, ensuring that $\hat{\mathbf{\Sigma}}$ is strictly positive-definite and well-conditioned. Its inverse $\hat{\mathbf{\Sigma}}^{-1}$ is solved stably via Cholesky decomposition ($\hat{\mathbf{\Sigma}} = \mathbf{L}\mathbf{L}^T$). Scoring a query $\mathbf{z}$ as $\mathbf{l}_{\text{fisher}} = \mathbf{z}\mathbf{W}^T + \mathbf{b}$ then requires only $C \cdot d$ multiply-accumulate (MAC) operations ($9{,}856$ MACs for $C=11$), incurring negligible on-device computation.
+This shifts zero eigenvalues to positive values $\tilde{\lambda}_i = (1 - \rho^*)\lambda_i + \rho^* \nu \ge \rho^* \nu > 0$, ensuring that $\hat{\mathbf{\Sigma}}$ is strictly positive-definite and invertible. Its inverse $\hat{\mathbf{\Sigma}}^{-1}$ is solved stably via Cholesky decomposition ($\hat{\mathbf{\Sigma}} = \mathbf{L}\mathbf{L}^T$). Scoring a query $\mathbf{z}$ as $\mathbf{l}_{\text{fisher}} = \mathbf{z}\mathbf{W}^T + \mathbf{b}$ then requires only $C \cdot d$ multiply-accumulate (MAC) operations ($9{,}856$ MACs for $C=11$), requiring minimal on-device computation.
 
-Weighting by $\hat{\mathbf{\Sigma}}^{-1}$ acts as a whitening transform: each eigen-direction with variance $\lambda_i$ is rescaled by $1/\lambda_i$, which down-weights shared vegetative background variance and amplifies low-variance directions containing discriminative lesion symptoms. The condition number
+Weighting by $\hat{\mathbf{\Sigma}}^{-1}$ acts as a whitening transform: each eigen-direction with variance $\lambda_i$ is rescaled by $1/\lambda_i$, dampening common leaf morphology while highlighting subtle lesion variations. The condition number
 \begin{equation}
     \kappa(\hat{\mathbf{\Sigma}}) = \lambda_{\max}(\hat{\mathbf{\Sigma}}) / \lambda_{\min}(\hat{\mathbf{\Sigma}})
     \label{eq:whitening_spread}
 \end{equation}
-quantifies this spectral rescaling across feature dimensions. Because the augmented support views are formed from real leaves, shrinkage keeps $\hat{\mathbf{\Sigma}}$ well-conditioned and positive-definite across all effective sample sizes.
+reflects the dynamic range of this feature rescaling. Because the augmented support views are formed from real leaves, shrinkage guarantees numerical stability across all sample sizes.
 
 \subsection{Adaptive Two-Tier Classification and Edge Deployment}
 \label{sec:edge_cascade}
@@ -151,7 +151,7 @@ where $p_{\text{dino}, (1)}$ and $p_{\text{dino}, (2)}$ are the top-1 and top-2 
 \begin{equation}
     \mathcal{H}_{\text{norm}}(\mathbf{x}) = -\frac{1}{\log C}\sum_{c=1}^C p_{\text{dino}, c}\log(p_{\text{dino}, c} + \epsilon)
 \end{equation}
-with $\epsilon = 10^{-12}$ for numerical stability. Since $\mathcal{H}_{\text{norm}}(\mathbf{x}) \in [0, 1]$, the term $1 - \mathcal{H}_{\text{norm}}(\mathbf{x})$ is non-negative in exact arithmetic; the rectifier only guards against floating-point round-off. For ambiguous queries with near-uniform posteriors, $\mathcal{H}_{\text{norm}} \to 1.0$ and the margin goes to zero, so $\mathcal{C}(\mathbf{x}) \to 0$. If $\mathcal{C}(\mathbf{x}) \ge \tau_{\text{conf}}$ ($\tau_{\text{conf}} = 0.35$, calibrated on validation data), Tier~1 exits immediately; otherwise, the query escalates to Tier~2.
+with $\epsilon = 10^{-12}$ for numerical stability. The rectifier $(\cdot)_+$ simply guards against floating-point round-off. Ambiguous queries with near-uniform posteriors exhibit high entropy ($\mathcal{H}_{\text{norm}} \to 1$) and negligible margin, driving $\mathcal{C}(\mathbf{x}) \to 0$. When $\mathcal{C}(\mathbf{x}) \ge \tau_{\text{conf}}$ ($\tau_{\text{conf}} = 0.35$, calibrated on validation data), Tier~1 accepts the prediction; otherwise, the query escalates to Tier~2.
 
 \subsubsection{Tier-2 Multimodal Consensus Escalation}
 When $\mathcal{C}(\mathbf{x}) < \tau_{\text{conf}}$, the query goes to Tier~2. BioCLIP ViT-B extracts $\mathbf{f}_{\text{bio}} \in \mathbb{R}^{512}$, which is concatenated with the Tier-1 embedding to form $\mathbf{z} = [\mathbf{f}_{\text{bio}} \,\|\, \mathbf{f}_{\text{dino}}] \in \mathbb{R}^{896}$. Two posteriors are then computed: the discriminant visual posterior $\mathbf{p}_{\text{fisher}} = \text{softmax}(\mathbf{z}\mathbf{W}^T + \mathbf{b})$ and the taxonomic text posterior $\mathbf{p}_{\text{text}} = \text{softmax}(\gamma \cdot \mathbf{f}_{\text{bio}}\mathbf{P}_{\text{text}}^T)$. These are fused with Fisher consensus weight $w_{\text{lda}} = 0.75$:
@@ -163,25 +163,25 @@ and the final diagnosis is $\hat{y} = \arg\max_c p_{\text{blend}, c}$.
 
 \subsubsection{Soft-Anchored Transductive Recalibration}
 \label{sec:transductive}
-In 5-shot calibration, each centroid $\boldsymbol{\mu}_c$ is estimated from only five support leaves. Lighting changes, shadows, and symptom progression can shift prototypes between support images and field queries. To adapt without manual labels, confident Tier-2 queries ($\max_c p_{\text{blend}, c} \ge 0.70$) are buffered into a first-in, first-out (FIFO) queue as reference anchors $\mathcal{Q}_{\text{anchor}}^{(c)}$, capped at 20 anchors per class. Ground-truth support samples receive a $3\times$ weight factor so that pseudo-label drift does not shift class centroids away from verified disease definitions:
+In 5-shot calibration, each centroid $\boldsymbol{\mu}_c$ is estimated from only five support leaves. Lighting changes, shadows, and symptom progression can shift prototypes between support images and field queries. To adapt without manual labels, confident Tier-2 queries ($\max_c p_{\text{blend}, c} \ge 0.70$) are buffered into a first-in, first-out (FIFO) queue as reference anchors $\mathcal{Q}_{\text{anchor}}^{(c)}$, limited to 20 anchors per class. Verified support samples receive a $3\times$ weight factor so that pseudo-label drift does not shift class centroids away from confirmed disease definitions:
 \begin{equation}
     \label{eq:transductive_set}
     \tilde{\mathcal{S}}_c^{\text{trans}} = \tilde{\mathcal{S}}_c^{(3\times)} \cup \mathcal{Q}_{\text{anchor}}^{(c)}
 \end{equation}
 Once the buffer fills during scouting, centroids $\boldsymbol{\mu}_c^{\text{trans}}$ and pooled scatter matrix $\mathbf{S}_W^{\text{trans}}$ are re-estimated, the shrinkage parameter $\rho^*$ is recomputed, and updated projection parameters $(\mathbf{W}^{\text{trans}}, \mathbf{b}^{\text{trans}})$ are resolved via Cholesky substitution in about 0.53\,s. This runs asynchronously in the background, so Tier~1 keeps operating with static prototypes while later Tier-2 decisions use the updated ones.
 
-Three design choices keep this update stable and efficient. First, the 0.70 confidence threshold ensures high pseudo-label purity ($\approx$98\%) while avoiding the coverage starvation that collapses accuracy at higher thresholds ($\ge$0.80). Second, the support weight anchors class centroids against manifold drift: the ground-truth leaves are repeated $w_{\mathrm{sup}}$ times so that in the re-estimated centroid
+Three design choices keep this update stable and efficient. First, the 0.70 confidence threshold ensures high pseudo-label purity ($\approx$98\%) while avoiding the coverage starvation that collapses accuracy at higher thresholds ($\ge$0.80). Second, the support weight anchors class centroids against manifold drift: the original support leaves are repeated $w_{\mathrm{sup}}$ times so that in the re-estimated centroid
 $\boldsymbol{\mu}_c^{\text{trans}} = (w_{\mathrm{sup}}\sum_{\mathbf{x}\in\mathcal{S}_c}\mathbf{x} + \sum_{\mathbf{q}\in\mathcal{Q}_{\text{anchor}}^{(c)}}\mathbf{q}) / (w_{\mathrm{sup}}|\mathcal{S}_c| + |\mathcal{Q}_{\text{anchor}}^{(c)}|)$
 the verified leaves outvote pseudo-labels, and $w_{\mathrm{sup}}$ is set per deployment rather than fixed globally. With five support leaves per class and up to twenty anchors, $w_{\mathrm{sup}}=3$ keeps a single support leaf worth roughly one and a half confident anchors on the 11-class benchmark, whereas the field protocol, which draws only two anchors per class, uses $w_{\mathrm{sup}}=1$ or $2$ and no confidence threshold because a fixed threshold there leaves too few eligible anchors. Third, the 20-anchor cap bounds update latency while preventing frequent classes from introducing sample imbalance.
 
 \subsection{Two-Tier Quantized Edge Model Packaging and Android Architecture}
 \label{sec:packaging}
-Agricultural scouting hardware operates under constrained flash storage, and field connectivity is often unreliable. BioDINO-Edge is therefore architected so that diagnosis never touches the network: once installed, every query is processed entirely on-device without streaming, cloud offloading, or server calls. The framework is partitioned into two INT8-quantized ONNX binaries (footprints reported in mebibytes (MiB), where $1\,\text{MiB} = 2^{20}$ bytes), separating an always-available fast engine from an on-demand deep companion.
+Agricultural scouting hardware operates under constrained flash storage, and field connectivity is often unreliable \cite{shoaib2023advanced, sharif2026real}. BioDINO-Edge is therefore architected so that diagnosis never touches the network: once installed, every query is processed entirely on-device without streaming, cloud offloading, or server calls. The framework is partitioned into two INT8-quantized ONNX binaries (footprints reported in mebibytes (MiB), where $1\,\text{MiB} = 2^{20}$ bytes), separating a fast standalone engine from an on-demand deep companion.
 
-\textbf{Tier 1 Standalone Engine} (\path{biodino_mobile_int8.onnx}): Packaged directly inside a $\approx$22.8\,MiB Android Application Package (APK), the base engine occupies $\approx$22.0\,MiB on disk ($\approx$15.1\,MiB deflated). It integrates the DINOv2 Small INT8 backbone, calibrated Phase~0 prototypes, and the Shannon confidence gate executed via the ONNX Runtime C++ execution provider. Installing the APK enables immediate offline diagnosis without requiring secondary downloads.
+\textbf{Tier 1 Standalone Engine} (\path{biodino_mobile_int8.onnx}): Packaged inside an Android Application Package (APK), the base engine occupies $\approx$22.0\,MiB on disk ($\approx$15.1\,MiB deflated). It integrates the DINOv2 Small INT8 backbone, calibrated Phase~0 prototypes, and the Shannon confidence gate executed via the ONNX Runtime C++ execution provider. Installing the APK enables immediate offline diagnosis.
 
 \textbf{Tier 2 Companion Module} (\path{biodino_companion_int8.onnx}): The companion engine occupies $\approx$85.3\,MiB on disk, containing the BioCLIP ViT-B INT8 backbone and the 896-dimensional Fisher projection matrix. It is fetched on-demand when high-precision multimodal escalation is requested, functioning completely offline once stored.
 
-Together, both binaries occupy $\approx$107.3\,MiB of flash storage; the base engine is installed with the application and the companion is fetched over the air on demand.
+Together, both binaries occupy $\approx$107.3\,MiB of flash storage on device.
 
 % =============================================================================
