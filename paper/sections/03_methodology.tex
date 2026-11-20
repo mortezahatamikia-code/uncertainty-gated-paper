@@ -7,7 +7,31 @@ Building upon the theoretical framework and operational constraints established 
 
 \subsection{Pipeline Overview}
 \label{sec:system_architecture}
-BioDINO-Edge splits its workflow into an offline analytical calibration phase (Phase~0) and an adaptive two-tier runtime cascade (Phase~1), as shown in Fig.~\ref{fig:architecture}. In Phase~0, a small support set ($K = 5$ labeled leaves per class) is expanded with multi-view augmentation. Features from the frozen DINOv2 and BioCLIP backbones are then used to compute Tier-1 visual prototypes and regularized Fisher-LDA projection weights in closed form, while botanical text prototypes are pre-encoded and cached. At inference (Phase~1), each query first goes through the lightweight Tier-1 DINOv2 encoder. An uncertainty gate lets unambiguous leaves exit immediately and escalates only ambiguous queries to the deeper Tier-2 BioCLIP multimodal consensus stage. High-confidence predictions can then update the Tier-2 projections through background transductive recalibration.
+BioDINO-Edge splits its workflow into an offline analytical calibration phase (Phase~0) and an adaptive two-tier runtime cascade (Phase~1), as shown in Fig.~\ref{fig:architecture}. In Phase~0, a small support set ($K = 5$ labeled leaves per class) is expanded with multi-view augmentation. Features from the frozen DINOv2 and BioCLIP backbones are then used to compute Tier-1 visual prototypes and regularized Fisher-LDA projection weights in closed form, while botanical text prototypes are pre-encoded and cached. At inference (Phase~1), each query first goes through the lightweight Tier-1 DINOv2 encoder. An uncertainty gate lets unambiguous leaves exit immediately and escalates only ambiguous queries to the deeper Tier-2 BioCLIP multimodal consensus stage. High-confidence predictions can then update the Tier-2 projections through background transductive recalibration. Table~\ref{tab:notation} summarizes the mathematical notations and descriptions used across the framework.
+
+\begin{table*}[htbp]
+\caption{Summary of mathematical notations and descriptions used in BioDINO-Edge.}
+\label{tab:notation}
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Notation} & \textbf{Mathematical Description and Operational Meaning} \\
+\midrule
+$C, K, N_s$ & Number of pathology classes, shots per class ($K=5$), and total support size ($N_s = C \cdot K$). \\
+$\phi_{\text{dino}}(\cdot), \phi_{\text{bio}}(\cdot)$ & Frozen INT8 DINOv2-Small ($d_1 = 384$) and BioCLIP ViT-B/16 ($d_2 = 512$) encoders. \\
+$\mathbf{z} \in \mathbb{R}^{896}$ & Concatenated joint foliar descriptor: $\mathbf{z} = [\mathbf{f}_{\text{bio}} \,\|\, \mathbf{f}_{\text{dino}}] \in \mathbb{R}^{896}$. \\
+$\mathbf{P}_{\text{dino}}, \mathbf{P}_{\text{text}}$ & Tier-1 visual prototypes ($\mathbb{R}^{C \times 384}$) and cached botanical text prototypes ($\mathbb{R}^{C \times 512}$). \\
+$\mathbf{S}_W, \hat{\mathbf{\Sigma}}$ & Empirical pooled within-class scatter matrix and Ledoit--Wolf regularized covariance matrix. \\
+$\rho^*, \nu$ & Analytical shrinkage intensity factor $\rho^* \in (0, 1]$ and mean trace shrinkage target $\nu = \frac{1}{d}\text{Tr}(\mathbf{S}_W)$. \\
+$\mathbf{W}, \mathbf{b}$ & Fisher-LDA discriminant projection matrix ($\mathbb{R}^{C \times 896}$) and class bias vector ($\mathbb{R}^C$). \\
+$\mathcal{C}(\mathbf{x}), \tau_{\text{conf}}$ & Dual-metric uncertainty gate (Shannon entropy and top-2 margin) and escalation threshold ($\tau_{\text{conf}} = 0.35$). \\
+$w_{\text{lda}}$ & Multimodal consensus blending weight ($w_{\text{lda}} = 0.75$, weighting visual Fisher against text posteriors). \\
+$\gamma$ & Inverse temperature logit scaling parameter ($\gamma = 20.0$). \\
+$\mathcal{Q}_{\text{anchor}}^{(c)}$ & High-confidence streaming query buffer ($\max_c p_c \ge 0.70$) for background transductive recalibration. \\
+\bottomrule
+\end{tabularx}
+\end{table*}
 
 \begin{figure*}[htbp]
 \centering

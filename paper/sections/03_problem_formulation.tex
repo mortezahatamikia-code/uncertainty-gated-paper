@@ -47,46 +47,22 @@ While the exact operational parameters $(\epsilon_{\text{esc}}, L_{\max}, T_{\ma
 
 \subsection{Statistical Preliminaries: Small-Sample Covariance Degeneracy}
 \label{sec:covariance_degeneracy}
-In foliar image representations, feature variance is heavily non-uniform across latent dimensions. Leaf imagery naturally shares dominant morphological structures---such as healthy green chlorophyll pigmentation, background venation patterns, and specular surface reflections---that span high-variance directions in the feature space. When classification relies on isotropic metrics such as unweighted Euclidean distance or cosine similarity:
+Foliar representations exhibit non-uniform feature variance across latent dimensions. Unrelated background patterns---such as green pigmentation, leaf veins, and surface glare---span the highest-variance directions in the feature space. When classification relies on isotropic metrics such as unweighted Euclidean distance or cosine similarity:
 \begin{equation}
     \hat{y}_t = \arg\max_{c \in \{1, \dots, C\}} \frac{\mathbf{z}_t^T \boldsymbol{\mu}_c}{\|\mathbf{z}_t\|_2 \|\boldsymbol{\mu}_c\|_2}, \qquad \boldsymbol{\mu}_c = \frac{1}{|\mathcal{S}_c|}\sum_{\mathbf{x} \in \mathcal{S}_c} \mathbf{z}(\mathbf{x})
     \label{eq:isotropic_cosine}
 \end{equation}
-all feature coordinates are weighted equally ($\mathbf{\Sigma} = \sigma^2 \mathbf{I}$). Consequently, distance calculations are dominated by shared vegetative background variance rather than the subtle, localized lesion characteristics critical for disease diagnosis.
+all feature coordinates are weighted equally ($\mathbf{\Sigma} = \sigma^2 \mathbf{I}$). As a result, distance metrics are dominated by healthy leaf background rather than subtle lesion symptoms.
 
 Fisher Linear Discriminant Analysis resolves this issue by projecting features through the inverse within-class covariance $\hat{\mathbf{\Sigma}}^{-1}$, which suppresses high-variance shared background directions and amplifies discriminative lesion signals. Computing this projection requires the empirical pooled within-class scatter matrix:
 \begin{equation}
     \mathbf{S}_W = \frac{1}{N - C} \sum_{c=1}^C \sum_{\mathbf{z} \in \mathcal{S}_c} (\mathbf{z} - \boldsymbol{\mu}_c)(\mathbf{z} - \boldsymbol{\mu}_c)^T \in \mathbb{R}^{d \times d}
     \label{eq:empirical_scatter}
 \end{equation}
-However, in realistic few-shot deployment, the total support sample size $N$ is substantially smaller than the latent dimension $d$ ($N \ll d$). Across our target evaluation settings:
+In field deployment, however, the number of support samples $N$ is far smaller than the feature dimension $d$ ($N \ll d$). Across our target evaluation settings:
 \begin{itemize}
     \item In 5-way 5-shot field diagnosis, $N = 25$ versus $d = 896$, yielding $\text{rank}(\mathbf{S}_W) \le 20$.
     \item On the 11-class PlantVillage benchmark without augmentation, $N = 55$ versus $d = 896$, yielding $\text{rank}(\mathbf{S}_W) \le 44$.
     \item Even after multi-view support augmentation ($N = 440$), $\text{rank}(\mathbf{S}_W) \le 429 < 896$.
 \end{itemize}
-Because $\text{rank}(\mathbf{S}_W) \le N - C \ll d$, the empirical scatter matrix $\mathbf{S}_W$ has a nullity of at least $d - (N - C) > 0$, making it rank-deficient, strictly non-invertible ($\det(\mathbf{S}_W) = 0$), and prone to severe numerical instability under naive diagonal loading. This fundamental singularity motivates the analytical shrinkage and uncertainty-gated architecture detailed in Section~\ref{sec:methodology}. Table~\ref{tab:notation} summarizes the mathematical notations used throughout this paper.
-
-\begin{table*}[htbp]
-\caption{Summary of mathematical notations and descriptions used in BioDINO-Edge.}
-\label{tab:notation}
-\centering
-\footnotesize
-\begin{tabularx}{\textwidth}{lX}
-\toprule
-\textbf{Notation} & \textbf{Mathematical Description and Operational Meaning} \\
-\midrule
-$C, K, N_s$ & Number of pathology classes, shots per class ($K=5$), and total support size ($N_s = C \cdot K$). \\
-$\phi_{\text{dino}}(\cdot), \phi_{\text{bio}}(\cdot)$ & Frozen INT8 DINOv2-Small ($d_1 = 384$) and BioCLIP ViT-B/16 ($d_2 = 512$) encoders. \\
-$\mathbf{z} \in \mathbb{R}^{896}$ & Concatenated joint foliar descriptor: $\mathbf{z} = [\mathbf{f}_{\text{bio}} \,\|\, \mathbf{f}_{\text{dino}}] \in \mathbb{R}^{896}$. \\
-$\mathbf{P}_{\text{dino}}, \mathbf{P}_{\text{text}}$ & Tier-1 visual prototypes ($\mathbb{R}^{C \times 384}$) and cached botanical text prototypes ($\mathbb{R}^{C \times 512}$). \\
-$\mathbf{S}_W, \hat{\mathbf{\Sigma}}$ & Empirical pooled within-class scatter matrix and Ledoit--Wolf regularized covariance matrix. \\
-$\rho^*, \nu$ & Analytical shrinkage intensity factor $\rho^* \in (0, 1]$ and mean trace shrinkage target $\nu = \frac{1}{d}\text{Tr}(\mathbf{S}_W)$. \\
-$\mathbf{W}, \mathbf{b}$ & Fisher-LDA discriminant projection matrix ($\mathbb{R}^{C \times 896}$) and class bias vector ($\mathbb{R}^C$). \\
-$\mathcal{C}(\mathbf{x}), \tau_{\text{conf}}$ & Dual-metric uncertainty gate (Shannon entropy and top-2 margin) and escalation threshold ($\tau_{\text{conf}} = 0.35$). \\
-$w_{\text{lda}}$ & Multimodal consensus blending weight ($w_{\text{lda}} = 0.75$, weighting visual Fisher against text posteriors). \\
-$\gamma$ & Inverse temperature logit scaling parameter ($\gamma = 20.0$). \\
-$\mathcal{Q}_{\text{anchor}}^{(c)}$ & High-confidence streaming query buffer ($\max_c p_c \ge 0.70$) for background transductive recalibration. \\
-\bottomrule
-\end{tabularx}
-\end{table*}
+Because $\text{rank}(\mathbf{S}_W) \le N - C \ll d$, the empirical scatter matrix $\mathbf{S}_W$ has nullity $d - (N - C) > 0$. This makes $\mathbf{S}_W$ strictly singular ($\det(\mathbf{S}_W) = 0$) and numerically unstable under simple diagonal loading. This fundamental singularity motivates the analytical shrinkage and uncertainty-gated architecture detailed in Section~\ref{sec:methodology}.
