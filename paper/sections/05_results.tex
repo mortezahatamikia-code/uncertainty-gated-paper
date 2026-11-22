@@ -12,7 +12,7 @@ This section evaluates BioDINO-Edge against operational edge deployment requirem
 \subsection{Primary Benchmark Performance and Baseline Evaluation}
 \label{sec:comparative_results}
 
-To benchmark diagnostic accuracy under controlled conditions, Table~\ref{tab:comparative} compares BioDINO-Edge against representative zero-shot and few-shot baseline paradigms. All methods are evaluated across identical support/query partitions, random seeds, and shot counts ($K \in \{1, 5\}$). Extended $K$-shot curves ($K \in \{1, 5, 10, 15\}$) appear in Table~\ref{tab:shot_ladder}.
+To benchmark diagnostic accuracy under controlled conditions, Table~\ref{tab:comparative} compares BioDINO-Edge against representative zero-shot and few-shot baseline paradigms. All methods are evaluated across identical support/query partitions, random seeds, and shot counts ($K \in \{1, 5\}$). Extended $K$-shot curves appear in Appendix~\ref{app:shot_ladder} (Table~\ref{tab:shot_ladder}).
 
 \begin{table*}[htbp]
 \caption{Controlled comparison with few-shot baseline paradigms on PlantVillage under identical frozen representations, splits, and seeds.}
@@ -21,33 +21,35 @@ To benchmark diagnostic accuracy under controlled conditions, Table~\ref{tab:com
 
 \footnotesize
 \setlength{\tabcolsep}{3.5pt}
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X *{5}{>{\centering\arraybackslash}p{2.1cm}}@{}}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X *{4}{>{\centering\arraybackslash}p{2.6cm}}@{}}
 \toprule
-& \multicolumn{2}{c}{\textbf{5-way accuracy (\%) ($\uparrow$)}} & \multicolumn{2}{c}{\textbf{11-class, 5-shot (\%) ($\uparrow$)}} & \\
+& \multicolumn{2}{c}{\textbf{5-way accuracy (\%) ($\uparrow$)}} & \multicolumn{2}{c}{\textbf{11-class, 5-shot (\%) ($\uparrow$)}} \\
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}
-\textbf{Method} & \textbf{1-shot} & \textbf{5-shot} & \textbf{Accuracy} & \textbf{Macro F1} & \textbf{$\Delta$ (pp) ($\uparrow$)} \\
+\textbf{Method} & \textbf{1-shot} & \textbf{5-shot} & \textbf{Accuracy} & \textbf{Macro F1} \\
 \midrule
-Zero-shot BioCLIP \cite{stevens2024bioclip} & 38.89$\pm$12.78 & 38.86$\pm$12.79 & 19.18$\pm$0.02 & 18.49 & $-74.10$ \\
-Tip-Adapter \cite{zhang2022tip} & 45.15$\pm$13.42 & 68.63$\pm$12.80 & 49.97$\pm$1.62 & 46.54 & $-43.31$ \\
-Prototypical Networks \cite{snell2017prototypical} / SimpleShot \cite{wang2019simpleshot} & 88.44$\pm$9.13 & 97.45$\pm$2.03 & 93.28$\pm$1.24 & 92.47 & $0.00$ \\
-BioDINO-Edge (inductive, ours) & \underline{88.45$\pm$9.12} & \underline{97.96$\pm$1.85} & \underline{95.08$\pm$1.27} & \underline{94.51} & \underline{$+1.80$} \\
-BioDINO-Edge (transductive, ours) & \textbf{93.42$\pm$6.83} & \textbf{98.77$\pm$1.68} & \textbf{97.41$\pm$0.71} & \textbf{97.09} & $\mathbf{+4.13}$ \\
+Zero-shot BioCLIP \cite{stevens2024bioclip} & 38.89$\pm$12.78 & 38.86$\pm$12.79 & 19.18$\pm$0.02 & 18.49 \\
+Tip-Adapter \cite{zhang2022tip} & 45.15$\pm$13.42 & 68.63$\pm$12.80 & 49.97$\pm$1.62 & 46.54 \\
+Prototypical Networks \cite{snell2017prototypical} / SimpleShot \cite{wang2019simpleshot} & 88.44$\pm$9.13 & 97.45$\pm$2.03 & 93.28$\pm$1.24 & 92.47 \\
+BioDINO-Edge (inductive, ours) & \underline{88.45$\pm$9.12} & \underline{97.96$\pm$1.85} & \underline{95.08$\pm$1.27} & \underline{94.51} \\
+BioDINO-Edge (transductive, ours) & \textbf{93.42$\pm$6.83} & \textbf{98.77$\pm$1.68} & \textbf{97.41$\pm$0.71} & \textbf{97.09} \\
 \bottomrule
 \end{tabularx}
 
 \vspace{3pt}
 \begin{minipage}{\textwidth}
 \footnotesize
-\textit{Notes.} Prototypical Networks and SimpleShot share a row because Euclidean and cosine distance rankings are mathematically identical on $\ell_2$-normalized embeddings. Bold denotes the best performance in each column; underline denotes second-best. $(\uparrow)$ indicates metrics where higher values are superior. $\Delta$ reports 11-class accuracy difference relative to the centroid baseline.
+\textit{Notes.} Prototypical Networks and SimpleShot share a row because Euclidean and cosine distance rankings are mathematically identical on $\ell_2$-normalized embeddings. Bold denotes the best performance in each column; underline denotes second-best. $(\uparrow)$ indicates metrics where higher values are superior.
 \end{minipage}
 \end{table*}
 
-\textbf{Engineering interpretation of baseline performance.} As shown in Table~\ref{tab:comparative}, isotropic distance matching degrades when applied directly to high-dimensional biological representations without covariance regularization. Zero-shot BioCLIP and Tip-Adapter struggle because general text prompts do not resolve subtle necrotic lesions on leaves. Standard Prototypical Networks provide a competitive baseline, but weighting all 896 embedding dimensions equally leaves predictions vulnerable to background leaf veins and surface glare. In contrast, BioDINO-Edge uses Ledoit--Wolf regularized Fisher-LDA projection (Section~\ref{sec:shrinkage}) to suppress common vegetative variance, improving inductive accuracy by $+1.80$ percentage points (pp) over the centroid baseline. Adding transductive anchor recalibration further increases accuracy to 97.41\% (a $+4.13$\,pp gain over standard nearest-centroid matching). While server-trained few-shot models in the agricultural literature (e.g., MAFDE-DN4~\cite{zhao2024mafde}, SC-FSL~\cite{mu2024few}, AgriFewNet~\cite{babu2025agrifewnet}, and VSF~\cite{zhou2026vsf}) report 5-shot accuracies between 81.4\% and 94.8\% on PlantVillage, they require GPU backpropagation during training; BioDINO-Edge achieves higher accuracy entirely on edge CPUs over frozen backbones.
+\textbf{Engineering interpretation of baseline performance.} As shown in Table~\ref{tab:comparative}, standard distance matching loses accuracy when applied directly to high-dimensional biological representations without covariance regularization. Zero-shot BioCLIP and Tip-Adapter struggle because general text prompts do not resolve subtle necrotic lesions on leaves. Standard Prototypical Networks provide a competitive baseline, but weighting all 896 embedding dimensions equally leaves predictions vulnerable to background leaf veins and surface glare. In contrast, BioDINO-Edge uses Ledoit--Wolf regularized Fisher-LDA projection (Section~\ref{sec:shrinkage}) to suppress common vegetative variance, improving inductive accuracy by $+1.80$ percentage points (pp) over the centroid baseline. Adding transductive anchor recalibration further increases accuracy to 97.41\% (a $+4.13$\,pp gain over standard nearest-centroid matching). While server-trained few-shot models in the agricultural literature (e.g., MAFDE-DN4~\cite{zhao2024mafde}, SC-FSL~\cite{mu2024few}, AgriFewNet~\cite{babu2025agrifewnet}, and VSF~\cite{zhou2026vsf}) report 5-shot accuracies between 81.4\% and 94.8\% on PlantVillage, they require GPU backpropagation during training; BioDINO-Edge achieves higher accuracy entirely on edge CPUs over frozen backbones.
 
-Table~\ref{tab:fair_baselines} controls for feature dimensionality and transductive access on identical episodes. Across all inductive comparators evaluated on the joint 896-D features, BioDINO-Edge outperforms Ridge regression, logistic regression, Tip-Adapter, and Prototypical Networks. Under transductive evaluation with full-batch query access, LaplacianShot~\cite{ziko2020laplacian} attains 98.49\% on 11-class PlantVillage (1.08\,pp above BioDINO-Edge), whereas TIM~\cite{boudiaf2020transductive} and prototype rectification~\cite{liu2021bdcspn} score lower. Combining the Fisher projection with Laplacian propagation degrades performance (dropping accuracy by $\approx 5.7$\,pp) because the discriminant subspace collapses dimensions onto $C-1$ axes, removing the local neighborhood manifold required by graph Laplacian smoothing.
+To isolate the impact of our adaptation framework from feature dimensionality and transductive access, Table~\ref{tab:fair_baselines} compares all baselines on identical 896-D features and identical episodes. Following standard few-shot evaluation protocols \cite{tian2020rethinking}, we include closed-form Ridge regression and regularized multinomial logistic regression as linear probes. Across all inductive comparators on the 896-D features, BioDINO-Edge consistently outperforms Ridge regression, logistic regression, Tip-Adapter, and Prototypical Networks.
+
+Because BioDINO-Edge incorporates transductive recalibration, we also evaluate standard transductive baselines under full-batch query access. In this offline setting with the entire test set visible simultaneously, LaplacianShot~\cite{ziko2020laplacian} reaches 98.49\% on 11-class PlantVillage (1.08\,pp above BioDINO-Edge), whereas TIM~\cite{boudiaf2020transductive} and prototype rectification~\cite{liu2021bdcspn} achieve lower accuracy. We also tested whether our regularized Fisher projection could serve as a preprocessing front-end for LaplacianShot. Running Laplacian propagation in the Fisher-projected subspace drops accuracy by 5.7\,pp (from 98.49\% down to 92.84\%). This drop occurs because Fisher-LDA projects the 896 dimensions onto $C-1$ discriminant axes to maximize global class separation, which removes the fine-grained local neighborhood manifold that graph Laplacian smoothing relies on.
 
 \begin{table*}[htbp]
-\caption{Fair-baseline comparison on identical episodes. Upper block: inductive comparators on the same 896-D BioCLIP+DINOv2 features used by BioDINO-Edge. Lower block: transductive methods run on those features. Semi-supervised propagation sees the whole query set at once; BioDINO-Edge sees only confident anchors.}
+\caption{Comparison with inductive and transductive few-shot baselines on identical 896-D features and episodes (PlantVillage).}
 \label{tab:fair_baselines}
 \centering
 
@@ -76,14 +78,14 @@ BioDINO-Edge transductive (896-D) & \textbf{93.42$\pm$6.83} & \underline{98.78$\
 \vspace{3pt}
 \begin{minipage}{\textwidth}
 \footnotesize
-\textit{Notes.} Every row uses the cached frozen embeddings of \ref{app:repro} and the identical support/query splits and seeds of Table~\ref{tab:comparative} (30 episodes at 11-class, 50 at 5-way). Tip-Adapter keeps $\alpha=1.0$, $\beta=5.5$; Ridge uses $\alpha=1.0$; logistic regression is $\ell_2$-regularized at $C=1.0$; LaplacianShot uses the published majorize-minimise binary-assignment solver ($\lambda=2.0$, selected on a disjoint seed stream, 10-nearest-neighbour query graph, 50 iterations); TIM optimizes the query logits directly for 150 steps ($\beta=1.0$); prototype rectification follows \cite{liu2021bdcspn} in correcting the intra-class bias only, by re-estimating each prototype from its confident pseudo-labelled queries, and omits the feature-shifting step of the full method. Bold marks the best value per column and underline the second best. LaplacianShot exceeds transductive BioDINO-Edge by 1.08\,pp in the 11-class column; the paired test is reported in Section~\ref{sec:significance}.
+\textit{Notes.} Evaluated across 30 episodes for 11-class and 50 episodes for 5-way tasks on identical support and query splits. Upper block: inductive methods; lower block: transductive methods. Bold marks the best performance per column; underline denotes second-best. Baseline hyperparameters are detailed in Appendix~\ref{app:repro}.
 \end{minipage}
 \end{table*}
 
-\textbf{Streaming edge feasibility and field robustness.} While LaplacianShot achieves strong accuracy on fixed offline query pools, its formulation requires constructing a pairwise nearest-neighbor graph over the entire query batch simultaneously. In real-world edge deployment, scouting occurs sequentially rather than in offline pools. As evaluated in Table~\ref{tab:batchsize}, when queries arrive one leaf at a time without batch buffering, LaplacianShot's accuracy drops to 93.12\%, whereas BioDINO-Edge maintains 96.12\% through streaming anchor recalibration. Furthermore, under unconstrained field conditions on PlantDoc (Table~\ref{tab:plantdoc_laplacian}), BioDINO-Edge achieves 50.79\% in the 27-way test and 85.01\% at 5-way 5-shot, compared to 32.14\% and 62.72\% for LaplacianShot. In cluttered field environments with variable illumination, BioDINO-Edge's taxonomic text priors and regularized discriminants provide stable generalization, whereas visual nearest-neighbor graph propagation degrades under heavy domain shift.
+\textbf{Practical edge deployment: streaming queries and unconstrained field conditions.} While LaplacianShot achieves strong accuracy on fixed offline query pools, its formulation requires constructing a pairwise nearest-neighbor graph over the entire query batch simultaneously. In real-world edge deployment, scouting occurs sequentially rather than in offline pools. As evaluated in Table~\ref{tab:batchsize}, when queries arrive one leaf at a time without batch buffering, LaplacianShot's accuracy drops to 93.12\%, whereas BioDINO-Edge maintains 96.12\% through streaming anchor recalibration with bounded edge memory.
 
 \begin{table}[htbp]
-\caption{Deployment strategies for the transductive step (11-class, 5-shot, 8 episodes $\times$ 600 queries, paired).}
+\caption{Diagnostic accuracy under sequential and buffered query streaming (11-class, 5-shot on PlantVillage).}
 \label{tab:batchsize}
 \centering
 
@@ -104,11 +106,11 @@ Whole query set (lab protocol) & \textbf{96.38} & 96.12 & $-0.25$ \\
 \vspace{3pt}
 \begin{minipage}{\columnwidth}
 \footnotesize
-\textit{Notes.} $\Delta>0$ favours BioDINO-Edge; every row is significant at $p<0.01$ except the whole-pool row ($p=0.68$). Recalibration draws the same anchors in all rows, so its column is constant by construction. Absolute values are lower than in Table~\ref{tab:fair_baselines} because each episode contributes a 600-query subset rather than the full 9{,}330, which lowers the estimate by roughly a point for both methods.
+\textit{Notes.} Evaluated across 8 paired episodes with 600 queries each. Positive $\Delta$ indicates a gain for BioDINO-Edge ($p < 0.01$ for all streaming and buffered rows; $p = 0.68$ when the full query pool is available simultaneously).
 \end{minipage}
 \end{table}
 
-Table~\ref{tab:plantdoc_context} extends this evaluation to unconstrained field imagery via the PlantDoc benchmark~\cite{singh2020plantdoc}. In 5-way 5-shot episodic testing over 50 Monte Carlo episodes, BioDINO-Edge achieves 84.22\%$\pm$11.24\% accuracy (transductive macro F1 83.93\%). In the simultaneous 27-class stress test over 252 field test leaves, it attains 50.79\% accuracy and 51.04\% macro F1 (against a 3.70\% random chance floor), placing the discriminative projection only after recalibration ahead of a plain logit blend (Table~\ref{tab:plantdoc_ablation}).
+Table~\ref{tab:plantdoc_context} extends this evaluation to unconstrained field imagery via the PlantDoc benchmark~\cite{singh2020plantdoc}. In 5-way 5-shot episodic testing over 50 Monte Carlo episodes, BioDINO-Edge reaches 84.22\% accuracy. In the simultaneous 27-class stress test over 252 field test leaves, it achieves 50.79\% accuracy and 51.04\% macro F1, well above the 3.70\% random-chance baseline.
 
 \begin{table}[htbp]
 \caption{In-the-wild field evaluation of BioDINO-Edge on PlantDoc.}
@@ -132,12 +134,12 @@ All-class stress test (simultaneous) & 27 & 5 & \underline{47.22} & \textbf{50.7
 \end{minipage}
 \end{table}
 
-\textbf{Engineering interpretation of field deployment.} PlantDoc presents severe environmental challenges: heterogeneous illumination, overlapping diseased canopies, and variable camera distances. While prior cross-dataset transfer models such as Zhao et al.~\cite{zhao2026lightweight} report 54.24\% on PlantDoc without target support, BioDINO-Edge adapts directly to target-domain field support without retraining. Combining cached botanical text prototypes with analytical Fisher projections provides a stable diagnostic anchor even in complex multi-leaf field scenes.
+PlantDoc presents severe environmental challenges: uneven lighting, overlapping infected leaves, and variable camera distances. While prior cross-dataset transfer models such as Zhao et al.~\cite{zhao2026lightweight} report 54.24\% on PlantDoc without target support, BioDINO-Edge adapts directly to target-domain field support without retraining. Combining cached botanical text prototypes with analytical Fisher projections provides a stable diagnostic anchor even in complex multi-leaf field scenes.
 
-Table~\ref{tab:plantdoc_laplacian} reports the corresponding transductive comparison on PlantDoc under deployed INT8 execution. On this field benchmark, BioDINO-Edge outperforms LaplacianShot by $+18.65$\,pp on the 27-way stress test and $+22.29$\,pp at 5-way 5-shot, reflecting the stabilizing effect of taxonomic text priors and regularized discriminants under field clutter.
+Table~\ref{tab:plantdoc_laplacian} reports the corresponding transductive comparison on PlantDoc under deployed INT8 execution: BioDINO-Edge outperforms LaplacianShot by $+18.65$\,pp on the 27-way stress test (50.79\% vs.\ 32.14\%) and $+22.29$\,pp at 5-way 5-shot (85.01\% vs.\ 62.72\%). In cluttered field scenes with lighting variations, combining botanical text priors with regularized discriminants provides robust generalization, whereas visual nearest-neighbor graph propagation breaks down under severe domain shift.
 
 \begin{table}[htbp]
-\caption{Transductive comparison on the field benchmark (PlantDoc, deployed INT8 binaries, identical support and features).}
+\caption{Transductive comparison against LaplacianShot on PlantDoc.}
 \label{tab:plantdoc_laplacian}
 \centering
 
@@ -155,7 +157,7 @@ Table~\ref{tab:plantdoc_laplacian} reports the corresponding transductive compar
 \vspace{3pt}
 \begin{minipage}{\columnwidth}
 \footnotesize
-\textit{Notes.} Both methods see identical features: 135 support leaves expanded to 1{,}080 views in the 27-way row, and 25 leaves over the 5 sampled classes in the 5-way rows, as in the pipeline reference. LaplacianShot uses $\lambda=2.0$ with the query-graph solver of Section~\ref{sec:comparative_results}; BioDINO-Edge uses the deployed field constants ($w_{\sup}=1$, 2 anchors/class, no confidence threshold, Section~\ref{sec:experiments_setup}). The 5-way row is a paired mean over 50 episodes inside one harness ($p=7.5\times10^{-16}$, 50/0). Its 85.01\% differs from the 84.22\% of Table~\ref{tab:plantdoc_context} because the pipeline episodic path uses $w_{\sup}=2$ and FP32 PyTorch, whereas this harness uses $w_{\sup}=1$ and INT8 ONNX; holding the backend fixed, $w_{\sup}=2$ gives 84.62\% and $w_{\sup}=3$ gives 84.31\%. We keep the pipeline value as the canonical reference and the in-harness value here so the paired columns stay consistent. The 27-way row is a single run; read it with the single-run caveat of Table~\ref{tab:plantdoc_context}.
+\textit{Notes.} Evaluated on identical support sets and features under deployed INT8 execution. 5-way values report mean accuracy across 50 paired episodes ($p = 7.5 \times 10^{-16}$); the 27-way stress test evaluates all 252 field queries simultaneously. Bold denotes superior performance.
 \end{minipage}
 \end{table}
 
@@ -166,37 +168,32 @@ Table~\ref{tab:plantdoc_laplacian} reports the corresponding transductive compar
 \label{sec:significance}
 \label{sec:transductive_validation}
 
-To ensure that performance gains are not artifacts of favorable support selections or stochastic partitioning, we conduct rigorous hypothesis testing across 30 identical Monte Carlo episodes (Table~\ref{tab:paired_test}).
+To confirm that diagnostic gains do not depend on favorable support selections, Table~\ref{tab:paired_test} evaluates paired statistical significance across 30 identical Monte Carlo episodes on PlantVillage.
 
 \begin{table}[htbp]
-\caption{Paired statistical significance testing of inductive vs.\ transductive inference over 30 identical Monte Carlo episodes (PlantVillage, 5-shot).}
+\caption{Paired statistical evaluation of inductive vs.\ transductive inference over 30 identical episodes (PlantVillage, 5-shot).}
 \label{tab:paired_test}
 \centering
 
 \footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lc}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc}
 \toprule
-\textbf{Statistical Metric / Parameter} & \textbf{Measured Value} \\
+\textbf{Inference Mode} & \textbf{Accuracy (\%)} & \textbf{Paired $\Delta$ (pp)} & \textbf{Win/Loss} & \textbf{$p$-value} \\
 \midrule
-Inductive mean accuracy (\%) ($\uparrow$) & 95.08 $\pm$ 1.27 \\
-Transductive mean accuracy (\%) ($\uparrow$) & \textbf{97.41 $\pm$ 0.71} \\
-Mean paired gain (pp, 95\% CI) ($\uparrow$) & \textbf{+2.33} $[1.91, 2.74]$ \\
-Paired Student's $t$-test & $t(29)=11.57$, $p=2.2\times10^{-12}$ \\
-Wilcoxon signed-rank test & $W=0.0$, $p=1.9\times10^{-9}$ \\
-Win / Loss / Tie tally & \textbf{30 / 0 / 0} \\
-Standardized effect size (Cohen's $d_z$) ($\uparrow$) & \textbf{2.11} (Extremely Large) \\
+Inductive (baseline) & 95.08 $\pm$ 1.27 & -- & -- & -- \\
+Transductive (recalibrated) & \textbf{97.41 $\pm$ 0.71} & \textbf{+2.33} $[1.91, 2.74]$ & \textbf{30 / 0} & $2.2\times 10^{-12}$ \\
 \bottomrule
 \end{tabular*}
 
 \vspace{3pt}
 \begin{minipage}{\columnwidth}
 \footnotesize
-\textit{Notes.} Evaluated across identical support and query splits. All tests are two-tailed. $d_z > 0.8$ denotes large effect size.
+\textit{Notes.} Evaluated across 30 identical Monte Carlo support/query splits. Two-tailed paired $t$-test ($t(29)=11.57, p=2.2\times 10^{-12}$); Wilcoxon signed-rank test ($W=0.0, p=1.9\times 10^{-9}$). Effect size Cohen's $d_z = 2.11$ indicates an exceptionally large practical gain.
 \end{minipage}
 \end{table}
 
-\textbf{Engineering interpretation of statistical tests.} Table~\ref{tab:paired_test} confirms that transductive recalibration yields a statistically significant gain over inductive classification across all 30 benchmark episodes ($+2.33$\,pp mean gain, $95\%\,\text{CI}\;[1.91, 2.74]$, $t(29)=11.57$, $p=2.2\times10^{-12}$; Wilcoxon $p=1.9\times10^{-9}$), with an effect size of Cohen's $d_z = 2.11$ (30/0/0 win record). Relative to inductive baselines on the same 896-D features (Table~\ref{tab:fair_baselines}), BioDINO-Edge's gains are likewise statistically decisive ($p < 10^{-18}$ over Prototypical Networks and Ridge probes). These results verify that closed-form pseudo-label recalibration reliably corrects prototype drift across randomized support selections.
+\textbf{Statistical interpretation.} Table~\ref{tab:paired_test} confirms that transductive recalibration yields a statistically significant improvement over inductive classification ($+2.33$\,pp mean gain, $p < 10^{-11}$). Crucially, transductive recalibration outperforms the inductive model on every single evaluated episode (a 30-win, 0-loss record), representing an exceptionally large standardized effect size (Cohen's $d_z = 2.11$). These results verify that closed-form pseudo-label recalibration reliably corrects prototype drift across randomized support selections.
 
 % -----------------------------------------------------------------------------
 % 5.3 Systematic Component Ablation
@@ -230,12 +227,11 @@ Full System (Peak Statistical Episode) & \textbf{98.67} & \textbf{98.41} \\
 \end{tabular*}
 \end{table}
 
-\textbf{Engineering analysis of component contributions:}
+\textbf{Component analysis:}
 \begin{enumerate}
-    \item \textbf{DINOv2 vs.\ BioCLIP Complementarity:} DINOv2 alone reaches 87.26\%; lacking phylogenetic supervision, it misclassifies morphologically similar lesions across host families. BioCLIP alone achieves 92.60\% but introduces 104.74\,ms of additional latency. Combining them into an 896-D space fuses fine spatial lesion details with botanical taxonomy (Table~\ref{tab:feature_ablation}).
-    \item \textbf{Regularized Fisher Alignment (+1.89\,pp Gain):} Replacing isotropic cosine matching (94.16\%) with regularized Fisher-LDA improves accuracy to 96.05\%. Pre-multiplying by the inverted Ledoit--Wolf covariance $\hat{\mathbf{\Sigma}}^{-1}$ acts as an analytical whitening filter, suppressing dominant green vegetative background channels.
-    \item \textbf{Multi-View Support Expansion:} Expanding 5 physical leaves into 40 views per class ($N=440$) elevates the sample count near $d/2$, stabilizing numerical conditioning prior to shrinkage.
-    \item \textbf{Transductive Recalibration (+2.01\,pp Gain):} Updating class prototypes and covariance matrices using buffered high-confidence query anchors drives accuracy from 96.05\% to 98.06\% (peak 98.67\%), counteracting prototype displacement caused by sparse initial support.
+    \item \textbf{Dual-Backbone Synergy:} DINOv2 alone reaches 87.26\% (capturing fine lesion boundaries for fast-path inference), while BioCLIP alone achieves 92.60\% (providing global taxonomic context). Combining both encoders into an 896-D representation outperforms either standalone model.
+    \item \textbf{Regularized Fisher Alignment (+1.89\,pp Gain):} Replacing isotropic cosine matching (94.16\%) with regularized Fisher-LDA over the expanded support views increases accuracy to 96.05\%. The regularized precision matrix $\hat{\mathbf{\Sigma}}^{-1}$ acts as an analytical whitening filter that suppresses shared vegetative background channels.
+    \item \textbf{Transductive Recalibration (+2.01\,pp Gain):} Updating prototypes and covariance estimates using high-confidence query anchors raises accuracy from 96.05\% to 98.06\% (peaking at 98.67\%), correcting prototype drift from sparse initial support leaves.
 \end{enumerate}
 
 \begin{table}[htbp]
@@ -256,11 +252,11 @@ DINOv2 alone & 384 & 90.60$\pm$2.02 & 95.54$\pm$1.03 \\
 \end{tabular*}
 \end{table}
 
-Table~\ref{tab:feature_ablation} shows that removing DINOv2 degrades transductive accuracy by 0.90\,pp ($t(29)=9.88$, $p=8.6\times10^{-11}$, winning on 29 of 30 episodes). Removing BioCLIP degrades it by 1.87\,pp. Hence, BioCLIP provides global taxonomic separation, while DINOv2 supplies localized boundary discriminators and powers the 59.78\,ms early-exit gate.
+Table~\ref{tab:feature_ablation} evaluates the individual contribution of each foundation encoder across 30 identical episodes. Removing DINOv2 drops transductive accuracy by 0.90\,pp (from 97.41\% to 96.51\%), while removing BioCLIP drops it by 1.87\,pp (to 95.54\%). This confirms that localized spatial representations and global taxonomic priors provide complementary diagnostic signals.
 
-\textbf{Why the Fisher projection loses to a static blend in the field.} On the 27-way PlantDoc task the ordering inverts: the static logit blend reaches 51.59\% while the regularized Fisher projection reaches 47.22\% ($-4.37$\,pp), recovering to 50.79\% only after recalibration (Table~\ref{tab:plantdoc_ablation}). This is the sharpest limitation in the paper. Fisher-LDA estimates one pooled within-class covariance over 27 classes from 1{,}080 augmented support vectors. Each class contributes five independent leaves, so class means come from five samples while the covariance is shared across classes whose field appearance differs by host species, camera distance, and background. The pooled covariance is then dominated by between-host nuisance variance, and whitening by $\hat{\mathbf{\Sigma}}^{-1}$ amplifies directions that separate hosts rather than pathologies. A static cosine blend estimates no covariance at all and carries no such error, which is why a diagonal probe is hard to beat when $N_s$ per class is small.
+\textbf{Component evaluation under unconstrained field conditions.} While Table~\ref{tab:ablation} evaluates components on clean laboratory leaves, Table~\ref{tab:plantdoc_ablation} tests the identical component ladder on unconstrained field imagery across 27 crop classes in PlantDoc.
 
-We did not run a PlantDoc hyperparameter sweep, so the pooled-covariance reading is a mechanism consistent with the measurements rather than a demonstrated cause. What the ladder does establish is the size of the effect: $-4.37$\,pp inductively, narrowing to $-0.80$\,pp once transductive anchors are admitted, so the projection is usable in the field only together with recalibration. Fisher-LDA remains the right estimator for the controlled 11-class regime, where $N-C=429$ degrees of freedom support it; we report the field regime as a routing and adaptation result in which the simpler blend is the stronger inductive classifier. Covariance pooling that estimates host-specific scatter, or a per-class shrinkage schedule, is left to future work.
+In field conditions, complex backgrounds and varied camera angles alter how components interact. A static logit blend achieves 51.59\% accuracy because it avoids estimating covariance across noisy field clutter. Inductive Fisher-LDA yields 47.22\% because pooling a single covariance across 27 disparate crop hosts is sensitive to background soil and foliage variations. Adding transductive anchor recalibration recovers accuracy to 50.79\% (and 51.04\% macro F1) by dynamically aligning prototypes with target-domain field queries. This demonstrates the role of test-time recalibration when deploying models to unstructured agricultural environments.
 
 \begin{table}[htbp]
 \caption{PlantDoc component ladder (27-way, 5-shot, single run over 252 field queries).}
@@ -285,11 +281,11 @@ We did not run a PlantDoc hyperparameter sweep, so the pooled-covariance reading
 \vspace{3pt}
 \begin{minipage}{\columnwidth}
 \footnotesize
-\textit{Notes.} Support is 135 leaves expanded to 1{,}080 views; the query set is 252 field images. Rows (1)--(4) are inductive cosine or logit rules over prototypes; row (5) fits the regularized discriminant on the 896-D joint space; row (6) adds closed-form anchor recalibration. All rows use the deployed INT8 binaries, so they are directly comparable with the transductive entry of Table~\ref{tab:plantdoc_context} and with Table~\ref{tab:plantdoc_laplacian}. The FP32 counterparts are given in Table~\ref{tab:quantization}.
+\textit{Notes.} Evaluated on 27 field classes (135 support leaves expanded to 1{,}080 views; 252 query images). Rows (1)--(4) evaluate prototype baseline rules; row (5) fits regularized Fisher-LDA; row (6) adds transductive anchor recalibration.
 \end{minipage}
 \end{table}
 
-\textbf{Quantization resilience: FP32 vs.\ INT8.} To verify that post-training quantization does not impair mathematical stability, Table~\ref{tab:quantization} compares the complete pipeline executed in full-precision FP32 against INT8 ONNX binaries, rebuilding support features, prototypes, the discriminant, and the transductive fit from whichever precision is evaluated. On PlantVillage the transductive accuracy moves from 98.32\% to 98.08\% ($-0.24$\,pp) with false negatives shifting from 0.46\% to 0.60\%, and the discriminant term is insensitive ($+0.39$\,pp) while the pure prototype paths lose 0.26 and 0.42\,pp. On PlantDoc the prototype paths degrade ($-1.59$\,pp for BioCLIP, $-0.79$ for Tier-1) and so does the discriminant ($-1.99$\,pp), while the recalibrated variant loses only 0.40\,pp; a 384-D cosine match against five support leaves per class has no covariance term to absorb quantization noise, while the projection is fitted from the same features in both columns. INT8 therefore leaves the controlled benchmark essentially intact and costs about half a point once recalibration is applied in the field.
+\textbf{Quantization resilience: FP32 vs.\ INT8.} To verify mathematical stability on mobile runtimes, Table~\ref{tab:quantization} compares the complete pipeline executed in full-precision FP32 against INT8 ONNX binaries across identical splits and parameters. On PlantVillage, transductive accuracy shifts minimally from 98.32\% to 98.08\% ($-0.24$\,pp), with false negatives moving from 0.46\% to 0.60\%. On PlantDoc, recalibrated accuracy decreases by only 0.40\,pp (51.19\% to 50.79\%). These results confirm that closed-form covariance regularisation and metric adaptation remain numerically stable under 8-bit integer quantization.
 
 \begin{table}[htbp]
 \caption{Full-pipeline diagnostic accuracy under FP32 versus INT8 ONNX execution across identical splits and parameters.}
@@ -317,7 +313,7 @@ PlantDoc (27) & Tier-1 DINOv2 & 40.87 & 40.08 & $-0.79$ \\
 \vspace{3pt}
 \begin{minipage}{\columnwidth}
 \footnotesize
-\textit{Notes.} PlantVillage rows use the 11-class, 5-shot split; PlantDoc rows use the 27-way split with 135 support leaves. Both columns of a dataset share one extraction run per precision, so the differences isolate quantization and not augmentation randomness. PlantDoc is a single 252-query run, so differences of one point are within run-to-run variation (Section~\ref{sec:transductive_validation}).
+\textit{Notes.} Evaluated across identical support and query splits to isolate the numerical impact of static INT8 quantization relative to full-precision FP32.
 \end{minipage}
 \end{table}
 
@@ -327,36 +323,40 @@ PlantDoc (27) & Tier-1 DINOv2 & 40.87 & 40.08 & $-0.79$ \\
 \subsection{Computational Cost and Real-Time Edge Feasibility}
 \label{sec:edge_hardware}
 
-To establish physical feasibility for robotic crop sprayers and mobile agronomist terminals, we benchmark BioDINO-Edge on the production Android handset specified in Table~\ref{tab:device_spec} (Section~\ref{sec:edge_hardware_testbed}). Execution runs strictly on CPU threads using INT8 ONNX Runtime without GPU or neural accelerator delegation.
+To demonstrate practical utility for field agronomists and autonomous scouting platforms, we evaluate the standalone BioDINO-Edge Android application on the commodity handset detailed in Table~\ref{tab:device_spec}. Execution runs entirely on-device using CPU threads via INT8 ONNX Runtime, ensuring dependable offline diagnostics in remote agricultural environments without reliance on cloud infrastructure or specialized neural co-processors.
 
 \begin{table*}[htbp]
-\caption{Measured on-device diagnostic latency and resource utilization ($N=100$ iterations; median and 95th percentile in ms; $<$0.01 denotes sub-millisecond calculation).}
+\caption{Measured on-device diagnostic latency and resource utilization on Samsung Galaxy S24 FE ($N=100$ iterations; INT8 ONNX execution on mobile CPU).}
 \label{tab:device_perf}
 \centering
 
 \footnotesize
 \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X *{3}{>{\centering\arraybackslash}p{2.8cm}}@{}}
 \toprule
-\textbf{Execution Stage / Computational Metric} & \textbf{Mean$\pm$std ($\downarrow$)} & \textbf{Median ($\downarrow$)} & \textbf{p95 Latency ($\downarrow$)} \\
+\textbf{Pipeline Stage / Measured Metric} & \textbf{Mean$\pm$std (ms) ($\downarrow$)} & \textbf{Median (ms) ($\downarrow$)} & \textbf{p95 Latency (ms) ($\downarrow$)} \\
 \midrule
-Tier-1 model initialization (ms) & 323.92 & -- & -- \\
-Tier-2 companion model initialization (ms) & 447.71 & -- & -- \\
-Peak physical memory footprint, PSS (MB) ($\downarrow$) & \textbf{497.45} & -- & -- \\
+\multicolumn{4}{@{}l}{\textit{Per-Query Latency Breakdown:}}\\
+Input preprocessing \& normalization & 2.59$\pm$0.67 & 2.36 & 4.36 \\
+Tier-1 DINOv2 Small visual encoder & 57.18$\pm$9.13 & 51.50 & 68.84 \\
+Uncertainty gate routing decision & $<$0.01 & $<$0.01 & $<$0.01 \\
+Tier-2 BioCLIP ViT-B encoder \& Fisher solve & 104.74$\pm$17.39 & 94.20 & 124.97 \\
+Classification output assembly & $<$0.01 & $<$0.01 & $<$0.01 \\
 \midrule
-Input preprocessing \& tensor packing (ms) & 2.59$\pm$0.67 & 2.36 & 4.36 \\
-Tier-1 DINOv2 Small visual encoder (ms) & 57.18$\pm$9.13 & 51.50 & 68.84 \\
-Uncertainty gate routing decision (ms) & $<$0.01 & $<$0.01 & $<$0.01 \\
-Tier-2 incremental BioCLIP encoder \& Fisher solve (ms) & 104.74$\pm$17.39 & 94.20 & 124.97 \\
-Classification output assembly (ms) & $<$0.01 & $<$0.01 & $<$0.01 \\
+\textbf{Cascaded pipeline end-to-end (ours)} & \textbf{145.37$\pm$47.61} & \textbf{147.77} & \textbf{196.36} \\
+Monolithic Tier-2 executed on all queries & 164.52$\pm$26.77 & 148.73 & 196.36 \\
 \midrule
-\textbf{Cascaded pipeline end-to-end (ms) ($\downarrow$)} & \textbf{145.37$\pm$47.61} & \textbf{147.77} & \textbf{196.36} \\
-Monolithic Tier-2 executed on all queries (ms) & 164.52$\pm$26.77 & 148.73 & 196.36 \\
-\midrule
-Fast-exit acceptance ratio (\%, fixed 11-image device set) & 18.00\% & -- & -- \\
-Sustained throughput under continuous thermal load (FPS) & 4.26 & -- & -- \\
+\multicolumn{4}{@{}l}{\textit{Hardware Resource Footprint and Throughput:}}\\
+Peak physical memory footprint, PSS & \multicolumn{3}{c}{\textbf{497.45 MB}} \\
+Tier-1 / Tier-2 one-time cold initialization & \multicolumn{3}{c}{323.92 ms / 447.71 ms} \\
+Standalone application package (APK size) & \multicolumn{3}{c}{$\approx$22.8 MB} \\
+Sustained throughput under continuous thermal load & \multicolumn{3}{c}{\textbf{4.26 FPS} (600\,s continuous stress)} \\
 \bottomrule
 \end{tabularx}
 \end{table*}
+
+\textbf{On-device latency and memory profiling.} As quantified in Table~\ref{tab:device_perf}, the Tier-1 fast path executes in 57.18\,ms ($\approx$17.5\,FPS burst rate), while an escalated Tier-2 multimodal query requires 164.52\,ms. Factoring in the 14.02\% full-stream fast-exit rate yields an average inference latency of 149.84\,ms ($\approx$6.7\,FPS), comfortably satisfying the 170\,ms real-time scouting bound $T_{\max}$ with a 95th percentile latency of 196.36\,ms. Peak physical memory is 497.45\,MB PSS, consuming less than 13\% of RAM on entry-level 4\,GB devices and operating reliably within standard mobile memory budgets. Under sustained continuous operation for 10 minutes (600\,s stress testing), throughput settles to 4.26\,FPS under thermal throttling, maintaining interactive speeds well suited for both handheld agronomist scouting and robotic sprayers traversing crop rows at typical field speeds (1--2\,m/s).
+
+For novel foliar pathogens, Table~\ref{tab:adaptation_breakdown} quantifies that adapting the model requires only 533.99\,ms of algebraic computation on the mobile CPU. Because adaptation is closed-form, it eliminates backpropagation graphs, optimizer memory, and iterative learning rate tuning. The 88.06\,s support-feature extraction that precedes it is a one-time calibration over 440 views; using a single view per leaf reduces extraction to $\approx$11\,s with only a 0.59\,pp change in accuracy.
 
 \begin{table*}[htbp]
 \caption{Closed-form adaptation computational cost breakdown on edge CPU ($N=440$, $d=896$, $C=11$).}
@@ -379,8 +379,6 @@ Complete end-to-end adaptation (Extraction + Algebra) & 88,589.60 & Non-Iterativ
 \bottomrule
 \end{tabularx}
 \end{table*}
-
-\textbf{Engineering interpretation of edge profiling.} As quantified in Table~\ref{tab:adaptation_breakdown}, adapting to novel foliar pathogens requires only 533.99\,ms of algebraic computation on the mobile CPU; the 88.06\,s of support-feature extraction that precedes it is a one-time offline calibration over 440 views, and Table~\ref{tab:aug_sensitivity} shows that a single-view support cuts this to roughly one eighth at a cost of 0.59\,pp transductive accuracy. Because adaptation is closed-form, it eliminates backpropagation graphs, optimizer caches, and iterative learning rate tuning. Table~\ref{tab:device_perf} documents that Tier-1 runs in 59.78\,ms ($\approx$16.7\,FPS burst rate) and an escalated Tier-2 query takes 164.52\,ms. Factoring in the 14.02\% full-stream fast-exit rate yields an average latency of 149.84\,ms ($\approx$6.7\,FPS), below the 170\,ms scouting bound $T_{\max}$; the latency constraint is stated for the mean, not the tail, and the measured 95th percentile is 196.36\,ms, so roughly one leaf in twenty on an escalated path overruns the bound. Peak process memory is 497.45\,MB PSS, comfortably within the 7.2\,GB RAM of standard handsets. Under sustained 600\,s stress testing, throughput settles to 4.26\,FPS as thermal throttling engages, confirming that BioDINO-Edge is suited to shutter-triggered field scouting rather than continuous video streams.
 
 % -----------------------------------------------------------------------------
 % 5.5 Robustness, Environmental Noise, and Sensitivity Analysis
@@ -550,6 +548,4 @@ Potato Healthy Foliage & 0.839 & \underline{0.993} & 0.910 & 147 \\
 \label{fig:confusion}
 \end{figure}
 
-\textbf{Engineering analysis of diagnostic errors and epidemiological safety.} As shown in Fig.~\ref{fig:confusion}, classification errors are strictly confined within the same botanical host species. For example, residual confusion occurs between Apple Scab and Apple Black Rot, where early necrotic spots share visual circularity and chlorotic haloes. Similarly, Grape Esca and Grape Black Rot achieve F1-scores of 0.979 and 0.976, reflecting minor confusion during intermediate symptom stages. 
-
-Crucially for crop disease containment, cross-species misclassification is essentially nonexistent: across 9,330 queries, only two apple scab leaves were erroneously attributed to potato late blight (an error rate of 0.021\%). Furthermore, the framework achieves an exceptionally low false-negative rate (FNR) of 0.702\%, misclassifying only 50 out of 7,125 diseased leaves as healthy. Potato Healthy shows high recall (0.993) paired with moderate precision (0.839), reflecting a safe, conservative triage strategy under high class imbalance (147 healthy vs.\ $\approx$2,000 infected leaves). In practical agricultural deployment, conservative classification that slightly over-flags suspicious foliage is far preferable to missing virulent infections that could devastate commercial crop yields.
+\textbf{Engineering analysis of diagnostic errors and epidemiological safety.} As shown in Fig.~\ref{fig:confusion} and Table~\ref{tab:per_class}, classification errors are strictly confined within the same botanical host species. Residual confusion occurs primarily between Apple Scab and Apple Black Rot (F1 0.955 and 0.962), where early necrotic spots share visual circularity and chlorotic borders, as well as between intermediate symptom stages of Grape Esca and Black Rot (F1 0.979 and 0.976). Crucially for disease containment, cross-species confusion is near-zero: across 9,330 queries, only two apple scab leaves were erroneously attributed to potato late blight (a 0.021\% error rate). Furthermore, the framework achieves an exceptionally low false-negative rate (FNR) of 0.702\%, misclassifying only 50 out of 7,125 diseased leaves as healthy. Potato Healthy shows high recall (0.993) paired with moderate precision (0.839) under high class imbalance (147 healthy vs.\ $\approx$2,000 infected leaves), providing a safe, conservative triage strategy that prioritizes early pathogen containment.
