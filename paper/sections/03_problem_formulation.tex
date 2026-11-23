@@ -10,7 +10,7 @@ Field diagnosis requires identifying crop diseases directly on mobile devices as
 \begin{equation}
     \mathcal{S} = \{(\mathbf{x}_i, y_i)\}_{i=1}^{N_s}, \qquad N_s = C \times K,
 \end{equation}
-where $C$ is the number of target pathology classes (e.g., $C \in \{5, 11, 27\}$) and $K$ is the number of labeled examples per class (typically $K = 5$). These local diseases are unseen during pre-training ($\mathcal{Y}_{\text{base}} \cap \mathcal{Y}_{\text{novel}} = \emptyset$).
+where $C$ is the number of target pathology classes (e.g., $C \in \{5, 11, 27\}$) and $K$ is the number of labeled examples per class (typically $K = 5$). The target classes themselves are absent from pre-training ($\mathcal{Y}_{\text{base}} \cap \mathcal{Y}_{\text{novel}} = \emptyset$).
 
 During active scouting, leaves are observed sequentially as an online stream:
 \begin{equation}
@@ -22,7 +22,7 @@ Performing this diagnosis on edge hardware faces strict computational limits. Fi
 
 \subsection{Engineering and Operational Constraints}
 \label{sec:engineering_constraints}
-Because remote crop fields often lack internet connectivity, foliar diagnosis must run entirely on edge devices rather than on cloud servers~\cite{shoaib2023advanced}. We define the on-device diagnostic objective as a constrained optimization problem that maximizes accuracy while bounding the disease escape rate (false-negative rate, FNR) and satisfying operational engineering boundaries:
+Because agricultural sites often have limited or unreliable connectivity, foliar diagnosis should run on edge devices rather than depend on cloud servers~\cite{radocaj2025evolution,sharif2026real}. We define the on-device diagnostic objective as a constrained optimization problem that maximizes accuracy while bounding the disease escape rate (false-negative rate, FNR) and satisfying operational engineering boundaries:
 \begin{equation}
 \begin{aligned}
     \max_{\mathbf{W}, \mathbf{b}, \, \tau_{\text{conf}}} \quad & \mathbb{E}_{(\mathbf{x}_t, y_t)}\big[\mathbb{I}(\hat{y}_t = y_t)\big] \\
@@ -39,8 +39,8 @@ where $\mathbf{W} \in \mathbb{R}^{C \times d}$ and $\mathbf{b} \in \mathbb{R}^C$
 
 While the exact operational parameters $(\epsilon_{\text{esc}}, L_{\max}, T_{\max}, M_{\max})$ depend on the scouting platform and target crop pathology, we establish representative target boundaries for our edge deployment:
 \begin{enumerate}
-    \item \textbf{Agronomic Disease Escape Limit ($\text{FNR} \le \epsilon_{\text{esc}}$):} In plant protection, misclassifying an infected leaf as healthy allows pathogens to spread across the field unnoticed. Under integrated pest management principles~\cite{richard2022control}, preventing secondary infection outbreaks requires minimizing missed infections. We therefore target an FNR below $\epsilon_{\text{esc}} = 1.0\%$.
-    \item \textbf{Real-Time Stream Latency ($\overline{L}_{\text{inf}} \le L_{\max}$):} Field scouting platforms require continuous scanning to inspect crop canopies. Maintaining an inspection rate of $\ge 6$ frames per second requires mean per-frame latency to remain within $L_{\max} = 170$\,ms to prevent buffer overflow and dropped frames~\cite{sharif2026real}.
+    \item \textbf{Agronomic Disease Escape Limit ($\text{FNR} \le \epsilon_{\text{esc}}$):} In plant protection, misclassifying an infected leaf as healthy lets pathogens spread unnoticed. Integrated pest management treats missed infections as the costliest error~\cite{richard2022control}, so we set our own target at an FNR below $\epsilon_{\text{esc}} = 1.0\%$.
+    \item \textbf{Real-Time Stream Latency ($\overline{L}_{\text{inf}} \le L_{\max}$):} Field scouting platforms scan crop canopies continuously. At the 1--2\,m/s row speeds typical of field scouting, 6\,fps corresponds to a 0.17--0.33\,m stride, roughly one frame per leaf cluster. This sets a 170\,ms per-frame budget ($1/6$\,s $\approx 167$\,ms, rounded up), which we adopt as our design requirement. Staying within it on device avoids the latency and bandwidth cost of off-board processing~\cite{radocaj2025evolution}.
     \item \textbf{Sub-Second On-Device Calibration ($T_{\text{adapt}} \le T_{\max}$):} When encountering a new regional pathogen variant in the field, calibrating the model with a few reference leaves ($K=5$) must finish within sub-second time ($T_{\max} \le 1.0$\,s) so scouting can resume immediately. In addition, backpropagation and optimizer tracking are disallowed on device ($\nabla_\theta = \emptyset$) to prevent memory bloat and processor slowdown.
     \item \textbf{Memory Footprint ($\text{Mem}_{\text{PSS}} \le M_{\max}$):} Mobile edge terminals share limited random-access memory (RAM) across the operating system and camera drivers. Setting a budget of $M_{\max} = 500$\,MB peak PSS ensures the diagnostic engine avoids memory-pressure termination and operates safely on fanless embedded hardware.
 \end{enumerate}

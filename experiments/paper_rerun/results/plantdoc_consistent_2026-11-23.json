@@ -1,0 +1,52 @@
+{
+  "dataset": "plantdoc-working-consistent",
+  "protocol": {
+    "n_classes": 27,
+    "support": 135,
+    "query": 252,
+    "n_views": 8,
+    "seed": 42,
+    "support_weight_27way": 1,
+    "lam": 2.0
+  },
+  "timing_27way_s": 31.9,
+  "27way": {
+    "ours_inductive": {
+      "acc": 48.80952380952381,
+      "f1": 47.51136106691662
+    },
+    "ours_transductive": {
+      "acc": 52.38095238095239,
+      "f1": 52.52231343009973
+    },
+    "laplacianshot": {
+      "acc": 30.555555555555557,
+      "f1": 20.02000135898099
+    }
+  },
+  "timing_5way_s": 319.6,
+  "5way": {
+    "ours_inductive": {
+      "mean": 82.596848447789,
+      "std": 11.49124831974286
+    },
+    "ours_transductive": {
+      "mean": 84.94374159181073,
+      "std": 11.152008027396269
+    },
+    "ours_macro_f1": {
+      "mean": 84.55025813434382,
+      "std": 11.200385535062622
+    },
+    "laplacianshot": {
+      "mean": 65.731328161112,
+      "std": 16.528734277937563,
+      "macro_f1_mean": 54.20649693959987
+    },
+    "delta_pp": 19.21241343069875,
+    "p_value": 1.145352217479776e-12,
+    "wins": 46,
+    "losses": 3
+  },
+  "timing_total_s": 356.9
+}
