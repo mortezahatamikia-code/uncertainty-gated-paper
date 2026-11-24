@@ -8,21 +8,21 @@
 \label{sec:task_formulation}
 Field diagnosis requires identifying crop diseases directly on mobile devices as leaves are inspected in the field. When deployed to a new crop or region, the system must calibrate using only a small reference set of labeled leaves collected on site:
 \begin{equation}
-    \mathcal{S} = \{(\mathbf{x}_i, y_i)\}_{i=1}^{N_s}, \qquad N_s = C \times K
+    \mathcal{S} = \{(\mathbf{x}_i, y_i)\}_{i=1}^{N_s}, \qquad N_s = C \times K,
 \end{equation}
 where $C$ is the number of target pathology classes (e.g., $C \in \{5, 11, 27\}$) and $K$ is the number of labeled examples per class (typically $K = 5$). These local diseases are unseen during pre-training ($\mathcal{Y}_{\text{base}} \cap \mathcal{Y}_{\text{novel}} = \emptyset$).
 
 During active scouting, leaves are observed sequentially as an online stream:
 \begin{equation}
-    \mathcal{Q}_{\text{stream}} = \{\mathbf{x}_t\}_{t=1}^{T}, \qquad \mathbf{x}_t \in \mathbb{R}^{H \times W \times 3}
+    \mathcal{Q}_{\text{stream}} = \{\mathbf{x}_t\}_{t=1}^{T}, \qquad \mathbf{x}_t \in \mathbb{R}^{H \times W \times 3}.
 \end{equation}
 The system must output an immediate diagnosis $\hat{y}_t \in \{1, \dots, C\}$ for each incoming frame $\mathbf{x}_t$, without buffering queries or waiting for future images.
 
-Performing this diagnosis on edge hardware faces strict computational limits. Fine-tuning deep backbones on device requires extra memory and causes processor slowdown. The model must therefore rely on frozen foundation encoders ($\nabla_\theta = \emptyset$). We extract complementary visual and biological features using DINOv2-Small ($d_1 = 384$) and BioCLIP ($d_2 = 512$), yielding a fixed joint descriptor $\mathbf{z} \in \mathbb{R}^d$ ($d = 896$) without gradient calculations during field adaptation.
+Performing this diagnosis on edge hardware faces strict computational limits. Fine-tuning deep backbones on device requires extra memory and causes processor slowdown. Our model therefore relies on frozen foundation encoders ($\nabla_\theta = \emptyset$). We extract complementary visual and biological features using DINOv2-Small ($d_1 = 384$) and BioCLIP ($d_2 = 512$), yielding a fixed joint descriptor $\mathbf{z} \in \mathbb{R}^d$ ($d = 896$) without gradient calculations during field adaptation.
 
 \subsection{Engineering and Operational Constraints}
 \label{sec:engineering_constraints}
-Because remote crop fields often lack internet connectivity, foliar diagnosis must run entirely on edge devices rather than on cloud servers \cite{shoaib2023advanced}. We define the on-device diagnostic objective as a constrained optimization problem that maximizes accuracy subject to four operational engineering boundaries:
+Because remote crop fields often lack internet connectivity, foliar diagnosis must run entirely on edge devices rather than on cloud servers~\cite{shoaib2023advanced}. We define the on-device diagnostic objective as a constrained optimization problem that maximizes accuracy while bounding the disease escape rate (false-negative rate, FNR) and satisfying operational engineering boundaries:
 \begin{equation}
 \begin{aligned}
     \max_{\mathbf{W}, \mathbf{b}, \, \tau_{\text{conf}}} \quad & \mathbb{E}_{(\mathbf{x}_t, y_t)}\big[\mathbb{I}(\hat{y}_t = y_t)\big] \\
@@ -30,7 +30,7 @@ Because remote crop fields often lack internet connectivity, foliar diagnosis mu
         \text{FNR}(\hat{y}) \le \epsilon_{\text{esc}} & \text{(agronomic safety)} \\
         \overline{L}_{\text{inf}}(\tau_{\text{conf}}) \le L_{\max} & \text{(real-time stream latency)} \\
         T_{\text{adapt}}(\mathcal{S}) \le T_{\max}, \; \nabla_\theta = \emptyset & \text{(gradient-free calibration)} \\
-        \text{Mem}_{\text{PSS}} \le M_{\max} & \text{(mobile thermal/RAM budget)}
+        \text{Mem}_{\text{PSS}} \le M_{\max} & \text{(mobile thermal and memory budget)},
     \end{cases}
 \end{aligned}
 \label{eq:constrained_objective}
@@ -39,24 +39,24 @@ where $\mathbf{W} \in \mathbb{R}^{C \times d}$ and $\mathbf{b} \in \mathbb{R}^C$
 
 While the exact operational parameters $(\epsilon_{\text{esc}}, L_{\max}, T_{\max}, M_{\max})$ depend on the scouting platform and target crop pathology, we establish representative target boundaries for our edge deployment:
 \begin{enumerate}
-    \item \textbf{Agronomic Disease Escape Limit ($\text{FNR} \le \epsilon_{\text{esc}}$):} In plant protection, misclassifying an infected leaf as healthy allows pathogens to spread across the field unnoticed. Under integrated pest management principles \cite{richard2022control}, preventing secondary infection outbreaks requires minimizing missed infections. We therefore target a false-negative rate ($\text{FNR}$) below $\epsilon_{\text{esc}} = 1.0\%$.
-    \item \textbf{Real-Time Stream Latency ($\overline{L}_{\text{inf}} \le L_{\max}$):} Field scouting platforms require continuous scanning to inspect crop canopies. Maintaining an inspection rate of $\ge 6$ frames per second requires mean per-frame latency to remain within $L_{\max} = 170$\,ms to prevent buffer overflow and dropped frames \cite{sharif2026real}.
+    \item \textbf{Agronomic Disease Escape Limit ($\text{FNR} \le \epsilon_{\text{esc}}$):} In plant protection, misclassifying an infected leaf as healthy allows pathogens to spread across the field unnoticed. Under integrated pest management principles~\cite{richard2022control}, preventing secondary infection outbreaks requires minimizing missed infections. We therefore target an FNR below $\epsilon_{\text{esc}} = 1.0\%$.
+    \item \textbf{Real-Time Stream Latency ($\overline{L}_{\text{inf}} \le L_{\max}$):} Field scouting platforms require continuous scanning to inspect crop canopies. Maintaining an inspection rate of $\ge 6$ frames per second requires mean per-frame latency to remain within $L_{\max} = 170$\,ms to prevent buffer overflow and dropped frames~\cite{sharif2026real}.
     \item \textbf{Sub-Second On-Device Calibration ($T_{\text{adapt}} \le T_{\max}$):} When encountering a new regional pathogen variant in the field, calibrating the model with a few reference leaves ($K=5$) must finish within sub-second time ($T_{\max} \le 1.0$\,s) so scouting can resume immediately. In addition, backpropagation and optimizer tracking are disallowed on device ($\nabla_\theta = \emptyset$) to prevent memory bloat and processor slowdown.
-    \item \textbf{Memory Footprint ($\text{Mem}_{\text{PSS}} \le M_{\max}$):} Mobile edge terminals share limited random-access memory (RAM) across the operating system and camera drivers. Setting a budget of $M_{\max} = 500$\,MB peak Proportional Set Size (PSS) ensures the diagnostic engine avoids memory-pressure termination and operates safely on fanless embedded hardware.
+    \item \textbf{Memory Footprint ($\text{Mem}_{\text{PSS}} \le M_{\max}$):} Mobile edge terminals share limited random-access memory (RAM) across the operating system and camera drivers. Setting a budget of $M_{\max} = 500$\,MB peak PSS ensures the diagnostic engine avoids memory-pressure termination and operates safely on fanless embedded hardware.
 \end{enumerate}
 
-\subsection{Statistical Preliminaries: Small-Sample Covariance Degeneracy}
+\subsection{Small-Sample Covariance Degeneracy}
 \label{sec:covariance_degeneracy}
 Foliar representations exhibit non-uniform feature variance across latent dimensions. Unrelated background patterns---such as green pigmentation, leaf veins, and surface glare---span the highest-variance directions in the feature space. When classification relies on isotropic metrics such as unweighted Euclidean distance or cosine similarity:
 \begin{equation}
-    \hat{y}_t = \arg\max_{c \in \{1, \dots, C\}} \frac{\mathbf{z}_t^T \boldsymbol{\mu}_c}{\|\mathbf{z}_t\|_2 \|\boldsymbol{\mu}_c\|_2}, \qquad \boldsymbol{\mu}_c = \frac{1}{|\mathcal{S}_c|}\sum_{\mathbf{x} \in \mathcal{S}_c} \mathbf{z}(\mathbf{x})
+    \hat{y}_t = \arg\max_{c \in \{1, \dots, C\}} \frac{\mathbf{z}_t^T \boldsymbol{\mu}_c}{\|\mathbf{z}_t\|_2 \|\boldsymbol{\mu}_c\|_2}, \qquad \boldsymbol{\mu}_c = \frac{1}{|\mathcal{S}_c|}\sum_{\mathbf{x} \in \mathcal{S}_c} \mathbf{z}(\mathbf{x}),
     \label{eq:isotropic_cosine}
 \end{equation}
 all feature coordinates are weighted equally ($\mathbf{\Sigma} = \sigma^2 \mathbf{I}$). As a result, distance metrics are dominated by healthy leaf background rather than subtle lesion symptoms.
 
 Fisher Linear Discriminant Analysis resolves this issue by projecting features through the inverse within-class covariance $\hat{\mathbf{\Sigma}}^{-1}$, which suppresses high-variance shared background directions and amplifies discriminative lesion signals. Computing this projection requires the empirical pooled within-class scatter matrix:
 \begin{equation}
-    \mathbf{S}_W = \frac{1}{N - C} \sum_{c=1}^C \sum_{\mathbf{z} \in \mathcal{S}_c} (\mathbf{z} - \boldsymbol{\mu}_c)(\mathbf{z} - \boldsymbol{\mu}_c)^T \in \mathbb{R}^{d \times d}
+    \mathbf{S}_W = \frac{1}{N - C} \sum_{c=1}^C \sum_{\mathbf{z} \in \mathcal{S}_c} (\mathbf{z} - \boldsymbol{\mu}_c)(\mathbf{z} - \boldsymbol{\mu}_c)^T \in \mathbb{R}^{d \times d}.
     \label{eq:empirical_scatter}
 \end{equation}
 In field deployment, however, the number of support samples $N$ is far smaller than the feature dimension $d$ ($N \ll d$). Across our target evaluation settings:
