@@ -30,8 +30,9 @@ Thank you for considering our work. We look forward to the reviewers’ comments
 
 Sincerely,
 
-**Reyhane Javidi Alsaadi** (corresponding author)
-Department of Computer Engineering, Dr. Shariaty Technical University, Tehran, Iran
-Email: reyhane.code@gmail.com
+**Reyhane Javidi Alsaadi** (corresponding author)  
+Department of Computer Engineering, Dr. Shariaty Technical University, Tehran, Iran  
+Email: reyhane.code@gmail.com  
+ORCID: https://orcid.org/0009-0000-0296-7467
 
 On behalf of all authors: Reyhane Javidi Alsaadi and Mohammad Reza Samadzadeh.

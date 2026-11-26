@@ -18,7 +18,7 @@ During active scouting, leaves are observed sequentially as an online stream:
 \end{equation}
 The system must output an immediate diagnosis $\hat{y}_t \in \{1, \dots, C\}$ for each incoming frame $\mathbf{x}_t$, without buffering queries or waiting for future images.
 
-Performing this diagnosis on edge hardware faces strict computational limits. Fine-tuning deep backbones on device requires extra memory and causes processor slowdown. Our model therefore relies on frozen foundation encoders ($\nabla_\theta = \emptyset$). We extract complementary visual and biological features using DINOv2-Small ($d_1 = 384$) and BioCLIP ($d_2 = 512$), yielding a fixed joint descriptor $\mathbf{z} \in \mathbb{R}^d$ ($d = 896$) without gradient calculations during field adaptation.
+Performing this diagnosis on edge hardware faces strict computational limits. Fine-tuning deep backbones on device requires substantial memory overhead for activation caching and optimizer state, causing severe processor latency~\cite{lin2022device,radocaj2025evolution}. Our model therefore relies on frozen foundation encoders ($\nabla_\theta = \emptyset$). We extract complementary visual and biological features using DINOv2-Small ($d_1 = 384$) and BioCLIP ($d_2 = 512$), yielding a fixed joint descriptor $\mathbf{z} \in \mathbb{R}^d$ ($d = 896$) without gradient calculations during field adaptation.
 
 \subsection{Engineering and Operational Constraints}
 \label{sec:engineering_constraints}
@@ -59,7 +59,7 @@ Fisher Linear Discriminant Analysis resolves this issue by projecting features t
     \mathbf{S}_W = \frac{1}{N - C} \sum_{c=1}^C \sum_{\mathbf{z} \in \mathcal{S}_c} (\mathbf{z} - \boldsymbol{\mu}_c)(\mathbf{z} - \boldsymbol{\mu}_c)^T \in \mathbb{R}^{d \times d}.
     \label{eq:empirical_scatter}
 \end{equation}
-In field deployment, however, the number of support samples $N$ is far smaller than the feature dimension $d$ ($N \ll d$). Across our target evaluation settings:
+Under our few-shot design paradigm, however, the target reference budget $N$ is intentionally constrained to a few exemplar leaves ($K=5$) to minimize on-site labeling friction, making $N$ far smaller than the joint representation dimension $d$ ($N \ll d$). Across our target evaluation settings:
 \begin{itemize}
     \item In 5-way 5-shot field diagnosis, $N = 25$ versus $d = 896$, yielding $\text{rank}(\mathbf{S}_W) \le 20$.
     \item On the 11-class PlantVillage benchmark without augmentation, $N = 55$ versus $d = 896$, yielding $\text{rank}(\mathbf{S}_W) \le 44$.
