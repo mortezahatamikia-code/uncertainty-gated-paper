@@ -31,7 +31,7 @@ $\gamma$ & Inverse temperature logit scaling parameter ($\gamma = 20.0$). \\
 $\mathcal{Q}_{\text{anchor}}^{(c)}$ & High-confidence streaming query buffer ($\max_c p_c \ge 0.70$) for background transductive recalibration. \\
 $\epsilon_{\text{esc}}, \text{FNR}$ & Agronomic disease escape bound ($\epsilon_{\text{esc}} = 1.0\%$) and false-negative disease rate. \\
 $L_{\max}, \overline{L}_{\text{inf}}$ & Real-time per-frame latency budget ($L_{\max} = 170$\,ms) and mean cascading stream latency. \\
-$T_{\max}, T_{\text{adapt}}$ & Sub-second on-device adaptation budget ($T_{\max} = 1.0$\,s) and novel-pathology registration latency ($0.53$\,s). \\
+$T_{\max}, T_{\text{adapt}}$ & Sub-second on-device adaptation budget ($T_{\max} = 1.0$\,s) and novel-pathology algebraic solve latency. \\
 $M_{\max}, \text{Mem}_{\text{PSS}}$ & Mobile resident memory budget ($M_{\max} = 500$\,MB) and measured proportional set size (PSS) footprint. \\
 \bottomrule
 \end{tabularx}
@@ -169,11 +169,11 @@ the verified leaves outvote pseudo-labels, and $w_{\mathrm{sup}}$ is set per dep
 \label{sec:packaging}
 Agricultural edge devices operate under limited memory and power budgets, and field connectivity is often unreliable~\cite{sharif2026real,radocaj2025evolution}. BioDINO-Edge therefore never sends a diagnosis over the network: once installed, every query is processed on device without streaming, cloud offloading, or server calls. The framework is partitioned into two INT8-quantized Open Neural Network Exchange (ONNX) binaries, separating a fast standalone engine from an on-demand deep companion.
 
-\textbf{Tier 1 Standalone Engine} (\path{biodino_mobile_int8.onnx}): Packaged inside an APK (occupying $\approx$22.0\,MiB on disk). It integrates the DINOv2 Small INT8 backbone, calibrated Phase~0 prototypes, and the Shannon confidence gate executed via the ONNX Runtime C++ execution provider. Installing the APK enables immediate offline diagnosis.
+\textbf{Tier 1 Standalone Engine} (\path{biodino_mobile_int8.onnx}): Packaged inside an APK (occupying $\approx$22.0\,MB on disk). It integrates the DINOv2 Small INT8 backbone, calibrated Phase~0 prototypes, and the Shannon confidence gate executed via the ONNX Runtime C++ execution provider. Installing the APK enables immediate offline diagnosis.
 
-\textbf{Tier 2 Companion Module} (\path{biodino_companion_int8.onnx}): The companion engine occupies $\approx$85.3\,MiB on disk, containing the BioCLIP ViT-B INT8 backbone and the 896-dimensional Fisher projection matrix. It is fetched on-demand when high-precision multimodal escalation is requested, functioning completely offline once stored.
+\textbf{Tier 2 Companion Module} (\path{biodino_companion_int8.onnx}): The companion engine occupies $\approx$85.3\,MB on disk, containing the BioCLIP ViT-B INT8 backbone and the 896-dimensional Fisher projection matrix. It is fetched on-demand when high-precision multimodal escalation is requested, functioning completely offline once stored.
 
-Together, both binaries occupy $\approx$107.3\,MiB of flash storage on device.
+Together, both binaries occupy $\approx$107.3\,MB of flash storage on device.
 
 \textbf{On-Device Few-Shot Pathogen Enrollment.} To accommodate field scenarios where agronomists encounter novel or uncataloged foliar pathologies, the Android application integrates an interactive on-device enrollment interface. Users can register a new disease class directly in the field by capturing 1--5 exemplar photos of symptomatic foliage, along with an optional healthy leaf reference from the same host crop. Upon capture, the application extracts foundation embeddings, runs on-device multi-view augmentation, and resolves the regularized discriminant projection via Efficient Java Matrix Library (EJML) Cholesky factorization in sub-second time, enabling immediate subsequent detection entirely offline without network connectivity.
 
