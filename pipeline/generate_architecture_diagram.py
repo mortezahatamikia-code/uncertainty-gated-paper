@@ -470,7 +470,7 @@ def create_architecture_diagram():
                   ("PlantVillage Mean: 97.41% (30-Episodes)", "#FFFFFF", 6.8, True),
                   ("PlantDoc In-the-Wild (5-Way): 84.94%", "#A7F3D0", 6.8, True),
                   ("Routing Reliability: 99.7% acc, 0.25% FNR (Tier-1)", "#E2E8F0", 6.6, False),
-                  (r"Storage: $\approx$107.3 MiB total (APK $\approx$22.8 MB) $\leq$ 110 MiB", "#6EE7B7", 6.8, True),
+                  (r"Storage: $\approx$107.3 MB total (APK $\approx$22.8 MB) $\leq$ 110 MB", "#6EE7B7", 6.8, True),
                   ("100% Offline Edge CPU (Tier-1: 16.7 FPS)", "#A7F3D0", 6.7, True)
               ], title_color="#A7F3D0", title_fs=7.5)
 

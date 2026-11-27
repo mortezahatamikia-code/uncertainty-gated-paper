@@ -1,5 +1,5 @@
-Gradient-free foliar pathology adapting frozen DINOv2 and BioCLIP encoders.
-Analytical Ledoit-Wolf shrinkage resolves small-sample covariance singularity.
-Joint Shannon-margin confidence gate routes routine leaves to a 60 ms Tier-1 path.
-Closed-form transductive recalibration adapts to field shifts in under 0.6 s.
-Standalone ~22.8 MB Android app achieves 97.4% accuracy without cloud servers.
+Fuses frozen DINOv2 and BioCLIP encoders for on-device plant disease diagnosis.
+Uncertainty gate pairs a ~60 ms fast visual path with a ~165 ms deep tier.
+Algebraic adaptation runs in 0.53 s on mobile processors without gradients.
+Achieves 97.41% accuracy and 0.79% false-negative rate on PlantVillage.
+Reaches 84.94% few-shot accuracy on PlantDoc field images.

@@ -169,7 +169,7 @@ the verified leaves outvote pseudo-labels, and $w_{\mathrm{sup}}$ is set per dep
 \label{sec:packaging}
 Agricultural edge devices operate under limited memory and power budgets, and field connectivity is often unreliable~\cite{sharif2026real,radocaj2025evolution}. BioDINO-Edge therefore never sends a diagnosis over the network: once installed, every query is processed on device without streaming, cloud offloading, or server calls. The framework is partitioned into two INT8-quantized Open Neural Network Exchange (ONNX) binaries, separating a fast standalone engine from an on-demand deep companion.
 
-\textbf{Tier 1 Standalone Engine} (\path{biodino_mobile_int8.onnx}): Packaged inside an APK (occupying $\approx$22.0\,MB on disk). It integrates the DINOv2 Small INT8 backbone, calibrated Phase~0 prototypes, and the Shannon confidence gate executed via the ONNX Runtime C++ execution provider. Installing the APK enables immediate offline diagnosis.
+\textbf{Tier 1 Standalone Engine} (\path{biodino_mobile_int8.onnx}): The quantized engine binary occupies $\approx$22.0\,MB on disk, packaged inside a $\approx$22.8\,MB base APK. It integrates the DINOv2 Small INT8 backbone, calibrated Phase~0 prototypes, and the Shannon confidence gate executed via the ONNX Runtime C++ execution provider. Installing the APK enables immediate offline diagnosis.
 
 \textbf{Tier 2 Companion Module} (\path{biodino_companion_int8.onnx}): The companion engine occupies $\approx$85.3\,MB on disk, containing the BioCLIP ViT-B INT8 backbone and the 896-dimensional Fisher projection matrix. It is fetched on-demand when high-precision multimodal escalation is requested, functioning completely offline once stored.
 
